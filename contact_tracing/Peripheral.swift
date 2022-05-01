@@ -13,7 +13,7 @@ class Peripheral: NSObject {
     
     private let queue: DispatchQueue
     private let services: [CBService]
-    private let characteristicCallback: CharacteristicDidUpdateValue?  // this is a typealias
+    private let characteristicCallback: CharacteristicDidUpdateValue?  // JianiL this is a typealias
     private let rssiCallback: DidReadRSSI? // this is also a type alias
     
     init(peripheral: CBPeripheral, queue: DispatchQueue, services: [CBService], characteristicValue: CharacteristicDidUpdateValue?, rssiValue: DidReadRSSI?) {

@@ -17,6 +17,10 @@
 		C16BE3D3281E33B70010DBAE /* contact_tracingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3D2281E33B70010DBAE /* contact_tracingTests.swift */; };
 		C16BE3DD281E33B70010DBAE /* contact_tracingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3DC281E33B70010DBAE /* contact_tracingUITests.swift */; };
 		C16BE3DF281E33B70010DBAE /* contact_tracingUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3DE281E33B70010DBAE /* contact_tracingUITestsLaunchTests.swift */; };
+		C16BE3F0281E35E20010DBAE /* PeripheralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3EB281E35E20010DBAE /* PeripheralManager.swift */; };
+		C16BE3F1281E35E20010DBAE /* CentralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3EC281E35E20010DBAE /* CentralManager.swift */; };
+		C16BE3F2281E35E20010DBAE /* Peripheral.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3ED281E35E20010DBAE /* Peripheral.swift */; };
+		C16BE3F3281E35E20010DBAE /* TokenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3EE281E35E20010DBAE /* TokenController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +55,10 @@
 		C16BE3D8281E33B70010DBAE /* contact_tracingUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = contact_tracingUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C16BE3DC281E33B70010DBAE /* contact_tracingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = contact_tracingUITests.swift; sourceTree = "<group>"; };
 		C16BE3DE281E33B70010DBAE /* contact_tracingUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = contact_tracingUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		C16BE3EB281E35E20010DBAE /* PeripheralManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeripheralManager.swift; sourceTree = "<group>"; };
+		C16BE3EC281E35E20010DBAE /* CentralManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CentralManager.swift; sourceTree = "<group>"; };
+		C16BE3ED281E35E20010DBAE /* Peripheral.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Peripheral.swift; sourceTree = "<group>"; };
+		C16BE3EE281E35E20010DBAE /* TokenController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +113,10 @@
 				C16BE3BA281E33B60010DBAE /* SceneDelegate.swift */,
 				C16BE3BC281E33B60010DBAE /* ViewController.swift */,
 				C16BE3BE281E33B60010DBAE /* Main.storyboard */,
+				C16BE3EC281E35E20010DBAE /* CentralManager.swift */,
+				C16BE3ED281E35E20010DBAE /* Peripheral.swift */,
+				C16BE3EB281E35E20010DBAE /* PeripheralManager.swift */,
+				C16BE3EE281E35E20010DBAE /* TokenController.swift */,
 				C16BE3C4281E33B70010DBAE /* Assets.xcassets */,
 				C16BE3C6281E33B70010DBAE /* LaunchScreen.storyboard */,
 				C16BE3C9281E33B70010DBAE /* Info.plist */,
@@ -261,10 +273,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C16BE3F0281E35E20010DBAE /* PeripheralManager.swift in Sources */,
+				C16BE3F2281E35E20010DBAE /* Peripheral.swift in Sources */,
 				C16BE3BD281E33B60010DBAE /* ViewController.swift in Sources */,
 				C16BE3B9281E33B60010DBAE /* AppDelegate.swift in Sources */,
 				C16BE3BB281E33B60010DBAE /* SceneDelegate.swift in Sources */,
+				C16BE3F3281E35E20010DBAE /* TokenController.swift in Sources */,
 				C16BE3C3281E33B60010DBAE /* contact_tracing.xcdatamodeld in Sources */,
+				C16BE3F1281E35E20010DBAE /* CentralManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

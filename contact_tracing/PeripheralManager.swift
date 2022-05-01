@@ -8,12 +8,7 @@
 import Foundation
 import CoreBluetooth
 
-// Generated from "https://www.uuidgenerator.net/version4"
-let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
-let service = CBMutableService(type: serviceUUID, primary:true)
-let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
-// Temporarily set both property and permission to "read/write"
-let characteristic = CBMutableCharacteristic.init(type:characteristicUUID, properties: [.read, .write], value: nil, permissions:[.writeable, .readable])
+
 
 class PeripheralManager: NSObject {
     let peripheralManager: CBPeripheralManager!
