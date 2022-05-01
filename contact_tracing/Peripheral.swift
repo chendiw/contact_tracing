@@ -54,6 +54,7 @@ extension Peripheral: CBPeripheralDelegate {
         
         guard let discoveredCharacteristics = service.characteristics else { print("No characteristics found for service")}
         for discoveredCharacteristic in discoveredCharacteristics {
+            // TODO: ReadValue then save to somewhere?? Save to peerTokens?
             peripheral.readValue(for: discoveredCharacteristic)
             peripheral.readRSSI()
         }

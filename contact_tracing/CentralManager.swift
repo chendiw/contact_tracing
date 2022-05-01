@@ -25,7 +25,7 @@ class CentralManager: NSObject {  // object-c subclass?
     
 //    var centralDidUpdateStateCallback: ((CBManagerState) -> Void)?
     
-    init(services: [CBService]){  // TODO: use CBService instead of service
+    init(services: [CBService]){ 
         self.services = services
         super.init()
         let options = [
@@ -35,31 +35,23 @@ class CentralManager: NSObject {  // object-c subclass?
         centralManager = CBCentralManager(delegate: self, queue: queue, options: options)  // self need to be the CBCentralManagerDelegate type
     }
     
-    func start() {
-        running = true
-        startScan()
-    }
-    
-    func stop() {
-        stopScan()
-        running = false
-    }
-    
     func restartScan() {
         // TODO: check do we need this function
     }
     
-    private func startScan() {
+    func startScan() {
         if centralManager.state != .poweredOn {
             return
         }
         let options = [CBCentralManagerScanOptionAllowDuplicatesKey: false as NSNumber]
         let cbuuids: [CBUUID] = services.map { $0.uuid }
         centralManager.scanForPeripherals(withServices: cbuuids, options: options)
+        running = true
     }
     
-    private func stopScan() {
+    func stopScan() {
         centralManager.stopScan()
+        running = false
     }
     
     // TODO: think more about callback functions.

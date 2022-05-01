@@ -52,6 +52,7 @@ class PeripheralManager: NSObject {
 
 }
 
+// TODO: Does the PeripheralManager write to the charicteristic.value?
 extension PeripheralManager: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         if self.peripheralManager.state == .poweredOn {
