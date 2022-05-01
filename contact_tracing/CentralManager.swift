@@ -16,7 +16,7 @@ typealias DidReadRSSI = (Peripheral, NSNumber, Error?) -> Void
 class CentralManager: NSObject {  // object-c subclass?
     private var centralManager: CBCentralManager!
     private var peripherals: [UUID: Peripheral] = [:]  // dict
-    private let services: [Service] = []  // TODO: Here uses the same type as periperal
+    private let services: [CBService] = []  // TODO: Here uses the same type as periperal
     private var queue: DispatchQueue
     private var running: Bool = false // whether the central manager has started?
     
@@ -25,7 +25,7 @@ class CentralManager: NSObject {  // object-c subclass?
     
 //    var centralDidUpdateStateCallback: ((CBManagerState) -> Void)?
     
-    init(services: [Service]){  // TODO: use CBService instead of service
+    init(services: [CBService]){  // TODO: use CBService instead of service
         self.services = services
         super.init()
         let options = [
@@ -54,7 +54,7 @@ class CentralManager: NSObject {  // object-c subclass?
             return
         }
         let options = [CBCentralManagerScanOptionAllowDuplicatesKey: false as NSNumber]
-        let cbuuids: [CBUUID] = services.map { $0.getCBUUID() }
+        let cbuuids: [CBUUID] = services.map { $0.uuid }
         centralManager.scanForPeripherals(withServices: cbuuids, options: options)
     }
     
@@ -74,7 +74,6 @@ class CentralManager: NSObject {  // object-c subclass?
     }
 
     func addPeripheral(_ peripheral: CBPeripheral) {
-        let services = services.map {$0.getService()}
         let p = Peripheral(peripheral: peripheral, queue: queue, services: services, characteristicValue: didUpdateValue, rssiValue: didReadRSSI)
         peripherals[peripheral.identifier] = p
     }
@@ -115,7 +114,7 @@ extension CentralManager: CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         let p = peripherals[peripheral.identifier]
-        let cbuuids = services.map{$0.getCBUUID()}
+        let cbuuids = services.map{$0.uuid}
         if let p = p {
             // TODO: class Periperal need to have a public function `discoverServices()`. The centralManager can not see class CBPeripheral directly.
             p.discoverServices(cbuuids)  // TODO: check how to call this function. (Can we directly call Per
