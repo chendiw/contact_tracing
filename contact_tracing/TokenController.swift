@@ -11,30 +11,52 @@ import CoreBluetooth
 import UserNotifications
 import UIKit
 
-// Generated from "https://www.uuidgenerator.net/version4"
-let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
-let service = CBMutableService(type: serviceUUID, primary:true)
+// uuid's generated from "https://www.uuidgenerator.net/version4"
+class myService {
+    private var uuid = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
+    private var service: CBMutableService
+    
+    init() {
+        service = CBMutableService(type: uuid, primary:true)
+    }
+    
+    public func getService() -> CBMutableService {
+        return service
+    }
+    
+    public func getServiceUUID() -> CBUUID {
+        return uuid
+    }
+}
 
-let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
-// Temporarily set both property and permission to "read/write"
-let characteristic = CBMutableCharacteristic.init(type:characteristicUUID, properties: [.read, .write], value: nil, permissions:[.writeable, .readable])
+class myCharacteristic {
+    private var uuid = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
+    private var value: Data? = nil
+    private var characteristic: CBMutableCharacteristic
+    
+    init() {
+        characteristic = CBMutableCharacteristic.init(type: uuid, properties: [.read, .write], value: value, permissions:[.writeable, .readable])
+    }
+    
+    public func getCharacteristic() -> CBMutableCharacteristic {
+        return characteristic
+    }
+    
+    public func getCharacteristicUUID() -> CBUUID {
+        return uuid
+    }
+    
+    public func getCharacteristicValue() -> Data? {
+        return value
+    }
+}
 
-// Not used: Encapuslation of the service
-//class Service {
-//    private var serviceUUID: CBUUID
-//    private var service: CBMutableService
-//    init() {
-//        serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
-//        service = CBMutableService(type: self.serviceUUID, primary:true)
-//    }
-//    public func getCBUUID() -> CBUUID {
-//        return self.serviceUUID
-//    }
-//    public func  getService() -> CBMutableService {
-//        return self.service
-//    }
-//}
-
+enum Command {
+    case read(from: myCharacteristic)
+    case write(to: myCharacteristic, value: Data)
+    case readRSSI
+//    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
+}
 
 let peripheralName = "BProximity"
 
@@ -121,7 +143,6 @@ extension Tokens {
         return item.keys.first!
     }
 }
-
 
 public class TokenController: NSObject {
     static var instance: TokenController!

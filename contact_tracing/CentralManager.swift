@@ -106,10 +106,8 @@ extension CentralManager: CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         let p = peripherals[peripheral.identifier]
-        let cbuuids = services.map{$0.uuid}
         if let p = p {
-            // TODO: class Periperal need to have a public function `discoverServices()`. The centralManager can not see class CBPeripheral directly.
-            p.discoverServices(cbuuids)  // TODO: check how to call this function. (Can we directly call Per
+            p.discoverMyService()
         }
     }
 
