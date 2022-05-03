@@ -15,7 +15,7 @@ import UIKit
 public var serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
 public var characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
 
-class myService {
+class MyService {
     private var uuid: CBUUID
     private var service: CBMutableService
     
@@ -33,7 +33,7 @@ class myService {
     }
 }
 
-class myCharacteristic {
+class MyCharacteristic {
     private var uuid: CBUUID
     private var value: Data? = nil
     private var characteristic: CBMutableCharacteristic
@@ -55,14 +55,14 @@ class myCharacteristic {
         return self.value
     }
     
-    public func fromCBCharacteristic(_ c: CBCharacteristic) -> myCharacteristic? {
-        return myCharacteristic(c.uuid)
+    public static func fromCBCharacteristic(_ c: CBCharacteristic) -> MyCharacteristic? {
+        return MyCharacteristic(c.uuid)
     }
 }
 
 enum Command {
-    case read(from: myCharacteristic)
-    case write(to: myCharacteristic, value: Data)
+    case read(from: MyCharacteristic)
+    case write(to: MyCharacteristic, value: Data)
     case readRSSI
 //    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
 }

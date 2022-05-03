@@ -12,12 +12,12 @@ class Peripheral: NSObject {
     let peripheral: CBPeripheral!
     
     private let queue: DispatchQueue
-    private let services: [myService]
+    private let services: [MyService]
     private var commands: [Command]
     private let characteristicCallback: CharacteristicDidUpdateValue?  // Jiani: this is a typealias defined in CentralManager.swift
     private let rssiCallback: DidReadRSSI? // this is also a type alias
     
-    init(peripheral: CBPeripheral, queue: DispatchQueue, services: [myService], commands: [Command], characteristicCallback: CharacteristicDidUpdateValue?, rssiCallback: DidReadRSSI?) {
+    init(peripheral: CBPeripheral, queue: DispatchQueue, services: [MyService], commands: [Command], characteristicCallback: CharacteristicDidUpdateValue?, rssiCallback: DidReadRSSI?) {
             self.peripheral = peripheral
             self.queue = queue
             self.services = services
