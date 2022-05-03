@@ -12,42 +12,51 @@ import UserNotifications
 import UIKit
 
 // uuid's generated from "https://www.uuidgenerator.net/version4"
+public var serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
+public var characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
+
 class myService {
-    private var uuid = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
+    private var uuid: CBUUID
     private var service: CBMutableService
     
-    init() {
-        service = CBMutableService(type: uuid, primary:true)
+    init(_ uuid: CBUUID) {
+        self.uuid = uuid
+        self.service = CBMutableService(type: uuid, primary:true)
     }
     
     public func getService() -> CBMutableService {
-        return service
+        return self.service
     }
     
     public func getServiceUUID() -> CBUUID {
-        return uuid
+        return self.uuid
     }
 }
 
 class myCharacteristic {
-    private var uuid = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
+    private var uuid: CBUUID
     private var value: Data? = nil
     private var characteristic: CBMutableCharacteristic
     
-    init() {
-        characteristic = CBMutableCharacteristic.init(type: uuid, properties: [.read, .write], value: value, permissions:[.writeable, .readable])
+    init(_ uuid: CBUUID) {
+        self.uuid = uuid
+        self.characteristic = CBMutableCharacteristic.init(type: uuid, properties: [.read, .write], value: self.value, permissions:[.writeable, .readable])
     }
     
     public func getCharacteristic() -> CBMutableCharacteristic {
-        return characteristic
+        return self.characteristic
     }
     
     public func getCharacteristicUUID() -> CBUUID {
-        return uuid
+        return self.uuid
     }
     
     public func getCharacteristicValue() -> Data? {
-        return value
+        return self.value
+    }
+    
+    public func fromCBCharacteristic(_ c: CBCharacteristic) -> myCharacteristic? {
+        return myCharacteristic(c.uuid)
     }
 }
 
