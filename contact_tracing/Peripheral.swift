@@ -19,6 +19,9 @@ class Peripheral: NSObject {
     private let characteristicCallback: CharacteristicDidUpdateValue?  // Jiani: this is a typealias defined in CentralManager.swift
     private let rssiCallback: DidReadRSSI? // this is also a type alias
     
+    var id: UUID {
+        return self.peripheral.identifier
+    }
 
     init(peripheral: CBPeripheral, queue: DispatchQueue, services: [MyService], commands: [Command], characteristicCallback: CharacteristicDidUpdateValue?, rssiCallback: DidReadRSSI?) {
             self.peripheral = peripheral
@@ -31,20 +34,19 @@ class Peripheral: NSObject {
             super.init()
             self.peripheral.delegate = self
     }
-    diCover() {
-        return peripheral.discoverServices()
-    }
     
     func executeCommand(_ command: Command) {
         switch command {
         case .read(let from):
             self.peripheral.readValue(for: from.getCharacteristic())
         case .write(let to, let value):
-            self.peripheral.writeValue(value, for: to.getCharacteristic(), type: .withResponse) //withresponse to log whether write is sucessful to backend
+            self.peripheral.writeValue(value!, for: to.getCharacteristic(), type: .withResponse) //withresponse to log whether write is sucessful to backend
         case .readRSSI:
             self.peripheral.readRSSI()
 //        case .scheduleCommands(let commands, let withTimeInterval, let repeatCount):
 //            break
+        case .cancel(callback: let callback):
+            callback(self)
         }
     }
     

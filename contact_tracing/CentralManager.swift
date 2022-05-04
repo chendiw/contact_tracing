@@ -16,17 +16,19 @@ typealias DidReadRSSI = (Peripheral, NSNumber, Error?) -> Void
 class CentralManager: NSObject {  // object-c subclass?
     private var centralManager: CBCentralManager!
     private var peripherals: [UUID: Peripheral] = [:]  // dict
-    private let services: [CBService] = []  // TODO: Here uses the same type as periperal
+    private var services: [MyService] = []  // TODO: Here uses the same type as periperal
     private var queue: DispatchQueue
     private var running: Bool = false // whether the central manager has started?
+    private var commands: [Command] = []
     
     private var didUpdateValue: CharacteristicDidUpdateValue!
     private var didReadRSSI: DidReadRSSI!
     
 //    var centralDidUpdateStateCallback: ((CBManagerState) -> Void)?
     
-    init(services: [CBService]){ 
+    init(services: [MyService], queue: DispatchQueue){
         self.services = services
+        self.queue = queue
         super.init()
         let options = [
             CBCentralManagerOptionShowPowerAlertKey: 1,
@@ -44,7 +46,7 @@ class CentralManager: NSObject {  // object-c subclass?
             return
         }
         let options = [CBCentralManagerScanOptionAllowDuplicatesKey: false as NSNumber]
-        let cbuuids: [CBUUID] = services.map { $0.uuid }
+        let cbuuids: [CBUUID] = services.map { $0.getServiceUUID() }
         centralManager.scanForPeripherals(withServices: cbuuids, options: options)
         running = true
     }
@@ -54,7 +56,6 @@ class CentralManager: NSObject {  // object-c subclass?
         running = false
     }
     
-    // TODO: think more about callback functions.
     func didUpdateValueCallback(_ callback :@escaping CharacteristicDidUpdateValue) -> CentralManager {
         didUpdateValue = callback
         return self
@@ -64,11 +65,17 @@ class CentralManager: NSObject {  // object-c subclass?
         didReadRSSI = callback
         return self
     }
+    
+    func addCommandCallback(command: Command) -> CentralManager {  // support chainning call
+        self.commands.append(command)
+        return self
+    }
 
     func addPeripheral(_ peripheral: CBPeripheral) {
-        let p = Peripheral(peripheral: peripheral, queue: queue, services: services, characteristicValue: didUpdateValue, rssiValue: didReadRSSI)
+        let p = Peripheral(peripheral: peripheral, queue: queue, services: services, commands: commands, characteristicCallback: didUpdateValue, rssiCallback: didReadRSSI)
         peripherals[peripheral.identifier] = p
     }
+
     
     func disconnect(_ peripheral: Peripheral) {
         centralManager.cancelPeripheralConnection(peripheral.peripheral)

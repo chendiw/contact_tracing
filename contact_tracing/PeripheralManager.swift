@@ -53,7 +53,7 @@ class PeripheralManager: NSObject {
         started = peripheralManager.isAdvertising
     }
     
-    func onReadClosure(callback: @escaping (CBCentral, MyCharacteristic) -> Data?) -> PeripheralManager {
+    func onReadClosure(_ callback: @escaping (CBCentral, MyCharacteristic) -> Data?) -> PeripheralManager {
         self.onReadClosure = callback
         return self
     }
