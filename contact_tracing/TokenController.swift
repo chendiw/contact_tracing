@@ -74,6 +74,8 @@ enum File: String {
     }
 }
 
+// XML:
+
 // TODO: check what IDs do here
 typealias Tokens = [[UserToken: TimeInterval]]
 extension Tokens {
@@ -175,6 +177,7 @@ public class TokenController: NSObject {
         let service = CBMutableService(type: serviceUUID, primary: true)
         service.characteristics = [tokenCharacteristic]
 
+        //
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: service)
             // TODO: need to add onRead callback function: can not call didReceiveRead directly
             // TODO: periperalManager need to add a callback function: OnRead, return itself's token
@@ -187,9 +190,8 @@ public class TokenController: NSObject {
             
         centralManager = CentralManager(queue: queue, services: [service])
             // TODO: [check understanding] DidReadRSSI is only a function signature, the function body is defined here?
-            .didReadRSSI({ [unowned self] peripheral, RSSI, error in
-                print("peripheral=\(peripheral.shortId), RSSI=\(RSSI), error=\(String(describing: error))")
-
+            .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
+                print("peripheral=\(peripheral.identifier), RSSI=\(RSSI), error=\(String(describing: error))")
                 guard error == nil else {
                     self.centralManager?.disconnect(peripheral)
                     return
@@ -201,9 +203,9 @@ public class TokenController: NSObject {
 //                    self.myTokens.last.data()
 //            })
 //            // TODO: how to call read()? Need CentralManager to add a callback function?
-//            .read(from: .ReadWriteId)
+            // .read(from: characteristic)
             // TODO: Is this correct way to call back
-            .didUpdateValue({ [unowned self] peripheral, ch, data, error in
+            .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
                 if let dat = data, let peerToken = UserToken(data: dat) {
                     log("Read Successful from \(peerToken)")
                     self.peerTokens.append(peerToken)

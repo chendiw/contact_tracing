@@ -8,6 +8,8 @@
 import Foundation
 import CoreBluetooth
 
+
+
 class Peripheral: NSObject {
     let peripheral: CBPeripheral!
     
@@ -16,14 +18,18 @@ class Peripheral: NSObject {
     private let characteristicCallback: CharacteristicDidUpdateValue?  // Jiani: this is a typealias defined in CentralManager.swift
     private let rssiCallback: DidReadRSSI? // this is also a type alias
     
+    
     init(peripheral: CBPeripheral, queue: DispatchQueue, services: [CBService], characteristicValue: CharacteristicDidUpdateValue?, rssiValue: DidReadRSSI?) {
             self.peripheral = peripheral
             self.queue = queue
             self.services = services
-            self.characteristicCallback = characteristicValue
-            self.rssiCallback = rssiValue
+//            self.characteristicCallback = characteristicValue
+//            self.rssiCallback = rssiValue
             super.init()
             self.peripheral.delegate = self
+    }
+    diCover() {
+        return peripheral.discoverServices()
     }
     
 //    func writeValueToCharacteristic(value: Data, forCharacteristic ch: CBCharacteristic, type: CBCharacteristicWriteType) {

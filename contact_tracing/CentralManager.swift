@@ -55,12 +55,12 @@ class CentralManager: NSObject {  // object-c subclass?
     }
     
     // TODO: think more about callback functions.
-    func didUpdateValue(_ callback :@escaping CharacteristicDidUpdateValue) -> CentralManager {
+    func didUpdateValueCallback(_ callback :@escaping CharacteristicDidUpdateValue) -> CentralManager {
         didUpdateValue = callback
         return self
     }
 
-    func didReadRSSI(_ callback: @escaping DidReadRSSI)-> CentralManager {
+    func didReadRSSICallback(_ callback: @escaping DidReadRSSI)-> CentralManager {
         didReadRSSI = callback
         return self
     }
