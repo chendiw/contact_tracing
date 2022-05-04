@@ -8,26 +8,29 @@
 import Foundation
 import CoreBluetooth
 
-
-
 class PeripheralManager: NSObject {
-    let peripheralManager: CBPeripheralManager!
+    var peripheralManager: CBPeripheralManager!
     
     private var started: Bool = false
     private let peripheralName: String
     private let queue: DispatchQueue
     private let service: CBMutableService
     
+    private var onReadClosure: ((CBCentral, MyCharacteristic) -> Data?)?
+    
     // service defined in MainBackend, peripheralName is the local name of a Peripheral
     init(peripheralName: String, queue: DispatchQueue, service: CBMutableService) {
         self.peripheralName = peripheralName
         self.service = service
+        self.queue = queue
         super.init()
-        peripheralManager = CBPeripheralManager(delegate: self, queue: queue)
+        self.peripheralManager = CBPeripheralManager(delegate: self, queue: queue)
     }
     
     func startAdvertising() {
-        guard peripheralManager.state == .poweredOn else {print("Peripheral Manager not powered on")}
+        guard peripheralManager.state == .poweredOn else {print("Peripheral Manager not powered on")
+            return
+        }
         
         // clear all previous services
         peripheralManager.removeAllServices()
@@ -49,6 +52,11 @@ class PeripheralManager: NSObject {
         peripheralManager.stopAdvertising()
         started = peripheralManager.isAdvertising
     }
+    
+    func onReadClosure(callback: @escaping (CBCentral, MyCharacteristic) -> Data?) -> PeripheralManager {
+        self.onReadClosure = callback
+        return self
+    }
 
 }
 
@@ -58,7 +66,7 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
         if self.peripheralManager.state == .poweredOn {
             print("Peripheral powered on!")
             
-            service.characteristics = [characteristic]
+//            service.characteristics = [characteristic]
             startAdvertising()
         }
     }
@@ -70,15 +78,24 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
-        let requestedCharID = request.characteristic.uuid
-        if requestedCharID != characteristicUUID {
-            print("Requesting characteristic uuid unmatch!")
+        guard let requestedMyChar = MyCharacteristic.fromCBCharacteristic(request.characteristic) else {
+            print("Failed conversion to MyCharacteristic in read request")
+            return
         }
+        let requestedCharValue = requestedMyChar.getCharacteristicValue()
+
         // check if request offset is longer than characteristic value
-        if request.offset > characteristic.value?.count ?? -1 {
+        if request.offset > requestedCharValue?.count ?? -1 {
             peripheral.respond(to: request, withResult: .invalidOffset)
+            return
         }
-        request.value = characteristic.value
-        peripheral.respond(to: request, withResult: .success)
+        
+        if let data = onReadClosure!(request.central, requestedMyChar) {
+            request.value = data
+            peripheral.respond(to: request, withResult: .success)
+            return
+        }
+        
+        peripheral.respond(to: request, withResult: .unlikelyError)
     }
 }
