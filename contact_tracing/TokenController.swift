@@ -11,9 +11,11 @@ import CoreBluetooth
 import UserNotifications
 import UIKit
 
+// Global static values
 // uuid's generated from "https://www.uuidgenerator.net/version4"
-public var serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
-public var characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
+public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
+public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
+public let peripheralName = "CT-Peripheral"
 
 class MyService {
     private var uuid: CBUUID
@@ -74,28 +76,25 @@ enum Command {
 //    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
 }
 
-let peripheralName = "BProximity"
-
-
 // We dropped 32bit support, so UInt = UInt64, and is converted to NSNumber when saving to PLists
-typealias UserToken = UInt
-
-extension UserToken {
-    func data() -> Data {
-        return Swift.withUnsafeBytes(of: self) { Data($0) }
-    }
-    init?(data :Data) {
-        var value: UserToken = 0
-        guard data.count >= MemoryLayout.size(ofValue: value) else { return nil }
-        _ = Swift.withUnsafeMutableBytes(of: &value, { data.copyBytes(to: $0)} )
-        self = value
-    }
-    static func next() -> UserToken {
-        // https://github.com/apple/swift-evolution/blob/master/proposals/0202-random-unification.md#random-number-generator
-        // This is cryptographically random
-        return UserToken(UInt64.random(in: 0 ... UInt64.max))
-    }
-}
+//typealias UserToken = UInt
+//
+//extension UserToken {
+//    func data() -> Data {
+//        return Swift.withUnsafeBytes(of: self) { Data($0) }
+//    }
+//    init?(data :Data) {
+//        var value: UserToken = 0
+//        guard data.count >= MemoryLayout.size(ofValue: value) else { return nil }
+//        _ = Swift.withUnsafeMutableBytes(of: &value, { data.copyBytes(to: $0)} )
+//        self = value
+//    }
+//    static func next() -> UserToken {
+//        // https://github.com/apple/swift-evolution/blob/master/proposals/0202-random-unification.md#random-number-generator
+//        // This is cryptographically random
+//        return UserToken(UInt64.random(in: 0 ... UInt64.max))
+//    }
+//}
 
 let KeepMyIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
 let KeepPeerIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
@@ -211,11 +210,20 @@ public class TokenController: NSObject {
         let ctService = MyService(serviceUUID)
         ctService.addCharacteristic(tokenCharacteristic)
 
+        // CW: TODO: clarify general read flow and write flow
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
             // CW: deleted [unowned self] because peripheralManager should always be around when closure finishes
-            .onReadClosure(callback: { (peripheral, tokenCharacteristic) in
+            // CW: TODO: confirm why peripheral can go uninitialized --> is it the peripheralManager object that's passed in? But the type is CBCentral...
+            .onReadClosure{[unowned self] (peripheral, tokenCharacteristic) in
                     return self.myTokens.last.data()
-                })
+            }
+            .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
+                // CW: TODO: why the whole userID typee
+                // CW: TODO: confirm where the data field comes from
+                self.peerIds.append(data)
+                self.peerIds.save(to: .peerIds)
+                return true
+            }
             
         centralManager = CentralManager(queue: queue, services: [ctService.getService()])
             // TODO: [check understanding] DidReadRSSI is only a function signature, the function body is defined here?
