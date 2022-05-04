@@ -17,6 +17,7 @@ class PeripheralManager: NSObject {
     private let service: CBMutableService
     
     private var onReadClosure: ((CBCentral, MyCharacteristic) -> Data?)?
+    private var onWriteClosure: ((CBCentral, MyCharacteristic, Data) -> Bool)?
     
     // service defined in MainBackend, peripheralName is the local name of a Peripheral
     init(peripheralName: String, queue: DispatchQueue, service: CBMutableService) {
@@ -58,6 +59,10 @@ class PeripheralManager: NSObject {
         return self
     }
 
+    func onWriteClosure(callback: @escaping (CBCentral, MyCharacteristic, Data) -> Bool) -> PeripheralManager {
+        self.onWriteClosure = callback
+        return self
+    }
 }
 
 // TODO: Does the PeripheralManager write to the charicteristic.value?
@@ -65,8 +70,6 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         if self.peripheralManager.state == .poweredOn {
             print("Peripheral powered on!")
-            
-//            service.characteristics = [characteristic]
             startAdvertising()
         }
     }
@@ -97,5 +100,26 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
         }
         
         peripheral.respond(to: request, withResult: .unlikelyError)
+    }
+    
+    func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
+        if requests.count == 0 {
+            return
+        }
+        for request in requests {
+            guard let requestedMyChar = MyCharacteristic.fromCBCharacteristic(request.characteristic)else {
+                print("Failed conversion to MyCharacteristic in write request")
+                return
+            }
+            guard let requestValue = request.value else {
+                print("No value from write request.")
+                return
+            }
+            if onWriteClosure!(request.central, requestedMyChar, requestValue) {
+                peripheral.respond(to: requests[0], withResult: .success)
+                break
+            }
+        }
+        peripheral.respond(to: requests[0], withResult: .unlikelyError)
     }
 }
