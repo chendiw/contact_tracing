@@ -71,8 +71,9 @@ class MyCharacteristic {
 
 enum Command {
     case read(from: MyCharacteristic)
-    case write(to: MyCharacteristic, value: Data)
+    case write(to: MyCharacteristic, value: Data?)
     case readRSSI
+    case cancel(callback: (Peripheral) -> Void)
 //    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
 }
 
@@ -111,13 +112,15 @@ enum File: String {
     }
 }
 
-// TODO: check what IDs do here
+
 typealias Tokens = [[UserToken: TimeInterval]]
 extension Tokens {
-    // 8Byte + 8Bytes = 16Bytes for one record.
-    // You're going to see .. max 1k people in a day.
-    // We want to keep records for 4 weeks.
-    // max: 16B x 1k x 28 = 448kBytes
+    // Each token composed of:
+    // - Rolling Proximity Identifier: AES-128 encrypted (16 bytes)
+    // - Associated Encrypted Metadata: AES-CTR encrypted (16 bytes)
+    // Assume max 1k contacts per day
+    // Store tokens for 14 days
+    // Max file size: 32 x 1k x 14 = 448k bytes
     static func load(from: File) -> Tokens {
         do {
             let data = try Data(contentsOf: from.url(), options: [])
@@ -159,6 +162,8 @@ extension Tokens {
     }
 }
 
+
+// Bluetooth token exchange controller
 public class TokenController: NSObject {
     static var instance: TokenController!
 
@@ -178,7 +183,6 @@ public class TokenController: NSObject {
         instance.peripheralManager.startAdvertising()
         instance.centralManager.startScan()
         
-
         // request user permission
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert]) { granted, error in
@@ -198,7 +202,7 @@ public class TokenController: NSObject {
         // load from different files
         self.myTokens = Tokens.load(from: .myTokens)
         _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
-        self.myTokens.append(UserToken.next()) // TODO only when some time has passed
+        self.myTokens.append(UserToken.next()) // TODO: only when some time has passed
         self.myTokens.save(to: .myTokens)
 
         self.peerTokens = Tokens.load(from: .peerTokens)
@@ -206,6 +210,7 @@ public class TokenController: NSObject {
             self.peerTokens.save(to: .peerTokens)
         }
         
+        // object of characteristic nad service
         let tokenCharacteristic = MyCharacteristic(characteristicUUID)
         let ctService = MyService(serviceUUID)
         ctService.addCharacteristic(tokenCharacteristic)
@@ -225,35 +230,36 @@ public class TokenController: NSObject {
                 return true
             }
             
-        centralManager = CentralManager(queue: queue, services: [ctService.getService()])
-            // TODO: [check understanding] DidReadRSSI is only a function signature, the function body is defined here?
-            .didReadRSSI({ [unowned self] peripheral, RSSI, error in
-                print("peripheral=\(peripheral.shortId), RSSI=\(RSSI), error=\(String(describing: error))")
-
+        centralManager = CentralManager(services: [ctService], queue: queue)
+            // TODO: what does [unowned self] do?
+            .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
+                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
                 guard error == nil else {
                     self.centralManager?.disconnect(peripheral)
                     return
                 }
             })
-//            // TODO: need to define similar call back function.
-//            // TODO: CentralManager write itself's token to
-//            .write(to: service, value: { [unowned self] peripheral in
-//                    self.myTokens.last.data()
-//            })
-//            // TODO: how to call read()? Need CentralManager to add a callback function?
-//            .read(from: .ReadWriteId)
-            // TODO: Is this correct way to call back
-            .didUpdateValue({ [unowned self] peripheral, ch, data, error in
+            // Ask periperal to write it's value to the characteristic
+            .addCommandCallback(
+                command: .write(to: tokenCharacteristic, value:
+                    self.myTokens.last.data()
+                ))
+            .addCommandCallback(
+                command: .read(from: tokenCharacteristic))
+//
+            .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
                 if let dat = data, let peerToken = UserToken(data: dat) {
-                    log("Read Successful from \(peerToken)")
+                    print("Read Successful from \(peerToken)")
                     self.peerTokens.append(peerToken)
-                    self.peerTokens.save(to: .peerIds)
+                    self.peerTokens.save(to: .peerTokens)
                 }
             })
             // TODO: need to disconnect? Or add cancel callback function
-            .cancel(callback: { [unowned self] peripheral in
+            .addCommandCallback(
+                command: .cancel(callback: { [unowned self] peripheral in
                     self.centralManager?.disconnect(peripheral)
-            })
+                }))
+            
         
     }
     
