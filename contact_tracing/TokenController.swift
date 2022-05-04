@@ -18,10 +18,12 @@ public var characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0b
 class MyService {
     private var uuid: CBUUID
     private var service: CBMutableService
+    private var characteristic: MyCharacteristic?
     
     init(_ uuid: CBUUID) {
         self.uuid = uuid
         self.service = CBMutableService(type: uuid, primary:true)
+        self.characteristic = nil
     }
     
     public func getService() -> CBMutableService {
@@ -30,6 +32,11 @@ class MyService {
     
     public func getServiceUUID() -> CBUUID {
         return self.uuid
+    }
+    
+    public func addCharacteristic(_ c: MyCharacteristic) {
+        self.characteristic = c
+        self.service.characteristics = [c.getCharacteristic()]
     }
 }
 
@@ -186,36 +193,31 @@ public class TokenController: NSObject {
     }
 
     public override init() {
-        queue = DispatchQueue(label: "TokenController")
+        self.queue = DispatchQueue(label: "TokenController")
 
         super.init()
         // load from different files
-        myTokens = Tokens.load(from: .myTokens)
-        _ = myTokens.expire(keepInterval: KeepMyIdsInterval)
-        myTokens.append(UserToken.next()) // TODO only when some time has passed
-        myTokens.save(to: .myTokens)
+        self.myTokens = Tokens.load(from: .myTokens)
+        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
+        self.myTokens.append(UserToken.next()) // TODO only when some time has passed
+        self.myTokens.save(to: .myTokens)
 
-        peerTokens = Tokens.load(from: .peerTokens)
-        if peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
-            peerTokens.save(to: .peerTokens)
+        self.peerTokens = Tokens.load(from: .peerTokens)
+        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
+            self.peerTokens.save(to: .peerTokens)
         }
+        
+        let tokenCharacteristic = MyCharacteristic(characteristicUUID)
+        let ctService = MyService(serviceUUID)
+        ctService.addCharacteristic(tokenCharacteristic)
 
-        // no pairing/bonding
-        let tokenCharacteristic = CBMutableCharacteristic(type: characteristicUUID, properties: [.read, .write, .writeWithoutResponse], value: nil, permissions: [.readable, .writeable])
-        let service = CBMutableService(type: serviceUUID, primary: true)
-        service.characteristics = [tokenCharacteristic]
-
-        peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: service)
-            // TODO: need to add onRead callback function: can not call didReceiveRead directly
-            // TODO: periperalManager need to add a callback function: OnRead, return itself's token
-            .onRead({ [unowned self] (peripheral, ch)  in
-                switch ch {
-                case .ReadWriteId:
+        peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
+            // CW: deleted [unowned self] because peripheralManager should always be around when closure finishes
+            .onReadClosure(callback: { (peripheral, tokenCharacteristic) in
                     return self.myTokens.last.data()
-                }
-            })
+                })
             
-        centralManager = CentralManager(queue: queue, services: [service])
+        centralManager = CentralManager(queue: queue, services: [ctService.getService()])
             // TODO: [check understanding] DidReadRSSI is only a function signature, the function body is defined here?
             .didReadRSSI({ [unowned self] peripheral, RSSI, error in
                 print("peripheral=\(peripheral.shortId), RSSI=\(RSSI), error=\(String(describing: error))")
