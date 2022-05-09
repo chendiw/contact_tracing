@@ -100,37 +100,89 @@ enum Command {
 let KeepMyIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
 let KeepPeerIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
 
-// TODO: check what files do here.
+// Two files storing myTEKs and peerTokens
+// myTEKs: i (computed from ENIntervalNumber) -> TEK_i (14 pairs)
+// peerTokens: ENIntervalNumber -> [Tokenobject{Bluetooth payload, RSSI, GPS location}] (144*14=2016 pairs)
 enum File: String {
-    case myTokens
+    case myTEKs
     case peerTokens
+    
+    var rawValue: String {
+        switch self {
+        case .myTEKs: return "myTEKs"
+        case .peerTokens: return "peerTokens"
+        }
+    }
+    
     func url() -> URL {
         // plist: simple key-value store in iOS: https://www.appypie.com/plist-property-list-swift-how-to
-        // FileManager.default.urls(): find the user's documents directory isn't very memorable
         let documentDirectoryUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        return documentDirectoryUrl.appendingPathComponent("\(self.rawValue).plist")
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue).appendingPathExtension("plist")
+        return fileUrl
     }
 }
 
+class TokenObject: NSObject, NSCoding {
+    var payload: Data
+    var rssi: NSNumber
+// TODO: Get gps location per ENInterval
+//    let gps:
+    
+    init(payload: Data, rssi: NSNumber) {
+        self.payload = payload
+        self.rssi = rssi
+    }
+    
+    required convenience init?(coder: NSCoder) {
+        guard let payload = coder.decodeObject(forKey: "payload") as? Data,
+              let rssi = coder.decodeObject(forKey: "rssi") as? NSNumber
+        else {
+            return nil
+        }
+        self.init(payload: payload, rssi: rssi)
+    }
+    
+    func encode(with coder: NSCoder) {
+        coder.encode(self.payload, forKey: "payload")
+        coder.encode(self.rssi, forKey: "rssi")
+    }
+    
+    var dictionary: [String: Any] {
+        return [
+            "payload": self.payload,
+            "rssi": self.rssi
+        ]
+    }
+    
+//    var data: Data {
+//        return (try? JSONSerialization.data(withJSONObject: dictionary)) ?? Data()
+//    }
+//
+//    var json: String {
+//        return String(data: data, encoding: .utf8) ?? String()
+//    }
+}
 
-typealias Tokens = [[UserToken: TimeInterval]]
-extension Tokens {
+typealias TokenList = [TokenObject]
+extension TokenList {
     // Each token composed of:
     // - Rolling Proximity Identifier: AES-128 encrypted (16 bytes)
     // - Associated Encrypted Metadata: AES-CTR encrypted (16 bytes)
     // Assume max 1k contacts per day
     // Store tokens for 14 days
     // Max file size: 32 x 1k x 14 = 448k bytes
-    static func load(from: File) -> Tokens {
+    
+    static func load(from: File) -> TokenList {
         do {
             let data = try Data(contentsOf: from.url(), options: [])
-            return try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as! Tokens
+            return try  NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as! TokenList
         } catch {
             print(error)
         }
-        return Tokens()
+        return TokenList()
     }
-    func save(to: File) {
+    
+    func save(to :File) {
         do {
             let data = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)
             try data.write(to: to.url(), options: [])
@@ -138,29 +190,65 @@ extension Tokens {
             print(error)
         }
     }
-    // a function that’s been marked as mutating can change any property within its enclosing value
-    mutating func expire(keepInterval: TimeInterval) -> Bool {
-        let count = self.count
+}
 
-        // Delete old entries
-        let now = Date().timeIntervalSince1970
-        self = self.filter({ (item) -> Bool in
-            let val = item.values.first!
-            return val + keepInterval > now  // expires
-        })
-
-        // Return if we removed expired items
-        return count != self.count
-    }
-    mutating func append(_ userId: UserToken) {
-        let next = [userId: Date().timeIntervalSince1970]
-        self.append(next)
-    }
-    var last: UserToken {
-        let item = self.last! // at least one item should exist in the array
-        return item.keys.first!
+typealias ENInterval = TimeInterval
+extension ENInterval {
+    func value() -> Int {
+        return Int((Date().timeIntervalSince1970) / (10 * 60))
     }
 }
+
+//typealias Tokens = [[UserToken: TimeInterval]]
+//extension Tokens {
+//    // Each token composed of:
+//    // - Rolling Proximity Identifier: AES-128 encrypted (16 bytes)
+//    // - Associated Encrypted Metadata: AES-CTR encrypted (16 bytes)
+//    // Assume max 1k contacts per day
+//    // Store tokens for 14 days
+//    // Max file size: 32 x 1k x 14 = 448k bytes
+//
+//    static func load(from: File) -> Tokens {
+//        do {
+//            let data = try Data(contentsOf: from.url(), options: [])
+//            return try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as! Tokens
+//        } catch {
+//            print(error)
+//        }
+//        return Tokens()
+//    }
+//
+//    func save(to: File) {
+//        do {
+//            let data = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)
+//            try data.write(to: to.url(), options: [])
+//        } catch {
+//            print(error)
+//        }
+//    }
+//    // a function that’s been marked as mutating can change any property within its enclosing value
+//    mutating func expire(keepInterval: TimeInterval) -> Bool {
+//        let count = self.count
+//
+//        // Delete old entries
+//        let now = Date().timeIntervalSince1970
+//        self = self.filter({ (item) -> Bool in
+//            let val = item.values.first!
+//            return val + keepInterval > now  // expires
+//        })
+//
+//        // Return if we removed expired items
+//        return count != self.count
+//    }
+//    mutating func append(_ userId: UserToken) {
+//        let next = [userId: Date().timeIntervalSince1970]
+//        self.append(next)
+//    }
+//    var last: UserToken {
+//        let item = self.last! // at least one item should exist in the array
+//        return item.keys.first!
+//    }
+//}
 
 
 // Bluetooth token exchange controller
