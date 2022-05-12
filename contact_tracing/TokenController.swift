@@ -181,6 +181,7 @@ class TokenObject: NSObject, NSCoding {
 //    }
 }
 
+
 typealias TokenList = [TokenObject]
 extension TokenList {
     // Each token composed of:
@@ -189,6 +190,7 @@ extension TokenList {
     // Assume max 1k contacts per day
     // Store tokens for 14 days
     // Max file size: 32 x 1k x 14 = 448k bytes
+
     
     static func load(from: File) -> TokenList {
         do {
@@ -330,6 +332,7 @@ public class TokenController: NSObject {
             // CW: deleted [unowned self] because peripheralManager should always be around when closure finishes
             // CW: TODO: confirm why peripheral can go uninitialized --> is it the peripheralManager object that's passed in? But the type is CBCentral...
             .onReadClosure{[unowned self] (peripheral, tokenCharacteristic) in
+
                 return self.myTokens[-1].payload
 //                    return self.myTokens.last.data()
             }
