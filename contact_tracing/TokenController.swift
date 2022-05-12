@@ -114,10 +114,28 @@ enum File: String {
         }
     }
     
+    static func createFile(url: URL) {
+        let fm = FileManager.default
+        guard !fm.fileExists(atPath: url.path) else {
+            print("\(url) already exists!")
+            return
+        }
+        let emptyData:[String:String] = ["":""]
+        let plistContent = NSDictionary(dictionary:emptyData)
+        let success:Bool = plistContent.write(toFile: url.path, atomically: true)
+        if success {
+            print("File: \(url) creation successful")
+        } else {
+            print("Error creating file \(url)")
+        }
+    }
+    
     func url() -> URL {
         // plist: simple key-value store in iOS: https://www.appypie.com/plist-property-list-swift-how-to
-        let documentDirectoryUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue).appendingPathExtension("plist")
+//        let fm = FileManager.default
+        let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
+        let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue)!.appendingPathExtension("plist")
         return fileUrl
     }
 }
@@ -128,7 +146,7 @@ class TokenObject: NSObject, NSCoding {
 // TODO: Get gps location per ENInterval
 //    let gps:
     
-    init(payload: Data, rssi: NSNumber) {
+    init?(payload: Data, rssi: NSNumber) {
         self.payload = payload
         self.rssi = rssi
     }
@@ -259,8 +277,8 @@ public class TokenController: NSObject {
     private var peripheralManager: PeripheralManager!
     private var centralManager: CentralManager!
     private var started: Bool = false
-    private var myTokens: Tokens!
-    private var peerTokens: Tokens!
+    private var myTokens: TokenList!
+    private var peerTokens: TokenList!
     private var backgroundTaskId: UIBackgroundTaskIdentifier?
 
     public static func didFinishLaunching() {
@@ -287,16 +305,20 @@ public class TokenController: NSObject {
         self.queue = DispatchQueue(label: "TokenController")
 
         super.init()
+        // init token files
+        File.createFile(url: File.myTEKs.url())
+        File.createFile(url: File.peerTokens.url())
+        
         // load from different files
-        self.myTokens = Tokens.load(from: .myTokens)
-        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
-        self.myTokens.append(UserToken.next()) // TODO: only when some time has passed
-        self.myTokens.save(to: .myTokens)
+        self.myTokens = TokenList.load(from: .myTEKs)
+//        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
+//        self.myTokens.append(UserToken.next()) // TODO: only when some time has passed
+        self.myTokens.save(to: .myTEKs)
 
-        self.peerTokens = Tokens.load(from: .peerTokens)
-        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
-            self.peerTokens.save(to: .peerTokens)
-        }
+        self.peerTokens = TokenList.load(from: .peerTokens)
+//        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
+//            self.peerTokens.save(to: .peerTokens)
+//        }
         
         // object of characteristic nad service
         let tokenCharacteristic = MyCharacteristic(characteristicUUID)
@@ -308,13 +330,14 @@ public class TokenController: NSObject {
             // CW: deleted [unowned self] because peripheralManager should always be around when closure finishes
             // CW: TODO: confirm why peripheral can go uninitialized --> is it the peripheralManager object that's passed in? But the type is CBCentral...
             .onReadClosure{[unowned self] (peripheral, tokenCharacteristic) in
-                    return self.myTokens.last.data()
+                return self.myTokens[-1].payload
+//                    return self.myTokens.last.data()
             }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
                 // CW: TODO: why the whole userID typee
                 // CW: TODO: confirm where the data field comes from
-                self.peerIds.append(data)
-                self.peerIds.save(to: .peerIds)
+//                self.peerIds.append(data)
+                self.peerTokens.save(to: .peerTokens)
                 return true
             }
             
@@ -330,13 +353,14 @@ public class TokenController: NSObject {
             // Ask periperal to write it's value to the characteristic
             .addCommandCallback(
                 command: .write(to: tokenCharacteristic, value:
-                    self.myTokens.last.data()
+                                    self.myTokens[-1].payload
                 ))
             .addCommandCallback(
                 command: .read(from: tokenCharacteristic))
 //
             .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
-                if let dat = data, let peerToken = UserToken(data: dat) {
+//                if let dat = data, let peerToken = UserToken(data: dat) {
+                if let dat = data, let peerToken = TokenObject(payload: dat, rssi: NSNumber.init(value: 0)) {
                     print("Read Successful from \(peerToken)")
                     self.peerTokens.append(peerToken)
                     self.peerTokens.save(to: .peerTokens)
