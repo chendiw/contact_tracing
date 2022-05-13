@@ -181,8 +181,7 @@ class TokenObject: NSObject, NSCoding {
 //    }
 }
 
-
-typealias TokenList = [TokenObject]
+typealias TokenList = [Int:[TokenObject]]
 extension TokenList {
     // Each token composed of:
     // - Rolling Proximity Identifier: AES-128 encrypted (16 bytes)
@@ -190,14 +189,15 @@ extension TokenList {
     // Assume max 1k contacts per day
     // Store tokens for 14 days
     // Max file size: 32 x 1k x 14 = 448k bytes
-
     
     static func load(from: File) -> TokenList {
-        do {
-            let data = try Data(contentsOf: from.url(), options: [])
-            return try  NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as! TokenList
-        } catch {
-            print(error)
+        if let data = try? Data(contentsOf: from.url()) {
+            print(data)
+            if let tokenlist = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) {
+                return tokenlist as! TokenList
+            }
+        } else {
+            print("Initial \(from) empty")
         }
         return TokenList()
     }
@@ -210,11 +210,39 @@ extension TokenList {
             print(error)
         }
     }
+    
+    func getTokensByENInterval(intervalValue: Int) -> [TokenObject]? {
+        return self[intervalValue]
+    }
+    
+    mutating func append(token: TokenObject) {
+        let curENInterval = ENInterval.value()
+        if self[curENInterval] == nil {
+            // curENInterval doesn't exist in tokenlist
+            self[curENInterval] = [token]
+        } else {
+            self[curENInterval]?.append(token) // self[curENInterval] shouldn't be nil
+        }
+    }
+    
+    var lastENInterval: Int {
+        let sortedByKeyDictionary = self.sorted{$0.0 < $1.0}
+        return sortedByKeyDictionary.last?.key ?? 0 // default ENInterval: 0
+    }
+    
+    var lastTokenObject: TokenObject? {
+        if self[lastENInterval] == nil {
+            print("\(lastENInterval) doesn't exist")
+            return nil
+        } else {
+            return self[lastENInterval]?.last ?? nil //default lastTokenObject to nil, should never return nil
+        }
+    }
 }
 
 typealias ENInterval = TimeInterval
 extension ENInterval {
-    func value() -> Int {
+    static func value() -> Int {
         return Int((Date().timeIntervalSince1970) / (10 * 60))
     }
 }
@@ -332,9 +360,7 @@ public class TokenController: NSObject {
             // CW: deleted [unowned self] because peripheralManager should always be around when closure finishes
             // CW: TODO: confirm why peripheral can go uninitialized --> is it the peripheralManager object that's passed in? But the type is CBCentral...
             .onReadClosure{[unowned self] (peripheral, tokenCharacteristic) in
-
-                return self.myTokens[-1].payload
-//                    return self.myTokens.last.data()
+                return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
             }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
                 // CW: TODO: why the whole userID typee
@@ -356,7 +382,7 @@ public class TokenController: NSObject {
             // Ask periperal to write it's value to the characteristic
             .addCommandCallback(
                 command: .write(to: tokenCharacteristic, value:
-                                    self.myTokens[-1].payload
+                                    self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
                 ))
             .addCommandCallback(
                 command: .read(from: tokenCharacteristic))
@@ -365,7 +391,7 @@ public class TokenController: NSObject {
 //                if let dat = data, let peerToken = UserToken(data: dat) {
                 if let dat = data, let peerToken = TokenObject(payload: dat, rssi: NSNumber.init(value: 0)) {
                     print("Read Successful from \(peerToken)")
-                    self.peerTokens.append(peerToken)
+                    self.peerTokens.append(token:peerToken)
                     self.peerTokens.save(to: .peerTokens)
                 }
             })
