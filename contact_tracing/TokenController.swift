@@ -120,8 +120,8 @@ enum File: String {
             print("\(url) already exists!")
             return
         }
-        let emptyData:[String:String] = ["":""]
-        let plistContent = NSDictionary(dictionary:emptyData)
+        let emptyData:[Int:[TokenObject]] = [-1:[]]
+        let plistContent = NSDictionary(dictionary: emptyData)
         let success:Bool = plistContent.write(toFile: url.path, atomically: true)
         if success {
             print("File: \(url) creation successful")
@@ -141,47 +141,52 @@ enum File: String {
 }
 
 class TokenObject: NSObject, NSCoding {
+    var eninterval: Int
     var payload: Data
     var rssi: NSNumber
 // TODO: Get gps location per ENInterval
 //    let gps:
     
-    init?(payload: Data, rssi: NSNumber) {
+    init?(eninterval: Int, payload: Data, rssi: NSNumber) {
+        self.eninterval = eninterval
         self.payload = payload
         self.rssi = rssi
     }
     
     required convenience init?(coder: NSCoder) {
-        guard let payload = coder.decodeObject(forKey: "payload") as? Data,
+        guard let eninterval = coder.decodeObject(forKey: "ENInterval") as? Int,
+              let payload = coder.decodeObject(forKey: "payload") as? Data,
               let rssi = coder.decodeObject(forKey: "rssi") as? NSNumber
         else {
             return nil
         }
-        self.init(payload: payload, rssi: rssi)
+        self.init(eninterval: eninterval, payload: payload, rssi: rssi)
     }
     
     func encode(with coder: NSCoder) {
+        coder.encode(self.payload, forKey: "ENInterval")
         coder.encode(self.payload, forKey: "payload")
         coder.encode(self.rssi, forKey: "rssi")
     }
     
     var dictionary: [String: Any] {
         return [
+            "ENInterval": self.eninterval,
             "payload": self.payload,
             "rssi": self.rssi
         ]
     }
     
-//    var data: Data {
-//        return (try? JSONSerialization.data(withJSONObject: dictionary)) ?? Data()
-//    }
-//
-//    var json: String {
-//        return String(data: data, encoding: .utf8) ?? String()
-//    }
+    var data: Data {
+        return (try? JSONSerialization.data(withJSONObject: dictionary)) ?? Data()
+    }
+
+    var json: String {
+        return String(data: data, encoding: .utf8) ?? String()
+    }
 }
 
-typealias TokenList = [Int:[TokenObject]]
+typealias TokenList = [TokenObject]
 extension TokenList {
     // Each token composed of:
     // - Rolling Proximity Identifier: AES-128 encrypted (16 bytes)
@@ -192,7 +197,8 @@ extension TokenList {
     
     static func load(from: File) -> TokenList {
         if let data = try? Data(contentsOf: from.url()) {
-            print(data)
+            let str = String(decoding: data, as: UTF8.self)
+            print(str)
             if let tokenlist = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) {
                 return tokenlist as! TokenList
             }
@@ -211,32 +217,39 @@ extension TokenList {
         }
     }
     
-    func getTokensByENInterval(intervalValue: Int) -> [TokenObject]? {
-        return self[intervalValue]
-    }
+//    func getTokensByENInterval(intervalValue: Int) -> [TokenObject]? {
+//        return self[intervalValue]
+//    }
     
     mutating func append(token: TokenObject) {
-        let curENInterval = ENInterval.value()
-        if self[curENInterval] == nil {
-            // curENInterval doesn't exist in tokenlist
-            self[curENInterval] = [token]
-        } else {
-            self[curENInterval]?.append(token) // self[curENInterval] shouldn't be nil
-        }
+        self.append(token)
+//        let curENInterval = ENInterval.value()
+//        if self[curENInterval] == nil {
+//            // curENInterval doesn't exist in tokenlist
+//            self[curENInterval] = [token]
+//        } else {
+//            self[curENInterval]?.append(token) // self[curENInterval] shouldn't be nil
+//        }
     }
     
     var lastENInterval: Int {
-        let sortedByKeyDictionary = self.sorted{$0.0 < $1.0}
-        return sortedByKeyDictionary.last?.key ?? 0 // default ENInterval: 0
+        guard let lastToken = self.lastTokenObject else {
+            print("Last token object doesn't exist")
+            return -1
+        }
+        return lastToken.eninterval
+//        let sortedByKeyDictionary = self.sorted{$0.0 < $1.0}
+//        return sortedByKeyDictionary.last?.key ?? 0 // default ENInterval: 0
     }
     
     var lastTokenObject: TokenObject? {
-        if self[lastENInterval] == nil {
-            print("\(lastENInterval) doesn't exist")
-            return nil
-        } else {
-            return self[lastENInterval]?.last ?? nil //default lastTokenObject to nil, should never return nil
-        }
+        return self.last
+//        if self[lastENInterval] == nil {
+//            print("\(lastENInterval) doesn't exist")
+//            return nil
+//        } else {
+//            return self[lastENInterval]?.last ?? nil //default lastTokenObject to nil, should never return nil
+//        }
     }
 }
 
@@ -246,58 +259,6 @@ extension ENInterval {
         return Int((Date().timeIntervalSince1970) / (10 * 60))
     }
 }
-
-//typealias Tokens = [[UserToken: TimeInterval]]
-//extension Tokens {
-//    // Each token composed of:
-//    // - Rolling Proximity Identifier: AES-128 encrypted (16 bytes)
-//    // - Associated Encrypted Metadata: AES-CTR encrypted (16 bytes)
-//    // Assume max 1k contacts per day
-//    // Store tokens for 14 days
-//    // Max file size: 32 x 1k x 14 = 448k bytes
-//
-//    static func load(from: File) -> Tokens {
-//        do {
-//            let data = try Data(contentsOf: from.url(), options: [])
-//            return try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as! Tokens
-//        } catch {
-//            print(error)
-//        }
-//        return Tokens()
-//    }
-//
-//    func save(to: File) {
-//        do {
-//            let data = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)
-//            try data.write(to: to.url(), options: [])
-//        } catch {
-//            print(error)
-//        }
-//    }
-//    // a function that’s been marked as mutating can change any property within its enclosing value
-//    mutating func expire(keepInterval: TimeInterval) -> Bool {
-//        let count = self.count
-//
-//        // Delete old entries
-//        let now = Date().timeIntervalSince1970
-//        self = self.filter({ (item) -> Bool in
-//            let val = item.values.first!
-//            return val + keepInterval > now  // expires
-//        })
-//
-//        // Return if we removed expired items
-//        return count != self.count
-//    }
-//    mutating func append(_ userId: UserToken) {
-//        let next = [userId: Date().timeIntervalSince1970]
-//        self.append(next)
-//    }
-//    var last: UserToken {
-//        let item = self.last! // at least one item should exist in the array
-//        return item.keys.first!
-//    }
-//}
-
 
 // Bluetooth token exchange controller
 public class TokenController: NSObject {
@@ -355,7 +316,6 @@ public class TokenController: NSObject {
         let ctService = MyService(serviceUUID)
         ctService.addCharacteristic(tokenCharacteristic)
 
-        // CW: TODO: clarify general read flow and write flow
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
             // CW: deleted [unowned self] because peripheralManager should always be around when closure finishes
             // CW: TODO: confirm why peripheral can go uninitialized --> is it the peripheralManager object that's passed in? But the type is CBCentral...
@@ -389,7 +349,7 @@ public class TokenController: NSObject {
 //
             .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
 //                if let dat = data, let peerToken = UserToken(data: dat) {
-                if let dat = data, let peerToken = TokenObject(payload: dat, rssi: NSNumber.init(value: 0)) {
+                if let dat = data, let peerToken = TokenObject(eninterval: ENInterval.value(), payload: dat, rssi: NSNumber.init(value: 0)) {
                     print("Read Successful from \(peerToken)")
                     self.peerTokens.append(token:peerToken)
                     self.peerTokens.save(to: .peerTokens)
