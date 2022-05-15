@@ -15,7 +15,7 @@ import UIKit
 // uuid's generated from "https://www.uuidgenerator.net/version4"
 public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
 public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
-public let peripheralName = "CT-Peripheral"
+public let peripheralName = "CT-Peripheral-test1"
 
 class MyService {
     private var uuid: CBUUID
@@ -130,9 +130,20 @@ enum File: String {
         }
     }
     
+    static func deleteFile(url: URL) {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: url.path) else {
+            print("Cannot delete non-existent files!")
+            return
+        }
+        do {
+            try fm.removeItem(atPath: url.path)
+        } catch let error as NSError {
+            print("Error: \(error.domain)")
+        }
+    }
+    
     func url() -> URL {
-        // plist: simple key-value store in iOS: https://www.appypie.com/plist-property-list-swift-how-to
-//        let fm = FileManager.default
         let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
         let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
         let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue)!.appendingPathExtension("plist")
@@ -177,13 +188,18 @@ class TokenObject: NSObject, NSCoding {
         ]
     }
     
-    var data: Data {
-        return (try? JSONSerialization.data(withJSONObject: dictionary)) ?? Data()
-    }
-
-    var json: String {
-        return String(data: data, encoding: .utf8) ?? String()
-    }
+//    var data: Data {
+//        print("Dictionary is:\n")
+//        print(dictionary)
+//        print(dictionary["payload"]!)
+//        print((dictionary["payload"]! as! Data).base64EncodedString(options: []))
+////        print(String(decoding: dictionary["payload"], as: UTF8.self))
+//        return (try? JSONSerialization.data(withJSONObject: dictionary)) ?? Data()
+//    }
+//
+//    var json: String {
+//        return String(data: data, encoding: .utf8) ?? String()
+//    }
 }
 
 typealias TokenList = [TokenObject]
@@ -216,20 +232,10 @@ extension TokenList {
             print(error)
         }
     }
-    
-//    func getTokensByENInterval(intervalValue: Int) -> [TokenObject]? {
-//        return self[intervalValue]
-//    }
+
     
     mutating func append(token: TokenObject) {
         self.append(token)
-//        let curENInterval = ENInterval.value()
-//        if self[curENInterval] == nil {
-//            // curENInterval doesn't exist in tokenlist
-//            self[curENInterval] = [token]
-//        } else {
-//            self[curENInterval]?.append(token) // self[curENInterval] shouldn't be nil
-//        }
     }
     
     var lastENInterval: Int {
@@ -238,18 +244,10 @@ extension TokenList {
             return -1
         }
         return lastToken.eninterval
-//        let sortedByKeyDictionary = self.sorted{$0.0 < $1.0}
-//        return sortedByKeyDictionary.last?.key ?? 0 // default ENInterval: 0
     }
     
     var lastTokenObject: TokenObject? {
         return self.last
-//        if self[lastENInterval] == nil {
-//            print("\(lastENInterval) doesn't exist")
-//            return nil
-//        } else {
-//            return self[lastENInterval]?.last ?? nil //default lastTokenObject to nil, should never return nil
-//        }
     }
 }
 
@@ -271,6 +269,11 @@ public class TokenController: NSObject {
     private var myTokens: TokenList!
     private var peerTokens: TokenList!
     private var backgroundTaskId: UIBackgroundTaskIdentifier?
+    
+    public static func startFresh() {
+        File.deleteFile(url: File.myTEKs.url())
+        File.deleteFile(url: File.peerTokens.url())
+    }
 
     public static func didFinishLaunching() {
         instance = TokenController()
@@ -323,9 +326,10 @@ public class TokenController: NSObject {
                 return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
             }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
-                // CW: TODO: why the whole userID typee
                 // CW: TODO: confirm where the data field comes from
-//                self.peerIds.append(data)
+                // CW: TODO: Check how to get rssi signal
+                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: NSNumber.init(value: 0))!
+                self.peerTokens.append(token:curToken)
                 self.peerTokens.save(to: .peerTokens)
                 return true
             }
@@ -346,7 +350,6 @@ public class TokenController: NSObject {
                 ))
             .addCommandCallback(
                 command: .read(from: tokenCharacteristic))
-//
             .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
 //                if let dat = data, let peerToken = UserToken(data: dat) {
                 if let dat = data, let peerToken = TokenObject(eninterval: ENInterval.value(), payload: dat, rssi: NSNumber.init(value: 0)) {

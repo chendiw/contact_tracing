@@ -8,8 +8,6 @@
 import Foundation
 import CoreBluetooth
 
-
-
 class Peripheral: NSObject {
     let peripheral: CBPeripheral!
     

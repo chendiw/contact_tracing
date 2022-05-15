@@ -25,33 +25,33 @@ class PeripheralManager: NSObject {
         self.service = service
         self.queue = queue
         super.init()
-        self.peripheralManager = CBPeripheralManager(delegate: self, queue: queue)
+        self.peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
     }
     
     func startAdvertising() {
-        guard peripheralManager.state == .poweredOn else {print("Peripheral Manager not powered on")
+        guard self.peripheralManager.state == .poweredOn else {print("Peripheral Manager not powered on")
             return
         }
         
         // clear all previous services
-        peripheralManager.removeAllServices()
+        self.peripheralManager.removeAllServices()
         
         // add new service upon start
-        peripheralManager.add(self.service)
+        self.peripheralManager.add(self.service)
         
         let advertisementData: [String: Any] = [
             CBAdvertisementDataLocalNameKey: peripheralName,
-            CBAdvertisementDataServiceUUIDsKey: self.service.uuid,
-            CBAdvertisementDataOverflowServiceUUIDsKey: self.service.uuid //if running peripheral in background mode, service uuid can only be discovered in the overflow area
+            CBAdvertisementDataServiceUUIDsKey: [self.service.uuid],
+//            CBAdvertisementDataOverflowServiceUUIDsKey: self.service.uuid //if running peripheral in background mode, service uuid can only be discovered in the overflow area
         ]
         
-        peripheralManager.startAdvertising(advertisementData)
-        started = peripheralManager.isAdvertising
+        self.peripheralManager.startAdvertising(advertisementData)
+        started = self.peripheralManager.isAdvertising
     }
     
     func stopAdvertising() {
-        peripheralManager.stopAdvertising()
-        started = peripheralManager.isAdvertising
+        self.peripheralManager.stopAdvertising()
+        started = self.peripheralManager.isAdvertising
     }
     
     func onReadClosure(_ callback: @escaping (CBCentral, MyCharacteristic) -> Data?) -> PeripheralManager {
@@ -77,6 +77,8 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
     func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: Error?) {
         if error != nil {
             print("Peripheral Manager failed to start advertising: \(String(describing: error))")
+        } else {
+            print("Peripheral Manager started advertising!")
         }
     }
     
