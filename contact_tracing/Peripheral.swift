@@ -39,9 +39,8 @@ class Peripheral: NSObject {
         switch command {
         case .read(let from):
             self.peripheral.readValue(for: from.getCharacteristic())
-        case .write(let to, let value):
-//            assert(self.discoveredCharacteristic in self.discoveredService?.characteristics)
-            self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: .withResponse) //withresponse to log whether write is sucessful to backend
+        case .write(let value):
+            self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
         case .readRSSI:
             self.peripheral.readRSSI()
 //        case .scheduleCommands(let commands, let withTimeInterval, let repeatCount):
@@ -52,6 +51,8 @@ class Peripheral: NSObject {
     }
     
     func nextCommand() -> Command? {
+        print("I'm confused")
+        print("commands I have: \(commands)")
         if commands.count == 0 {
             print("No next command.")
             return nil
@@ -59,23 +60,6 @@ class Peripheral: NSObject {
         commands.removeFirst()
         return commands.first
     }
-    
-//    func nextCommand(readWrite: Bool, discoveredService: CBService?, discoveredCharacteristic: CBCharacteristic?) -> Command? {
-//        if commands.count == 0 {
-//            print("No next command.")
-//            return nil
-//        }
-//        commands.removeFirst()
-//        if readWrite == true {
-//            if discoveredService != nil {
-//                self.discoveredService = discoveredService
-//            }
-//            if discoveredCharacteristic != nil {
-//                self.discoveredCharacteristic = discoveredCharacteristic
-//            }
-//        }
-//        return commands.first
-//    }
     
     // called in centralManager:didConnectPeripheral
     func discoverMyService() {
@@ -133,12 +117,8 @@ extension Peripheral: CBPeripheralDelegate {
             return
         }
         
-        print("DidDiscoverChar 1: \(discoveredCharacteristics)")
-        print("DidDiscoverChar 2: \(service.characteristics)")
-        
         assert(discoveredCharacteristics.count == 1)
-        for curDiscovered in discoveredCharacteristics {
-//            executeCommand(nextCommand(readWrite: true, discoveredService: service, discoveredCharacteristic: curDiscovered)!)
+        for _ in discoveredCharacteristics {
             executeCommand(nextCommand()!)
         }
     }
@@ -155,7 +135,6 @@ extension Peripheral: CBPeripheralDelegate {
         
         // use callback characteristicCallback to make characteristicValue accessible to centralManager
         characteristicCallback?(self, characteristic as! CBMutableCharacteristic, characteristicValue, error)
-//        executeCommand(nextCommand(readWrite: true, discoveredService: nil, discoveredCharacteristic: characteristic)!)
         executeCommand(nextCommand()!)
     }
     
@@ -168,7 +147,6 @@ extension Peripheral: CBPeripheralDelegate {
         
         // use callback rssiCallback to make RSSI accessible to centralManager
         rssiCallback?(self, RSSI, error)
-//        executeCommand(nextCommand(readWrite: false, discoveredService: nil, discoveredCharacteristic: nil)!)
         executeCommand(nextCommand()!)
     }
     
@@ -177,7 +155,6 @@ extension Peripheral: CBPeripheralDelegate {
             print(error ?? "write to characteristic error")
             return
         }
-//        executeCommand(nextCommand(readWrite: false, discoveredService: nil, discoveredCharacteristic: nil)!)
         executeCommand(nextCommand()!)
     }
 }

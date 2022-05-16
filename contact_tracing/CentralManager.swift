@@ -93,31 +93,26 @@ class CentralManager: NSObject {  // object-c subclass?
 // extension: write necessary function of Delegete.
 extension CentralManager: CBCentralManagerDelegate {
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
-//        while (true) {
             if central.state == .poweredOn {
                 startScan()
             }
             centralDidUpdateStateCallback?(central.state)
             return
-//        }
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
         if let p = peripherals[peripheral.identifier] {
-            didReadRSSI(p, RSSI, nil)  // TODO: check what RSSI is
-        }
-
-        if peripherals[peripheral.identifier] != nil {
-            print("iOS Peripheral \(peripheral.identifier) has been discovered already")
-            return
+            print("You have already discovered peripheral: \(peripheral.identifier)")
+            didReadRSSI(p, RSSI, nil)
         }
         addPeripheral(peripheral)
         central.connect(peripheral, options: nil)
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        let p = peripherals[peripheral.identifier]
-        if let p = p {
+        print("Central connected with peripheral: \(peripheral.identifier)")
+        print("how many peripherals are there: \(peripherals.count)")
+        if let p = peripherals[peripheral.identifier] {
             p.discoverMyService()
         }
     }

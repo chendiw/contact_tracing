@@ -25,7 +25,7 @@ class PeripheralManager: NSObject {
         self.service = service
         self.queue = queue
         super.init()
-        self.peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
+        self.peripheralManager = CBPeripheralManager(delegate: self, queue: queue)
     }
     
     func startAdvertising() {

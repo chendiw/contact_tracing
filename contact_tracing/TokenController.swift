@@ -49,7 +49,7 @@ class MyCharacteristic {
     
     init(_ uuid: CBUUID) {
         self.uuid = uuid
-        self.characteristic = CBMutableCharacteristic.init(type: uuid, properties: [.read, .write, .writeWithoutResponse], value: self.value, permissions:[.writeable, .readable])
+        self.characteristic = CBMutableCharacteristic.init(type: uuid, properties: [CBCharacteristicProperties.read, CBCharacteristicProperties.write], value: self.value, permissions:[CBAttributePermissions.readable, CBAttributePermissions.writeable])
     }
     
     public func getCharacteristic() -> CBMutableCharacteristic {
@@ -71,7 +71,7 @@ class MyCharacteristic {
 
 enum Command {
     case read(from: MyCharacteristic)
-    case write(to: MyCharacteristic, value: Data?)
+    case write(value: Data?)
     case readRSSI
     case cancel(callback: (Peripheral) -> Void)
 //    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
@@ -320,8 +320,7 @@ public class TokenController: NSObject {
         ctService.addCharacteristic(tokenCharacteristic)
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
-            // CW: deleted [unowned self] because peripheralManager should always be around when closure finishes
-            // CW: TODO: confirm why peripheral can go uninitialized --> is it the peripheralManager object that's passed in? But the type is CBCentral...
+
             .onReadClosure{[unowned self] (peripheral, tokenCharacteristic) in
                 return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
             }
@@ -336,7 +335,7 @@ public class TokenController: NSObject {
             
         centralManager = CentralManager(services: [ctService], queue: queue)
             // TODO: what does [unowned self] do?
-        
+            .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
                 print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
                 guard error == nil else {
@@ -345,9 +344,12 @@ public class TokenController: NSObject {
                 }
             })
             // Ask periperal to write it's value to the characteristic
+//            .addCommandCallback(
+//                command: .write(to: tokenCharacteristic, value:
+//                                    self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
+//                ))
             .addCommandCallback(
-                command: .write(to: tokenCharacteristic, value:
-                                    self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
+                command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
                 ))
             .addCommandCallback(
                 command: .read(from: tokenCharacteristic))
