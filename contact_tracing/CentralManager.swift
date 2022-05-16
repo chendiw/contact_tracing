@@ -24,7 +24,7 @@ class CentralManager: NSObject {  // object-c subclass?
     private var didUpdateValue: CharacteristicDidUpdateValue!
     private var didReadRSSI: DidReadRSSI!
     
-//    var centralDidUpdateStateCallback: ((CBManagerState) -> Void)?
+    var centralDidUpdateStateCallback: ((CBManagerState) -> Void)?
     
     init(services: [MyService], queue: DispatchQueue){
         self.services = services
@@ -42,13 +42,14 @@ class CentralManager: NSObject {  // object-c subclass?
     }
     
     func startScan() {
-        if centralManager.state != .poweredOn {
-            return
+        while centralManager.state != .poweredOn {
         }
+        print("Central Manager powered on!")
         let options = [CBCentralManagerScanOptionAllowDuplicatesKey: false as NSNumber]
         let cbuuids: [CBUUID] = services.map { $0.getServiceUUID() }
         centralManager.scanForPeripherals(withServices: cbuuids, options: options)
         running = true
+        return
     }
     
     func stopScan() {
@@ -92,10 +93,13 @@ class CentralManager: NSObject {  // object-c subclass?
 // extension: write necessary function of Delegete.
 extension CentralManager: CBCentralManagerDelegate {
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        if central.state == .poweredOn && running {
-            startScan()
-        }
-//        centralDidUpdateStateCallback?(central.state)  // TODO: check whether do we need this. Do we need to
+//        while (true) {
+            if central.state == .poweredOn {
+                startScan()
+            }
+            centralDidUpdateStateCallback?(central.state)
+            return
+//        }
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {

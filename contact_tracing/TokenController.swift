@@ -49,7 +49,7 @@ class MyCharacteristic {
     
     init(_ uuid: CBUUID) {
         self.uuid = uuid
-        self.characteristic = CBMutableCharacteristic.init(type: uuid, properties: [.read, .write], value: self.value, permissions:[.writeable, .readable])
+        self.characteristic = CBMutableCharacteristic.init(type: uuid, properties: [.read, .write, .writeWithoutResponse], value: self.value, permissions:[.writeable, .readable])
     }
     
     public func getCharacteristic() -> CBMutableCharacteristic {
@@ -117,12 +117,12 @@ enum File: String {
     static func createFile(url: URL) {
         let fm = FileManager.default
         guard !fm.fileExists(atPath: url.path) else {
-            print("\(url) already exists!")
+//            print("\(url) already exists!")
             return
         }
-        let emptyData:[Int:[TokenObject]] = [-1:[]]
+        let emptyData:[String:Int] = ["Start":ENInterval.value()]
         let plistContent = NSDictionary(dictionary: emptyData)
-        let success:Bool = plistContent.write(toFile: url.path, atomically: true)
+        let success:Bool = plistContent.write(toFile: url.path, atomically: false)
         if success {
             print("File: \(url) creation successful")
         } else {
@@ -133,7 +133,7 @@ enum File: String {
     static func deleteFile(url: URL) {
         let fm = FileManager.default
         guard fm.fileExists(atPath: url.path) else {
-            print("Cannot delete non-existent files!")
+            print("Cannot delete non-existent files: \(url)!")
             return
         }
         do {
@@ -336,6 +336,7 @@ public class TokenController: NSObject {
             
         centralManager = CentralManager(services: [ctService], queue: queue)
             // TODO: what does [unowned self] do?
+        
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
                 print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
                 guard error == nil else {
