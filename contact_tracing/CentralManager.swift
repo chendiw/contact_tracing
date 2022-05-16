@@ -77,7 +77,6 @@ class CentralManager: NSObject {  // object-c subclass?
         peripherals[peripheral.identifier] = p
     }
 
-    
     func disconnect(_ peripheral: Peripheral) {
         centralManager.cancelPeripheralConnection(peripheral.peripheral)
     }
@@ -101,6 +100,7 @@ extension CentralManager: CBCentralManagerDelegate {
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+//        centralManager.cancelPeripheralConnection(peripheral)
         if let p = peripherals[peripheral.identifier] {
             print("You have already discovered peripheral: \(peripheral.identifier)")
             didReadRSSI(p, RSSI, nil)

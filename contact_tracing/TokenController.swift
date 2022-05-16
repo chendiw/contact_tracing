@@ -74,7 +74,21 @@ enum Command {
     case write(value: Data?)
     case readRSSI
     case cancel(callback: (Peripheral) -> Void)
-//    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
+    //    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
+    var description: String {
+        switch self {
+        case .read:
+            return "read"
+        case .write:
+            return "write"
+        case .readRSSI:
+            return "readRSSI"
+//        case .scheduleCommands:
+//            return "schedule"
+        case .cancel:
+            return "cancel"
+        }
+    }
 }
 
 // We dropped 32bit support, so UInt = UInt64, and is converted to NSNumber when saving to PLists
@@ -280,7 +294,7 @@ public class TokenController: NSObject {
     }
 
     public static func start() {
-        instance.peripheralManager.startAdvertising()
+//        instance.peripheralManager.startAdvertising()
         instance.centralManager.startScan()
         
         // request user permission
@@ -288,6 +302,7 @@ public class TokenController: NSObject {
         center.requestAuthorization(options: [.alert]) { granted, error in
             print("granted: \(granted), error: \(String(describing: error))")
         }
+        
     }
 
     public static func stop() {
@@ -348,24 +363,25 @@ public class TokenController: NSObject {
 //                command: .write(to: tokenCharacteristic, value:
 //                                    self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
 //                ))
-            .addCommandCallback(
-                command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
-                ))
-            .addCommandCallback(
-                command: .read(from: tokenCharacteristic))
-            .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
-//                if let dat = data, let peerToken = UserToken(data: dat) {
-                if let dat = data, let peerToken = TokenObject(eninterval: ENInterval.value(), payload: dat, rssi: NSNumber.init(value: 0)) {
-                    print("Read Successful from \(peerToken)")
-                    self.peerTokens.append(token:peerToken)
-                    self.peerTokens.save(to: .peerTokens)
-                }
-            })
-            // TODO: need to disconnect? Or add cancel callback function
-            .addCommandCallback(
-                command: .cancel(callback: { [unowned self] peripheral in
-                    self.centralManager?.disconnect(peripheral)
-                }))
+        
+//            .addCommandCallback(
+//                command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
+//                ))
+//            .addCommandCallback(
+//                command: .read(from: tokenCharacteristic))
+//            .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
+////                if let dat = data, let peerToken = UserToken(data: dat) {
+//                if let dat = data, let peerToken = TokenObject(eninterval: ENInterval.value(), payload: dat, rssi: NSNumber.init(value: 0)) {
+//                    print("Read Successful from \(peerToken)")
+//                    self.peerTokens.append(token:peerToken)
+//                    self.peerTokens.save(to: .peerTokens)
+//                }
+//            })
+//            // TODO: need to disconnect? Or add cancel callback function
+//            .addCommandCallback(
+//                command: .cancel(callback: { [unowned self] peripheral in
+//                    self.centralManager?.disconnect(peripheral)
+//                }))
             
         
     }

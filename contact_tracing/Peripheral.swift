@@ -37,16 +37,17 @@ class Peripheral: NSObject {
     
     func executeCommand(_ command: Command) {
         switch command {
-        case .read(let from):
-            self.peripheral.readValue(for: from.getCharacteristic())
-        case .write(let value):
-            self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
-        case .readRSSI:
-            self.peripheral.readRSSI()
-//        case .scheduleCommands(let commands, let withTimeInterval, let repeatCount):
-//            break
-        case .cancel(callback: let callback):
-            callback(self)
+            case .read(let from):
+                self.peripheral.readValue(for: from.getCharacteristic())
+            case .write(let value):
+                self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
+            case .readRSSI:
+                print("before readRSSI")
+                self.peripheral.readRSSI()
+    //        case .scheduleCommands(let commands, let withTimeInterval, let repeatCount):
+    //            break
+            case .cancel(callback: let callback):
+                callback(self)
         }
     }
     
@@ -109,6 +110,7 @@ extension Peripheral: CBPeripheralDelegate {
     
     // called after peripheral:discoverCharacteristics
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        print("in diddiscovercharacteristics")
         if error != nil {
             print(error ?? "discover characteristic error")
         }
@@ -119,7 +121,10 @@ extension Peripheral: CBPeripheralDelegate {
         
         assert(discoveredCharacteristics.count == 1)
         for _ in discoveredCharacteristics {
-            executeCommand(nextCommand()!)
+            if let c = nextCommand() {
+                print("ready to execute \(c)")
+                executeCommand(c)
+            }
         }
     }
     
@@ -135,7 +140,9 @@ extension Peripheral: CBPeripheralDelegate {
         
         // use callback characteristicCallback to make characteristicValue accessible to centralManager
         characteristicCallback?(self, characteristic as! CBMutableCharacteristic, characteristicValue, error)
-        executeCommand(nextCommand()!)
+        if let c = nextCommand() {
+            executeCommand(c)
+        }
     }
     
     // called after peripheral:readRSSI
@@ -147,7 +154,9 @@ extension Peripheral: CBPeripheralDelegate {
         
         // use callback rssiCallback to make RSSI accessible to centralManager
         rssiCallback?(self, RSSI, error)
-        executeCommand(nextCommand()!)
+        if let c = nextCommand() {
+            executeCommand(c)
+        }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -155,6 +164,8 @@ extension Peripheral: CBPeripheralDelegate {
             print(error ?? "write to characteristic error")
             return
         }
-        executeCommand(nextCommand()!)
+        if let c = nextCommand() {
+            executeCommand(c)
+        }
     }
 }
