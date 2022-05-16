@@ -36,6 +36,7 @@ class Peripheral: NSObject {
     }
     
     func executeCommand(_ command: Command) {
+        print("execute command: \(command)")
         switch command {
             case .read(let from):
                 self.peripheral.readValue(for: from.getCharacteristic())
@@ -52,14 +53,14 @@ class Peripheral: NSObject {
     }
     
     func nextCommand() -> Command? {
-        print("I'm confused")
         print("commands I have: \(commands)")
         if commands.count == 0 {
             print("No next command.")
             return nil
         }
+        let curCommand = commands.first
         commands.removeFirst()
-        return commands.first
+        return curCommand
     }
     
     // called in centralManager:didConnectPeripheral
