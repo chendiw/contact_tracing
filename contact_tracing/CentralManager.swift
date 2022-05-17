@@ -24,7 +24,7 @@ class CentralManager: NSObject {  // object-c subclass?
     private var didUpdateValue: CharacteristicDidUpdateValue!
     private var didReadRSSI: DidReadRSSI!
     
-//    var centralDidUpdateStateCallback: ((CBManagerState) -> Void)?
+    var centralDidUpdateStateCallback: ((CBManagerState) -> Void)?
     
     init(services: [MyService], queue: DispatchQueue){
         self.services = services
@@ -42,13 +42,14 @@ class CentralManager: NSObject {  // object-c subclass?
     }
     
     func startScan() {
-        if centralManager.state != .poweredOn {
-            return
+        while centralManager.state != .poweredOn {
         }
+        print("Central Manager powered on!")
         let options = [CBCentralManagerScanOptionAllowDuplicatesKey: false as NSNumber]
         let cbuuids: [CBUUID] = services.map { $0.getServiceUUID() }
         centralManager.scanForPeripherals(withServices: cbuuids, options: options)
         running = true
+        return
     }
     
     func stopScan() {
@@ -76,7 +77,6 @@ class CentralManager: NSObject {  // object-c subclass?
         peripherals[peripheral.identifier] = p
     }
 
-    
     func disconnect(_ peripheral: Peripheral) {
         centralManager.cancelPeripheralConnection(peripheral.peripheral)
     }
@@ -92,28 +92,25 @@ class CentralManager: NSObject {  // object-c subclass?
 // extension: write necessary function of Delegete.
 extension CentralManager: CBCentralManagerDelegate {
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        if central.state == .poweredOn && running {
-            startScan()
-        }
-//        centralDidUpdateStateCallback?(central.state)  // TODO: check whether do we need this. Do we need to
+            if central.state == .poweredOn {
+                startScan()
+            }
+            centralDidUpdateStateCallback?(central.state)
+            return
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+//        centralManager.cancelPeripheralConnection(peripheral)
         if let p = peripherals[peripheral.identifier] {
-            didReadRSSI(p, RSSI, nil)  // TODO: check what RSSI is
-        }
-
-        if peripherals[peripheral.identifier] != nil {
-            print("iOS Peripheral \(peripheral.identifier) has been discovered already")
-            return
+            print("You have already discovered peripheral: \(peripheral.identifier)")
+            didReadRSSI(p, RSSI, nil)
         }
         addPeripheral(peripheral)
         central.connect(peripheral, options: nil)
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        let p = peripherals[peripheral.identifier]
-        if let p = p {
+        if let p = peripherals[peripheral.identifier] {
             p.discoverMyService()
         }
     }

@@ -8,14 +8,15 @@
 import Foundation
 import CoreBluetooth
 
-
-
 class Peripheral: NSObject {
     let peripheral: CBPeripheral!
     
     private let queue: DispatchQueue
     private let services: [MyService]
+    private var discoveredService: CBService?
+    private var discoveredCharacteristic: CBCharacteristic?
     private var commands: [Command]
+    private var timer: Timer?
     private let characteristicCallback: CharacteristicDidUpdateValue?  // Jiani: this is a typealias defined in CentralManager.swift
     private let rssiCallback: DidReadRSSI? // this is also a type alias
     
@@ -36,27 +37,52 @@ class Peripheral: NSObject {
     }
     
     func executeCommand(_ command: Command) {
+        print("execute command: \(command)")
         switch command {
-        case .read(let from):
-            self.peripheral.readValue(for: from.getCharacteristic())
-        case .write(let to, let value):
-            self.peripheral.writeValue(value!, for: to.getCharacteristic(), type: .withResponse) //withresponse to log whether write is sucessful to backend
-        case .readRSSI:
-            self.peripheral.readRSSI()
-//        case .scheduleCommands(let commands, let withTimeInterval, let repeatCount):
-//            break
-        case .cancel(callback: let callback):
-            callback(self)
+//            case .read:
+//                self.peripheral.readValue(for: toCBCharacteristic()!)
+            case .write(let value):
+                self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
+            case .readRSSI:
+                self.peripheral.readRSSI()
+            case .scheduleCommands(let newCommands, let withTimeInterval, let repeatCount):
+                        if repeatCount == 0 {
+                            // Schedule finished
+                            if let c = nextCommand() {
+                                executeCommand(c)
+                            }
+                            return
+                        }
+                        print("Before timer")
+                        timer = Timer(timeInterval: withTimeInterval, repeats: false) { [weak self] _ in
+                            self?.queue.async {
+                                // Finish off current commands
+                                var nextCommands = self?.commands ?? []
+                                // Add new scheduled ocmmands for this round
+                                nextCommands.append(contentsOf: newCommands)
+                                // Mark the next scheduling event
+                                nextCommands.append(.scheduleCommands(commands: newCommands, withTimeInterval: withTimeInterval, repeatCount: repeatCount - 1))
+                                self?.commands = nextCommands
+                                print("Current iteration of commands: \(self?.commands)")
+                                if let c = self?.nextCommand() {
+                                    print("next command after schedule: \(c)")
+                                    self?.executeCommand(c)
+                                }
+                            }
+                        }
+                        RunLoop.current.add(timer!, forMode: .common)
+            case .cancel(callback: let callback):
+                callback(self)
         }
     }
     
     func nextCommand() -> Command? {
         if commands.count == 0 {
-            print("No next command.")
             return nil
         }
+        let curCommand = commands.first
         commands.removeFirst()
-        return commands.first
+        return curCommand
     }
     
     // called in centralManager:didConnectPeripheral
@@ -70,6 +96,22 @@ class Peripheral: NSObject {
         self.peripheral.discoverServices(serviceUUIDs)
     }
     
+    func toCBCharacteristic() -> CBCharacteristic? {
+        let targetServiceUUID = CBUUID(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
+        let targetCharUUID = CBUUID(string: "34a30272-19e0-4900-a8e2-7d0bb0e23568")
+
+        if let services = self.peripheral.services {
+            let foundService = services.first { service in
+                targetServiceUUID.isEqual(service.uuid)
+            }
+            if let c12cs = foundService?.characteristics {
+                return c12cs.first { c in
+                    targetCharUUID.isEqual(c.uuid)
+                }
+            }
+        }
+        return nil
+    }
 }
 
 extension Peripheral: CBPeripheralDelegate {
@@ -99,9 +141,10 @@ extension Peripheral: CBPeripheralDelegate {
             return
         }
         
-        assert(discoveredCharacteristics.count == 1)
         for _ in discoveredCharacteristics {
-            executeCommand(nextCommand()!)
+            if let c = nextCommand() {
+                executeCommand(c)
+            }
         }
     }
     
@@ -115,9 +158,13 @@ extension Peripheral: CBPeripheralDelegate {
             return
         }
         
+        print("in didUpdateValueFor: \(characteristicValue)")
+        
         // use callback characteristicCallback to make characteristicValue accessible to centralManager
         characteristicCallback?(self, characteristic as! CBMutableCharacteristic, characteristicValue, error)
-        executeCommand(nextCommand()!)
+        if let c = nextCommand() {
+            executeCommand(c)
+        }
     }
     
     // called after peripheral:readRSSI
@@ -129,7 +176,9 @@ extension Peripheral: CBPeripheralDelegate {
         
         // use callback rssiCallback to make RSSI accessible to centralManager
         rssiCallback?(self, RSSI, error)
-        executeCommand(nextCommand()!)
+        if let c = nextCommand() {
+            executeCommand(c)
+        }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -137,6 +186,8 @@ extension Peripheral: CBPeripheralDelegate {
             print(error ?? "write to characteristic error")
             return
         }
-        executeCommand(nextCommand()!)
+        if let c = nextCommand() {
+            executeCommand(c)
+        }
     }
 }

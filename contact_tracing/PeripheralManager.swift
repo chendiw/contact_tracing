@@ -29,29 +29,29 @@ class PeripheralManager: NSObject {
     }
     
     func startAdvertising() {
-        guard peripheralManager.state == .poweredOn else {print("Peripheral Manager not powered on")
+        guard self.peripheralManager.state == .poweredOn else {print("Peripheral Manager not powered on")
             return
         }
         
         // clear all previous services
-        peripheralManager.removeAllServices()
+        self.peripheralManager.removeAllServices()
         
         // add new service upon start
-        peripheralManager.add(self.service)
+        self.peripheralManager.add(self.service)
         
         let advertisementData: [String: Any] = [
             CBAdvertisementDataLocalNameKey: peripheralName,
-            CBAdvertisementDataServiceUUIDsKey: self.service.uuid,
-            CBAdvertisementDataOverflowServiceUUIDsKey: self.service.uuid //if running peripheral in background mode, service uuid can only be discovered in the overflow area
+            CBAdvertisementDataServiceUUIDsKey: [self.service.uuid],
+//            CBAdvertisementDataOverflowServiceUUIDsKey: self.service.uuid //if running peripheral in background mode, service uuid can only be discovered in the overflow area
         ]
         
-        peripheralManager.startAdvertising(advertisementData)
-        started = peripheralManager.isAdvertising
+        self.peripheralManager.startAdvertising(advertisementData)
+        started = self.peripheralManager.isAdvertising
     }
     
     func stopAdvertising() {
-        peripheralManager.stopAdvertising()
-        started = peripheralManager.isAdvertising
+        self.peripheralManager.stopAdvertising()
+        started = self.peripheralManager.isAdvertising
     }
     
     func onReadClosure(_ callback: @escaping (CBCentral, MyCharacteristic) -> Data?) -> PeripheralManager {
@@ -65,7 +65,6 @@ class PeripheralManager: NSObject {
     }
 }
 
-// TODO: Does the PeripheralManager write to the charicteristic.value?
 extension PeripheralManager: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         if self.peripheralManager.state == .poweredOn {
@@ -77,30 +76,34 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
     func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: Error?) {
         if error != nil {
             print("Peripheral Manager failed to start advertising: \(String(describing: error))")
+        } else {
+            print("Peripheral Manager started advertising!")
         }
     }
     
-    func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
-        guard let requestedMyChar = MyCharacteristic.fromCBCharacteristic(request.characteristic) else {
-            print("Failed conversion to MyCharacteristic in read request")
-            return
-        }
-        let requestedCharValue = requestedMyChar.getCharacteristicValue()
-
-        // check if request offset is longer than characteristic value
-        if request.offset > requestedCharValue?.count ?? -1 {
-            peripheral.respond(to: request, withResult: .invalidOffset)
-            return
-        }
-        
-        if let data = onReadClosure!(request.central, requestedMyChar) {
-            request.value = data
-            peripheral.respond(to: request, withResult: .success)
-            return
-        }
-        
-        peripheral.respond(to: request, withResult: .unlikelyError)
-    }
+//    func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
+//        print("request offset: \(request.offset)")
+//        print("request characteristic: \(request.characteristic)")
+//        guard let requestedMyChar = MyCharacteristic.fromCBCharacteristic(request.characteristic) else {
+//            print("Failed conversion to MyCharacteristic in read request")
+//            return
+//        }
+//        let requestedCharValue = requestedMyChar.getCharacteristicValue()
+//
+//        // check if request offset is longer than characteristic value
+//        if request.offset > requestedCharValue?.count ?? -1 {
+//            peripheral.respond(to: request, withResult: .invalidOffset)
+//            return
+//        }
+//
+//        if let data = onReadClosure!(request.central, requestedMyChar) {
+//            request.value = data
+//            peripheral.respond(to: request, withResult: .success)
+//            return
+//        }
+//
+//        peripheral.respond(to: request, withResult: .unlikelyError)
+//    }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
         if requests.count == 0 {
