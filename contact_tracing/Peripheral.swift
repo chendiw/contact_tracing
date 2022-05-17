@@ -16,6 +16,7 @@ class Peripheral: NSObject {
     private var discoveredService: CBService?
     private var discoveredCharacteristic: CBCharacteristic?
     private var commands: [Command]
+    private var timer: Timer?
     private let characteristicCallback: CharacteristicDidUpdateValue?  // Jiani: this is a typealias defined in CentralManager.swift
     private let rssiCallback: DidReadRSSI? // this is also a type alias
     
@@ -38,26 +39,45 @@ class Peripheral: NSObject {
     func executeCommand(_ command: Command) {
         print("execute command: \(command)")
         switch command {
-            case .read:
-                self.peripheral.readValue(for: toCBCharacteristic()!)
+//            case .read:
+//                self.peripheral.readValue(for: toCBCharacteristic()!)
             case .write(let value):
-                print("Write value: \(value!) to characteristic: \(toCBCharacteristic()!)")
-                print("Central wrote payload: \(value!.uint64)")
                 self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
             case .readRSSI:
-                print("before readRSSI")
                 self.peripheral.readRSSI()
-    //        case .scheduleCommands(let commands, let withTimeInterval, let repeatCount):
-    //            break
+            case .scheduleCommands(let newCommands, let withTimeInterval, let repeatCount):
+                        if repeatCount == 0 {
+                            // Schedule finished
+                            if let c = nextCommand() {
+                                executeCommand(c)
+                            }
+                            return
+                        }
+                        print("Before timer")
+                        timer = Timer(timeInterval: withTimeInterval, repeats: false) { [weak self] _ in
+                            self?.queue.async {
+                                // Finish off current commands
+                                var nextCommands = self?.commands ?? []
+                                // Add new scheduled ocmmands for this round
+                                nextCommands.append(contentsOf: newCommands)
+                                // Mark the next scheduling event
+                                nextCommands.append(.scheduleCommands(commands: newCommands, withTimeInterval: withTimeInterval, repeatCount: repeatCount - 1))
+                                self?.commands = nextCommands
+                                print("Current iteration of commands: \(self?.commands)")
+                                if let c = self?.nextCommand() {
+                                    print("next command after schedule: \(c)")
+                                    self?.executeCommand(c)
+                                }
+                            }
+                        }
+                        RunLoop.current.add(timer!, forMode: .common)
             case .cancel(callback: let callback):
                 callback(self)
         }
     }
     
     func nextCommand() -> Command? {
-        print("commands I have: \(commands)")
         if commands.count == 0 {
-            print("No next command.")
             return nil
         }
         let curCommand = commands.first
@@ -121,7 +141,6 @@ extension Peripheral: CBPeripheralDelegate {
             return
         }
         
-        print(discoveredCharacteristics)
         for _ in discoveredCharacteristics {
             if let c = nextCommand() {
                 executeCommand(c)

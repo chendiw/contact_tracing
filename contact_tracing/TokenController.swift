@@ -16,6 +16,7 @@ import UIKit
 public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
 public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
 public let peripheralName = "CT-Peripheral-test1"
+public let scheduleCommandsInterval: TimeInterval = 1*60 //re-exchange tokens per 10 min
 
 class MyService {
     private var uuid: CBUUID
@@ -70,21 +71,21 @@ class MyCharacteristic {
 }
 
 enum Command {
-    case read
+//    case read
     case write(value: Data?)
     case readRSSI
     case cancel(callback: (Peripheral) -> Void)
-    //    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
+    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
     var description: String {
         switch self {
-        case .read:
-            return "read"
+//        case .read:
+//            return "read"
         case .write:
             return "write"
         case .readRSSI:
             return "readRSSI"
-//        case .scheduleCommands:
-//            return "schedule"
+        case .scheduleCommands:
+            return "schedule"
         case .cancel:
             return "cancel"
         }
@@ -120,7 +121,6 @@ extension UserToken {
         // https://github.com/apple/swift-evolution/blob/master/proposals/0202-random-unification.md#random-number-generator
         // This is cryptographically random
         let curRandom = UInt64.random(in: 0 ... UInt64.max)
-        print("Current token field: \(curRandom)")
         return UserToken(curRandom)
         // For testing:
 //        let encodeUInt = "test1"
@@ -246,7 +246,6 @@ extension TokenList {
     static func load(from: File) -> TokenList {
         if let data = try? Data(contentsOf: from.url()) {
             let str = String(decoding: data, as: UTF8.self)
-            print(str)
             if let tokenlist = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) {
                 return tokenlist as! TokenList
             }
@@ -312,7 +311,7 @@ public class TokenController: NSObject {
     }
 
     public static func start() {
-//        instance.peripheralManager.startAdvertising()
+        instance.peripheralManager.startAdvertising()
         instance.centralManager.startScan()
         
         // request user permission
@@ -340,7 +339,7 @@ public class TokenController: NSObject {
         self.myTokens = TokenList.load(from: .myTEKs)
 //        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
         let curPayload = UserToken.next().data()
-        print("Current payload in tokenController: \(curPayload.uint64)")
+        print("My latest token payload: \(curPayload.uint64)")
         self.myTokens.append(TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: NSNumber(value: 0))!) //TODO: Run this line per 10 min
         self.myTokens.save(to: .myTEKs)
 
@@ -356,20 +355,22 @@ public class TokenController: NSObject {
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
 
-            .onReadClosure{[unowned self] (peripheral, tokenCharacteristic) in
-                return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
-            }
+//            .onReadClosure{[unowned self] (peripheral, tokenCharacteristic) in
+//                return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
+//            }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
                 // CW: TODO: Check how to get rssi signal
-                print("Peripheral peer token: \(data.uint64)")
+                print("Received peer token: \(data.uint64)")
                 let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: NSNumber.init(value: 0))!
                 self.peerTokens.append(token:curToken)
                 self.peerTokens.save(to: .peerTokens)
                 return true
             }
-            
+        
+        let commandSequence: [Command] = [Command.readRSSI, Command.write(value: self.myTokens.lastTokenObject?.payload)]
         centralManager = CentralManager(services: [ctService], queue: queue)
             // TODO: what does [unowned self] do?
+//            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
             .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
                 print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
@@ -378,14 +379,11 @@ public class TokenController: NSObject {
                     return
                 }
             })
-            // Ask periperal to write it's value to the characteristic
-//            .addCommandCallback(
-//                command: .write(to: tokenCharacteristic, value:
-//                                    self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
-//            ))
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
+        
+        
 //            .addCommandCallback(
 //                command: .read)
 //            .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in

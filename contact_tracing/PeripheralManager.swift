@@ -65,7 +65,6 @@ class PeripheralManager: NSObject {
     }
 }
 
-// TODO: Does the PeripheralManager write to the charicteristic.value?
 extension PeripheralManager: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         if self.peripheralManager.state == .poweredOn {
@@ -82,29 +81,29 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
         }
     }
     
-    func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
-        print("request offset: \(request.offset)")
-        print("request characteristic: \(request.characteristic)")
-        guard let requestedMyChar = MyCharacteristic.fromCBCharacteristic(request.characteristic) else {
-            print("Failed conversion to MyCharacteristic in read request")
-            return
-        }
-        let requestedCharValue = requestedMyChar.getCharacteristicValue()
-        
-        // check if request offset is longer than characteristic value
-        if request.offset > requestedCharValue?.count ?? -1 {
-            peripheral.respond(to: request, withResult: .invalidOffset)
-            return
-        }
-        
-        if let data = onReadClosure!(request.central, requestedMyChar) {
-            request.value = data
-            peripheral.respond(to: request, withResult: .success)
-            return
-        }
-        
-        peripheral.respond(to: request, withResult: .unlikelyError)
-    }
+//    func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
+//        print("request offset: \(request.offset)")
+//        print("request characteristic: \(request.characteristic)")
+//        guard let requestedMyChar = MyCharacteristic.fromCBCharacteristic(request.characteristic) else {
+//            print("Failed conversion to MyCharacteristic in read request")
+//            return
+//        }
+//        let requestedCharValue = requestedMyChar.getCharacteristicValue()
+//
+//        // check if request offset is longer than characteristic value
+//        if request.offset > requestedCharValue?.count ?? -1 {
+//            peripheral.respond(to: request, withResult: .invalidOffset)
+//            return
+//        }
+//
+//        if let data = onReadClosure!(request.central, requestedMyChar) {
+//            request.value = data
+//            peripheral.respond(to: request, withResult: .success)
+//            return
+//        }
+//
+//        peripheral.respond(to: request, withResult: .unlikelyError)
+//    }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
         if requests.count == 0 {
@@ -119,7 +118,6 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
                 print("No value from write request.")
                 return
             }
-            print("Write request requestValue: \(requestValue)")
             if onWriteClosure!(request.central, requestedMyChar, requestValue) {
                 peripheral.respond(to: requests[0], withResult: .success)
                 break
