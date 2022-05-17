@@ -110,8 +110,6 @@ extension CentralManager: CBCentralManagerDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        print("Central connected with peripheral: \(peripheral.identifier)")
-        print("how many peripherals are there: \(peripherals.count)")
         if let p = peripherals[peripheral.identifier] {
             p.discoverMyService()
         }

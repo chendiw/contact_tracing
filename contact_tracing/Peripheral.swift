@@ -38,9 +38,11 @@ class Peripheral: NSObject {
     func executeCommand(_ command: Command) {
         print("execute command: \(command)")
         switch command {
-            case .read(let from):
-                self.peripheral.readValue(for: from.getCharacteristic())
+            case .read:
+                self.peripheral.readValue(for: toCBCharacteristic()!)
             case .write(let value):
+                print("Write value: \(value!) to characteristic: \(toCBCharacteristic()!)")
+//            print("Write test: \("test1".data(using: .utf8)!) to characteristic: \(toCBCharacteristic()!)")
                 self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
             case .readRSSI:
                 print("before readRSSI")
@@ -111,7 +113,6 @@ extension Peripheral: CBPeripheralDelegate {
     
     // called after peripheral:discoverCharacteristics
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        print("in diddiscovercharacteristics")
         if error != nil {
             print(error ?? "discover characteristic error")
         }
@@ -120,10 +121,9 @@ extension Peripheral: CBPeripheralDelegate {
             return
         }
         
-        assert(discoveredCharacteristics.count == 1)
+        print(discoveredCharacteristics)
         for _ in discoveredCharacteristics {
             if let c = nextCommand() {
-                print("ready to execute \(c)")
                 executeCommand(c)
             }
         }
@@ -138,6 +138,8 @@ extension Peripheral: CBPeripheralDelegate {
         guard let characteristicValue = characteristic.value else { print("Error reading characteristic value")
             return
         }
+        
+        print("in didUpdateValueFor: \(characteristicValue)")
         
         // use callback characteristicCallback to make characteristicValue accessible to centralManager
         characteristicCallback?(self, characteristic as! CBMutableCharacteristic, characteristicValue, error)

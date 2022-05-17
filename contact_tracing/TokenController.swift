@@ -70,7 +70,7 @@ class MyCharacteristic {
 }
 
 enum Command {
-    case read(from: MyCharacteristic)
+    case read
     case write(value: Data?)
     case readRSSI
     case cancel(callback: (Peripheral) -> Void)
@@ -91,25 +91,31 @@ enum Command {
     }
 }
 
-// We dropped 32bit support, so UInt = UInt64, and is converted to NSNumber when saving to PLists
-//typealias UserToken = UInt
-//
-//extension UserToken {
-//    func data() -> Data {
-//        return Swift.withUnsafeBytes(of: self) { Data($0) }
-//    }
-//    init?(data :Data) {
-//        var value: UserToken = 0
-//        guard data.count >= MemoryLayout.size(ofValue: value) else { return nil }
-//        _ = Swift.withUnsafeMutableBytes(of: &value, { data.copyBytes(to: $0)} )
-//        self = value
-//    }
-//    static func next() -> UserToken {
-//        // https://github.com/apple/swift-evolution/blob/master/proposals/0202-random-unification.md#random-number-generator
-//        // This is cryptographically random
-//        return UserToken(UInt64.random(in: 0 ... UInt64.max))
-//    }
-//}
+typealias UserToken = UInt64
+extension UserToken {
+    func data() -> Data {
+        return Swift.withUnsafeBytes(of: self) { Data($0) }
+    }
+    
+    init?(data: Data) {
+        var value: UserToken = 0
+        guard data.count >= MemoryLayout.size(ofValue: value) else { return nil }
+        _ = Swift.withUnsafeMutableBytes(of: &value, { data.copyBytes(to: $0)} )
+        self = value
+    }
+    
+    static func next() -> UserToken {
+        // https://github.com/apple/swift-evolution/blob/master/proposals/0202-random-unification.md#random-number-generator
+        // This is cryptographically random
+        let curRandom = UInt64.random(in: 0 ... UInt64.max)
+        print("Current token field: \(curRandom)")
+        return UserToken(curRandom)
+        // For testing:
+//        let encodeUInt = "test1"
+////        let uint64 = UInt64(encodeUInt)
+//        return UserToken(data: encodeUInt.data(using: .utf8)!)!
+    }
+}
 
 let KeepMyIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
 let KeepPeerIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
@@ -321,7 +327,7 @@ public class TokenController: NSObject {
         // load from different files
         self.myTokens = TokenList.load(from: .myTEKs)
 //        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
-//        self.myTokens.append(UserToken.next()) // TODO: only when some time has passed
+        self.myTokens.append(TokenObject(eninterval: ENInterval.value(), payload: UserToken.next().data(), rssi: NSNumber(value: 0))!) //TODO: Run this line per 10 min
         self.myTokens.save(to: .myTEKs)
 
         self.peerTokens = TokenList.load(from: .peerTokens)
@@ -362,13 +368,12 @@ public class TokenController: NSObject {
 //            .addCommandCallback(
 //                command: .write(to: tokenCharacteristic, value:
 //                                    self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
-//                ))
-        
-//            .addCommandCallback(
-//                command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
-//                ))
-//            .addCommandCallback(
-//                command: .read(from: tokenCharacteristic))
+//            ))
+            .addCommandCallback(
+                command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
+            ))
+            .addCommandCallback(
+                command: .read)
 //            .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
 ////                if let dat = data, let peerToken = UserToken(data: dat) {
 //                if let dat = data, let peerToken = TokenObject(eninterval: ENInterval.value(), payload: dat, rssi: NSNumber.init(value: 0)) {

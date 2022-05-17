@@ -70,7 +70,7 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         if self.peripheralManager.state == .poweredOn {
             print("Peripheral powered on!")
-            startAdvertising()
+//            startAdvertising()
         }
     }
     
