@@ -70,7 +70,7 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         if self.peripheralManager.state == .poweredOn {
             print("Peripheral powered on!")
-//            startAdvertising()
+            startAdvertising()
         }
     }
     
@@ -83,12 +83,14 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
     }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
+        print("request offset: \(request.offset)")
+        print("request characteristic: \(request.characteristic)")
         guard let requestedMyChar = MyCharacteristic.fromCBCharacteristic(request.characteristic) else {
             print("Failed conversion to MyCharacteristic in read request")
             return
         }
         let requestedCharValue = requestedMyChar.getCharacteristicValue()
-
+        
         // check if request offset is longer than characteristic value
         if request.offset > requestedCharValue?.count ?? -1 {
             peripheral.respond(to: request, withResult: .invalidOffset)
@@ -117,6 +119,7 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
                 print("No value from write request.")
                 return
             }
+            print("Write request requestValue: \(requestValue)")
             if onWriteClosure!(request.central, requestedMyChar, requestValue) {
                 peripheral.respond(to: requests[0], withResult: .success)
                 break

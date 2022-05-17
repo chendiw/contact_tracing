@@ -91,6 +91,18 @@ enum Command {
     }
 }
 
+extension Data {
+    var uint64: UInt64 {
+          get {
+              if count >= 8 {
+                  return self.withUnsafeBytes { $0.load(as: UInt64.self) }
+              } else {
+                  return (self + Data(repeating: 0, count: 8 - count)).uint64
+              }
+          }
+      }
+}
+
 typealias UserToken = UInt64
 extension UserToken {
     func data() -> Data {
@@ -327,7 +339,9 @@ public class TokenController: NSObject {
         // load from different files
         self.myTokens = TokenList.load(from: .myTEKs)
 //        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
-        self.myTokens.append(TokenObject(eninterval: ENInterval.value(), payload: UserToken.next().data(), rssi: NSNumber(value: 0))!) //TODO: Run this line per 10 min
+        let curPayload = UserToken.next().data()
+        print("Current payload in tokenController: \(curPayload.uint64)")
+        self.myTokens.append(TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: NSNumber(value: 0))!) //TODO: Run this line per 10 min
         self.myTokens.save(to: .myTEKs)
 
         self.peerTokens = TokenList.load(from: .peerTokens)
@@ -346,8 +360,8 @@ public class TokenController: NSObject {
                 return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
             }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
-                // CW: TODO: confirm where the data field comes from
                 // CW: TODO: Check how to get rssi signal
+                print("Peripheral peer token: \(data.uint64)")
                 let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: NSNumber.init(value: 0))!
                 self.peerTokens.append(token:curToken)
                 self.peerTokens.save(to: .peerTokens)
@@ -372,8 +386,8 @@ public class TokenController: NSObject {
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
-            .addCommandCallback(
-                command: .read)
+//            .addCommandCallback(
+//                command: .read)
 //            .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
 ////                if let dat = data, let peerToken = UserToken(data: dat) {
 //                if let dat = data, let peerToken = TokenObject(eninterval: ENInterval.value(), payload: dat, rssi: NSNumber.init(value: 0)) {

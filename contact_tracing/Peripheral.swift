@@ -42,7 +42,7 @@ class Peripheral: NSObject {
                 self.peripheral.readValue(for: toCBCharacteristic()!)
             case .write(let value):
                 print("Write value: \(value!) to characteristic: \(toCBCharacteristic()!)")
-//            print("Write test: \("test1".data(using: .utf8)!) to characteristic: \(toCBCharacteristic()!)")
+                print("Central wrote payload: \(value!.uint64)")
                 self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
             case .readRSSI:
                 print("before readRSSI")
