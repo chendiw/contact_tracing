@@ -360,6 +360,7 @@ public class TokenController: NSObject {
 //            }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
                 // CW: TODO: Check how to get rssi signal
+                
                 print("Received peer token: \(data.uint64)")
                 let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: NSNumber.init(value: 0))!
                 self.peerTokens.append(token:curToken)
@@ -370,8 +371,8 @@ public class TokenController: NSObject {
         let commandSequence: [Command] = [Command.readRSSI, Command.write(value: self.myTokens.lastTokenObject?.payload)]
         centralManager = CentralManager(services: [ctService], queue: queue)
             // TODO: what does [unowned self] do?
-            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
-//            .addCommandCallback(command: .readRSSI)
+//            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
+            .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
                 print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
                 guard error == nil else {
@@ -379,9 +380,9 @@ public class TokenController: NSObject {
                     return
                 }
             })
-//            .addCommandCallback(
-//                command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
-//            ))
+            .addCommandCallback(
+                command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
+            ))
         
         
 //            .addCommandCallback(
