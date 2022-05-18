@@ -339,6 +339,21 @@ public class TokenController: NSObject {
     }
     
     @objc public func scheduleCentralCommand() {
+        self.myTokens = TokenList.load(from: .myTEKs)
+//        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
+        let curPayload = UserToken.next().data()
+        print("My latest token payload: \(curPayload.uint64)")
+        self.myTokens.append(TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: NSNumber(value: 0))!) //TODO: Run this line per 10 min
+        self.myTokens.save(to: .myTEKs)
+        
+        self.peripheralManager.onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
+            // CW: TODO: Check how to get rssi signal
+            print("[Onwrite]Received peer token: \(data.uint64)")
+            let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: NSNumber.init(value: 0))!
+            self.peerTokens.append(token:curToken)
+            self.peerTokens.save(to: .peerTokens)
+            return true
+        }
         self.centralManager
             .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
@@ -351,6 +366,7 @@ public class TokenController: NSObject {
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
+        
     }
 
     public override init() {
@@ -363,7 +379,7 @@ public class TokenController: NSObject {
         
         generateMyToken()
         
-        let timer1 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(generateMyToken), userInfo: nil, repeats: true)
+//        let timer1 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(generateMyToken), userInfo: nil, repeats: true)
 
         self.peerTokens = TokenList.load(from: .peerTokens)
 //        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
@@ -382,7 +398,7 @@ public class TokenController: NSObject {
 //            }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
                 // CW: TODO: Check how to get rssi signal
-                print("Received peer token: \(data.uint64)")
+                print("[Onwrite]Received peer token: \(data.uint64)")
                 let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: NSNumber.init(value: 0))!
                 self.peerTokens.append(token:curToken)
                 self.peerTokens.save(to: .peerTokens)
@@ -405,7 +421,7 @@ public class TokenController: NSObject {
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
         
-            let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
+        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
         
         
 //            .addCommandCallback(
