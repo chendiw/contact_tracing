@@ -102,8 +102,12 @@ extension CentralManager: CBCentralManagerDelegate {
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
 //        centralManager.cancelPeripheralConnection(peripheral)
         if let p = peripherals[peripheral.identifier] {
-            print("You have already discovered peripheral: \(peripheral.identifier)")
+            // print("You have already discovered peripheral: \(peripheral.identifier)")
             didReadRSSI(p, RSSI, nil)
+        }
+        if peripherals[peripheral.identifier] != nil {
+            print("iOS Peripheral \(peripheral.identifier) has been discovered already")
+            return
         }
         addPeripheral(peripheral)
         central.connect(peripheral, options: nil)

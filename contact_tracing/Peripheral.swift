@@ -37,11 +37,13 @@ class Peripheral: NSObject {
     }
     
     func executeCommand(_ command: Command) {
-        print("execute command: \(command)")
+        print("execute command: \(command), next command is ")
         switch command {
 //            case .read:
 //                self.peripheral.readValue(for: toCBCharacteristic()!)
             case .write(let value):
+                while toCBCharacteristic() == nil{
+                    print("Have not find the service yet. So the toCBCharacteristic() returns nil.")}
                 self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
             case .readRSSI:
                 self.peripheral.readRSSI()
@@ -70,6 +72,21 @@ class Peripheral: NSObject {
                                 }
                             }
                         }
+                        RunLoop.current.add(timer!, forMode: .common)
+                        
+//            //verion2:
+//                        timer = Timer(timeInterval: withTimeInterval, repeats: false) { [weak self] _ in
+//                            self?.queue.async {
+//                                // Scheduled commands get executed first,
+//                                var nextCommands = newCommands
+//                                // and then continue the schedule,
+//                                nextCommands.append(.scheduleCommands(commands: newCommands, withTimeInterval: withTimeInterval, repeatCount: repeatCount - 1))
+//                                // and then continue the rest.
+//                                nextCommands.append(contentsOf: self?.commands ?? [])
+//                                self?.commands = nextCommands
+//                                self?.nextCommand()
+//                            }
+//                        }
                         RunLoop.current.add(timer!, forMode: .common)
             case .cancel(callback: let callback):
                 callback(self)
@@ -105,6 +122,7 @@ class Peripheral: NSObject {
                 targetServiceUUID.isEqual(service.uuid)
             }
             if let c12cs = foundService?.characteristics {
+                print("Find service in toCBCharacteristic() ")
                 return c12cs.first { c in
                     targetCharUUID.isEqual(c.uuid)
                 }

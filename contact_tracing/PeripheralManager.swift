@@ -122,7 +122,7 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
                 return
             }
             if onWriteClosure!(request.central, requestedMyChar, requestValue) {
-                peripheral.respond(to: requests[0], withResult: .success)
+                peripheral.respond(to: requests[0], withResult: .success)  // respond to the central manager
                 break
             }
         }

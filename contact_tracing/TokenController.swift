@@ -16,7 +16,7 @@ import UIKit
 public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
 public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
 public let peripheralName = "CT-Peripheral-test1"
-public let scheduleCommandsInterval: TimeInterval = 1*60 //re-exchange tokens per 10 min
+public let scheduleCommandsInterval: TimeInterval = 10 //re-exchange tokens per 10 min
 
 class MyService {
     private var uuid: CBUUID
@@ -371,19 +371,22 @@ public class TokenController: NSObject {
         let commandSequence: [Command] = [Command.readRSSI, Command.write(value: self.myTokens.lastTokenObject?.payload)]
         centralManager = CentralManager(services: [ctService], queue: queue)
             // TODO: what does [unowned self] do?
-//            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
+            
             .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
-                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
-                guard error == nil else {
-                    self.centralManager?.disconnect(peripheral)
-                    return
-                }
-            })
+                           print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
+                           guard error == nil else {
+                               self.centralManager?.disconnect(peripheral)
+                               return
+                           }
+                       })
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
-        
+                
+            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
+//
+
         
 //            .addCommandCallback(
 //                command: .read)
