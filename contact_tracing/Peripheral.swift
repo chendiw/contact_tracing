@@ -37,14 +37,19 @@ class Peripheral: NSObject {
     }
     
     func executeCommand(_ command: Command) {
-        print("execute command: \(command), next command is ")
+
+        print("execute command: \(command)")
         switch command {
 //            case .read:
 //                self.peripheral.readValue(for: toCBCharacteristic()!)
             case .write(let value):
-                while toCBCharacteristic() == nil{
-                    print("Have not find the service yet. So the toCBCharacteristic() returns nil.")}
-                self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
+                if let targetChar = toCBCharacteristic() {
+                    self.peripheral.writeValue(value!, for: targetChar, type: CBCharacteristicWriteType.withResponse)
+                } else {
+                    if let c = nextCommand() {
+                        executeCommand(c)
+                    }
+                } //withresponse to log whether write is sucessful to backend
             case .readRSSI:
                 self.peripheral.readRSSI()
             case .scheduleCommands(let newCommands, let withTimeInterval, let repeatCount):
@@ -56,9 +61,10 @@ class Peripheral: NSObject {
                             return
                         }
                         print("Before timer")
-                        timer = Timer(timeInterval: withTimeInterval, repeats: false) { [weak self] _ in
-                            self?.queue.async {
+            timer = Timer.scheduledTimer(withTimeInterval: withTimeInterval, repeats: true) { [weak self] timer in
+//                            self?.queue.async {
                                 // Finish off current commands
+                                print("Executed timer")
                                 var nextCommands = self?.commands ?? []
                                 // Add new scheduled ocmmands for this round
                                 nextCommands.append(contentsOf: newCommands)
@@ -70,24 +76,9 @@ class Peripheral: NSObject {
                                     print("next command after schedule: \(c)")
                                     self?.executeCommand(c)
                                 }
-                            }
-                        }
-                        RunLoop.current.add(timer!, forMode: .common)
-                        
-//            //verion2:
-//                        timer = Timer(timeInterval: withTimeInterval, repeats: false) { [weak self] _ in
-//                            self?.queue.async {
-//                                // Scheduled commands get executed first,
-//                                var nextCommands = newCommands
-//                                // and then continue the schedule,
-//                                nextCommands.append(.scheduleCommands(commands: newCommands, withTimeInterval: withTimeInterval, repeatCount: repeatCount - 1))
-//                                // and then continue the rest.
-//                                nextCommands.append(contentsOf: self?.commands ?? [])
-//                                self?.commands = nextCommands
-//                                self?.nextCommand()
 //                            }
-//                        }
-                        RunLoop.current.add(timer!, forMode: .common)
+                        }
+//                        RunLoop.current.add(timer!, forMode: .common)
             case .cancel(callback: let callback):
                 callback(self)
         }
@@ -122,7 +113,6 @@ class Peripheral: NSObject {
                 targetServiceUUID.isEqual(service.uuid)
             }
             if let c12cs = foundService?.characteristics {
-                print("Find service in toCBCharacteristic() ")
                 return c12cs.first { c in
                     targetCharUUID.isEqual(c.uuid)
                 }

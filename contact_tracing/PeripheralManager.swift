@@ -29,11 +29,9 @@ class PeripheralManager: NSObject {
     }
     
     func startAdvertising() {
-//        guard self.peripheralManager.state == .poweredOn else {print("Peripheral Manager not powered on")
-//            return
-//        }
-        while(self.peripheralManager.state != .poweredOn){
+        guard self.peripheralManager.state == .poweredOn else {
             print("Peripheral Manager not powered on")
+            return
         }
         
         // clear all previous services

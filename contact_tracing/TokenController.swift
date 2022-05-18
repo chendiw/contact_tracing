@@ -4,7 +4,6 @@
 //
 //  Created by Jiani Wang on 2022/4/30.
 //
-
 // TODO: another controller. How to change ht
 import Foundation
 import CoreBluetooth
@@ -16,8 +15,7 @@ import UIKit
 public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
 public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
 public let peripheralName = "CT-Peripheral-test1"
-public let scheduleCommandsInterval: TimeInterval = 10 //re-exchange tokens per 10 min
-
+public let tokenGenInterval: TimeInterval = 1*60 //re-exchange tokens per 10 min
 class MyService {
     private var uuid: CBUUID
     private var service: CBMutableService
@@ -131,7 +129,6 @@ extension UserToken {
 
 let KeepMyIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
 let KeepPeerIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
-
 // Two files storing myTEKs and peerTokens
 // myTEKs: i (computed from ENIntervalNumber) -> TEK_i (14 pairs)
 // peerTokens: ENIntervalNumber -> [Tokenobject{Bluetooth payload, RSSI, GPS location}] (144*14=2016 pairs)
@@ -309,10 +306,14 @@ public class TokenController: NSObject {
     public static func didFinishLaunching() {
         instance = TokenController()
     }
+    
+    @objc public static func scheduleStartScan() {
+        instance.centralManager.startScan()
+    }
 
     public static func start() {
         instance.peripheralManager.startAdvertising()
-        instance.centralManager.startScan()
+        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleStartScan), userInfo: nil, repeats: true)
         
         // request user permission
         let center = UNUserNotificationCenter.current()
@@ -326,6 +327,31 @@ public class TokenController: NSObject {
         instance.peripheralManager.stopAdvertising()
         instance.centralManager.stopScan()
     }
+    
+    @objc public func generateMyToken() {
+        // load from different files
+        self.myTokens = TokenList.load(from: .myTEKs)
+//        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
+        let curPayload = UserToken.next().data()
+        print("My latest token payload: \(curPayload.uint64)")
+        self.myTokens.append(TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: NSNumber(value: 0))!) //TODO: Run this line per 10 min
+        self.myTokens.save(to: .myTEKs)
+    }
+    
+    @objc public func scheduleCentralCommand() {
+        self.centralManager
+            .addCommandCallback(command: .readRSSI)
+            .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
+                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
+                guard error == nil else {
+                    self.centralManager?.disconnect(peripheral)
+                    return
+                }
+            })
+            .addCommandCallback(
+                command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
+            ))
+    }
 
     public override init() {
         self.queue = DispatchQueue(label: "TokenController")
@@ -335,13 +361,9 @@ public class TokenController: NSObject {
         File.createFile(url: File.myTEKs.url())
         File.createFile(url: File.peerTokens.url())
         
-        // load from different files
-        self.myTokens = TokenList.load(from: .myTEKs)
-//        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
-        let curPayload = UserToken.next().data()
-        print("My latest token payload: \(curPayload.uint64)")
-        self.myTokens.append(TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: NSNumber(value: 0))!) //TODO: Run this line per 10 min
-        self.myTokens.save(to: .myTEKs)
+        generateMyToken()
+        
+        let timer1 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(generateMyToken), userInfo: nil, repeats: true)
 
         self.peerTokens = TokenList.load(from: .peerTokens)
 //        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
@@ -360,7 +382,6 @@ public class TokenController: NSObject {
 //            }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
                 // CW: TODO: Check how to get rssi signal
-                
                 print("Received peer token: \(data.uint64)")
                 let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: NSNumber.init(value: 0))!
                 self.peerTokens.append(token:curToken)
@@ -368,25 +389,24 @@ public class TokenController: NSObject {
                 return true
             }
         
-        let commandSequence: [Command] = [Command.readRSSI, Command.write(value: self.myTokens.lastTokenObject?.payload)]
+//        let commandSequence: [Command] = [Command.readRSSI, Command.write(value: self.myTokens.lastTokenObject?.payload)]
         centralManager = CentralManager(services: [ctService], queue: queue)
             // TODO: what does [unowned self] do?
-            
+//            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
             .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
-                           print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
-                           guard error == nil else {
-                               self.centralManager?.disconnect(peripheral)
-                               return
-                           }
-                       })
+                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
+                guard error == nil else {
+                    self.centralManager?.disconnect(peripheral)
+                    return
+                }
+            })
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
-                
-            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
-//
-
+        
+            let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
+        
         
 //            .addCommandCallback(
 //                command: .read)
@@ -408,4 +428,3 @@ public class TokenController: NSObject {
     }
     
 }
-
