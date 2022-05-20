@@ -40,6 +40,7 @@ class CentralManager: NSObject {  // object-c subclass?
     func restartScan() {
         // TODO: check do we need this function
     }
+
     
     func startScan() {
         while centralManager.state != .poweredOn {
@@ -106,7 +107,7 @@ extension CentralManager: CBCentralManagerDelegate {
         }
         if peripherals[peripheral.identifier] != nil {
             print("iOS Peripheral \(peripheral.identifier) has been discovered already")
-            return
+//            return
         }
 
         addPeripheral(peripheral)
