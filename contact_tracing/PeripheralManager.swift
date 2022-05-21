@@ -29,7 +29,8 @@ class PeripheralManager: NSObject {
     }
     
     func startAdvertising() {
-        guard self.peripheralManager.state == .poweredOn else {print("Peripheral Manager not powered on")
+        guard self.peripheralManager.state == .poweredOn else {
+            print("Peripheral Manager not powered on")
             return
         }
         
@@ -119,7 +120,7 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
                 return
             }
             if onWriteClosure!(request.central, requestedMyChar, requestValue) {
-                peripheral.respond(to: requests[0], withResult: .success)
+                peripheral.respond(to: requests[0], withResult: .success)  // respond to the central manager
                 break
             }
         }

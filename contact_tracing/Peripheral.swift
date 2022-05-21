@@ -37,12 +37,20 @@ class Peripheral: NSObject {
     }
     
     func executeCommand(_ command: Command) {
+
         print("execute command: \(command)")
         switch command {
 //            case .read:
 //                self.peripheral.readValue(for: toCBCharacteristic()!)
             case .write(let value):
-                self.peripheral.writeValue(value!, for: toCBCharacteristic()!, type: CBCharacteristicWriteType.withResponse) //withresponse to log whether write is sucessful to backend
+                if let targetChar = toCBCharacteristic() {
+                    self.peripheral.writeValue(value!, for: targetChar, type: CBCharacteristicWriteType.withResponse)
+                } else {
+                    if let c = nextCommand() {
+                        print("NextCommand is: \(c)")
+                        executeCommand(c)
+                    }
+                } //withresponse to log whether write is sucessful to backend
             case .readRSSI:
                 self.peripheral.readRSSI()
             case .scheduleCommands(let newCommands, let withTimeInterval, let repeatCount):
@@ -54,9 +62,10 @@ class Peripheral: NSObject {
                             return
                         }
                         print("Before timer")
-                        timer = Timer(timeInterval: withTimeInterval, repeats: false) { [weak self] _ in
-                            self?.queue.async {
+            timer = Timer.scheduledTimer(withTimeInterval: withTimeInterval, repeats: true) { [weak self] timer in
+//                            self?.queue.async {
                                 // Finish off current commands
+                                print("Executed timer")
                                 var nextCommands = self?.commands ?? []
                                 // Add new scheduled ocmmands for this round
                                 nextCommands.append(contentsOf: newCommands)
@@ -68,11 +77,13 @@ class Peripheral: NSObject {
                                     print("next command after schedule: \(c)")
                                     self?.executeCommand(c)
                                 }
-                            }
+//                            }
                         }
-                        RunLoop.current.add(timer!, forMode: .common)
+//                        RunLoop.current.add(timer!, forMode: .common)
             case .cancel(callback: let callback):
                 callback(self)
+            case .clear:
+                self.clearCommand()
         }
     }
     
@@ -83,6 +94,10 @@ class Peripheral: NSObject {
         let curCommand = commands.first
         commands.removeFirst()
         return curCommand
+    }
+    
+    func clearCommand() {
+        self.commands = []
     }
     
     // called in centralManager:didConnectPeripheral
