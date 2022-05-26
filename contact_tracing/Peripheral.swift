@@ -47,6 +47,7 @@ class Peripheral: NSObject {
                     self.peripheral.writeValue(value!, for: targetChar, type: CBCharacteristicWriteType.withResponse)
                 } else {
                     if let c = nextCommand() {
+                        print("NextCommand is: \(c)")
                         executeCommand(c)
                     }
                 } //withresponse to log whether write is sucessful to backend
@@ -81,6 +82,8 @@ class Peripheral: NSObject {
 //                        RunLoop.current.add(timer!, forMode: .common)
             case .cancel(callback: let callback):
                 callback(self)
+            case .clear:
+                self.clearCommand()
         }
     }
     
@@ -91,6 +94,10 @@ class Peripheral: NSObject {
         let curCommand = commands.first
         commands.removeFirst()
         return curCommand
+    }
+    
+    func clearCommand() {
+        self.commands = []
     }
     
     // called in centralManager:didConnectPeripheral

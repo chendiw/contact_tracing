@@ -106,7 +106,7 @@ extension CentralManager: CBCentralManagerDelegate {
         }
         if peripherals[peripheral.identifier] != nil {
             print("iOS Peripheral \(peripheral.identifier) has been discovered already")
-            return
+//            return
         }
 
         addPeripheral(peripheral)

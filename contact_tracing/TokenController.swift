@@ -9,13 +9,14 @@ import Foundation
 import CoreBluetooth
 import UserNotifications
 import UIKit
+import CoreLocation
 
 // Global static values
 // uuid's generated from "https://www.uuidgenerator.net/version4"
 public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
 public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
 public let peripheralName = "CT-Peripheral-test1"
-public let tokenGenInterval: TimeInterval = 1*60 //re-exchange tokens per 10 min
+public let tokenGenInterval: TimeInterval = 20 //re-exchange tokens per 10 min
 class MyService {
     private var uuid: CBUUID
     private var service: CBMutableService
@@ -74,6 +75,7 @@ enum Command {
     case readRSSI
     case cancel(callback: (Peripheral) -> Void)
     case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
+    case clear
     var description: String {
         switch self {
 //        case .read:
@@ -86,6 +88,8 @@ enum Command {
             return "schedule"
         case .cancel:
             return "cancel"
+        case .clear:
+            return "clear"
         }
     }
 }
@@ -175,60 +179,18 @@ enum File: String {
     func url() -> URL {
         let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
         let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue)!.appendingPathExtension("plist")
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue)!.appendingPathExtension("txt")
         return fileUrl
     }
 }
 
-class TokenObject: NSObject, NSCoding {
+
+struct TokenObject: Codable {
     var eninterval: Int
     var payload: Data
-    var rssi: NSNumber
-// TODO: Get gps location per ENInterval
-//    let gps:
-    
-    init?(eninterval: Int, payload: Data, rssi: NSNumber) {
-        self.eninterval = eninterval
-        self.payload = payload
-        self.rssi = rssi
-    }
-    
-    required convenience init?(coder: NSCoder) {
-        guard let eninterval = coder.decodeObject(forKey: "ENInterval") as? Int,
-              let payload = coder.decodeObject(forKey: "payload") as? Data,
-              let rssi = coder.decodeObject(forKey: "rssi") as? NSNumber
-        else {
-            return nil
-        }
-        self.init(eninterval: eninterval, payload: payload, rssi: rssi)
-    }
-    
-    func encode(with coder: NSCoder) {
-        coder.encode(self.payload, forKey: "ENInterval")
-        coder.encode(self.payload, forKey: "payload")
-        coder.encode(self.rssi, forKey: "rssi")
-    }
-    
-    var dictionary: [String: Any] {
-        return [
-            "ENInterval": self.eninterval,
-            "payload": self.payload,
-            "rssi": self.rssi
-        ]
-    }
-    
-//    var data: Data {
-//        print("Dictionary is:\n")
-//        print(dictionary)
-//        print(dictionary["payload"]!)
-//        print((dictionary["payload"]! as! Data).base64EncodedString(options: []))
-////        print(String(decoding: dictionary["payload"], as: UTF8.self))
-//        return (try? JSONSerialization.data(withJSONObject: dictionary)) ?? Data()
-//    }
-//
-//    var json: String {
-//        return String(data: data, encoding: .utf8) ?? String()
-//    }
+    var rssi: Int
+    var lat: CLLocationDegrees  // latitute
+    var long: CLLocationDegrees // logitude
 }
 
 typealias TokenList = [TokenObject]
@@ -242,27 +204,28 @@ extension TokenList {
     
     static func load(from: File) -> TokenList {
         if let data = try? Data(contentsOf: from.url()) {
-            let str = String(decoding: data, as: UTF8.self)
-            if let tokenlist = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) {
-                return tokenlist as! TokenList
+            do {
+                let arr = try JSONDecoder().decode(self, from: data)
+                return arr
+            } catch {
+                print(error)
             }
-        } else {
-            print("Initial \(from) empty")
         }
         return TokenList()
     }
     
     func save(to :File) {
         do {
-            let data = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)
-            try data.write(to: to.url(), options: [])
+            let data = try JSONEncoder().encode(self)
+            try data.write(to: to.url())
         } catch {
-            print(error)
+            print("Save to file error: \(error)")
         }
     }
 
     
-    mutating func append(token: TokenObject) {
+    mutating func append(curPayload: Data, rssi: Int, lat: CLLocationDegrees, long: CLLocationDegrees) {
+        let token = TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: rssi, lat: lat, long: long)
         self.append(token)
     }
     
@@ -275,7 +238,8 @@ extension TokenList {
     }
     
     var lastTokenObject: TokenObject? {
-        return self.last
+        // let item = self.last! // at least one item should exist in the array
+        return self.last!
     }
 }
 
@@ -330,33 +294,35 @@ public class TokenController: NSObject {
     
     @objc public func generateMyToken() {
         // load from different files
-        self.myTokens = TokenList.load(from: .myTEKs)
+         self.myTokens = TokenList.load(from: .myTEKs)
 //        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
+//        print("My token list size is : \(self.myTokens.count)")
         let curPayload = UserToken.next().data()
-        print("My latest token payload: \(curPayload.uint64)")
-        self.myTokens.append(TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: NSNumber(value: 0))!) //TODO: Run this line per 10 min
-        self.myTokens.save(to: .myTEKs)
+//        print("My latest token payload: \(curPayload.uint64)")
+        self.myTokens.append(curPayload: curPayload, rssi: 0) //TODO: Run this line per 10 min
+//        print("My token list size is : \(self.myTokens.count)")
+//        print("My token list last data is: \(self.myTokens.lastTokenObject?.payload.uint64)")
+         self.myTokens.save(to: .myTEKs)
+
     }
     
     @objc public func scheduleCentralCommand() {
         self.centralManager
+//            .addCommandCallback(command: .clear)
             .addCommandCallback(command: .readRSSI)
-            .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
-                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
-                guard error == nil else {
-                    self.centralManager?.disconnect(peripheral)
-                    return
-                }
-            })
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
+        
     }
 
     public override init() {
         self.queue = DispatchQueue(label: "TokenController")
-
+        self.myTokens = []
+        self.peerTokens = []
+        
         super.init()
+        
         // init token files
         File.createFile(url: File.myTEKs.url())
         File.createFile(url: File.peerTokens.url())
@@ -374,6 +340,8 @@ public class TokenController: NSObject {
         let tokenCharacteristic = MyCharacteristic(characteristicUUID)
         let ctService = MyService(serviceUUID)
         ctService.addCharacteristic(tokenCharacteristic)
+        
+        var rssiList: [UUID: Int] = [:]
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
 
@@ -381,21 +349,26 @@ public class TokenController: NSObject {
 //                return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
 //            }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
-                // CW: TODO: Check how to get rssi signal
-                print("Received peer token: \(data.uint64)")
-                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: NSNumber.init(value: 0))!
-                self.peerTokens.append(token:curToken)
+                print("[Onwrite]Received peer token: \(data.uint64)")
+//                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: 0)
+                var rssiValue = 0;
+                if rssiList[peripheral.identifier] != nil{
+                    rssiValue = rssiList[peripheral.identifier]!
+                }
+                print("[Read RSSI]peripheral=\(peripheral.identifier), RSSI=\(rssiValue)")
+                self.peerTokens.append(curPayload: data, rssi: rssiValue)
                 self.peerTokens.save(to: .peerTokens)
                 return true
             }
         
 //        let commandSequence: [Command] = [Command.readRSSI, Command.write(value: self.myTokens.lastTokenObject?.payload)]
         centralManager = CentralManager(services: [ctService], queue: queue)
-            // TODO: what does [unowned self] do?
 //            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
             .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
-                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
+//                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
+                rssiList[peripheral.id] = Int(truncating: RSSI)  // change NSNumber to Ints
+                print("[Store RSSI]peripheral=\(peripheral.id), RSSI=\(rssiList[peripheral.id]), error=\(String(describing: error))")
                 guard error == nil else {
                     self.centralManager?.disconnect(peripheral)
                     return
@@ -404,8 +377,12 @@ public class TokenController: NSObject {
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
+//            .addCommandCallback(
+//                command: .cancel(callback: { [unowned self] peripheral in
+//                    self.centralManager?.disconnect(peripheral)
+//                }))
         
-            let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
+        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
         
         
 //            .addCommandCallback(

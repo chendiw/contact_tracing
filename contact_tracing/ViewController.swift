@@ -58,7 +58,9 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         print("Start Bluetooth")
+        
         TokenController.didFinishLaunching()
+        TokenController.startFresh()  // delete previous file
         TokenController.start()
     }
-} 
+}
