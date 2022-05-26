@@ -189,8 +189,11 @@ struct TokenObject: Codable {
     var eninterval: Int
     var payload: Data
     var rssi: Int
+<<<<<<< HEAD
     var lat: CLLocationDegrees  // latitute
     var long: CLLocationDegrees // logitude
+=======
+>>>>>>> d63cd9eb5f24a4f8dbd21325cacbaf6312ed3aea
 }
 
 typealias TokenList = [TokenObject]
@@ -224,6 +227,7 @@ extension TokenList {
     }
 
     
+
     mutating func append(curPayload: Data, rssi: Int, lat: CLLocationDegrees, long: CLLocationDegrees) {
         let token = TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: rssi, lat: lat, long: long)
         self.append(token)
@@ -349,6 +353,7 @@ public class TokenController: NSObject {
 //                return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
 //            }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
+<<<<<<< HEAD
                 print("[Onwrite]Received peer token: \(data.uint64)")
 //                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: 0)
                 var rssiValue = 0;
@@ -357,6 +362,12 @@ public class TokenController: NSObject {
                 }
                 print("[Read RSSI]peripheral=\(peripheral.identifier), RSSI=\(rssiValue)")
                 self.peerTokens.append(curPayload: data, rssi: rssiValue)
+=======
+                // CW: TODO: Check how to get rssi signal
+                print("[Onwrite]Received peer token: \(data.uint64)")
+                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: 0)
+                self.peerTokens.append(curPayload: data, rssi: 0)
+>>>>>>> d63cd9eb5f24a4f8dbd21325cacbaf6312ed3aea
                 self.peerTokens.save(to: .peerTokens)
                 return true
             }

@@ -40,6 +40,7 @@ class CentralManager: NSObject {  // object-c subclass?
     func restartScan() {
         // TODO: check do we need this function
     }
+
     
     func startScan() {
         while centralManager.state != .poweredOn {
