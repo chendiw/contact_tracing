@@ -142,7 +142,7 @@ enum File: String {
     
     var rawValue: String {
         switch self {
-        case .myTEKs: return "myTEKs"
+        case .myTEKs: return "myTEKs_" + String(NSDate().)
         case .peerTokens: return "peerTokens"
         }
     }
@@ -189,11 +189,9 @@ struct TokenObject: Codable {
     var eninterval: Int
     var payload: Data
     var rssi: Int
-<<<<<<< HEAD
     var lat: CLLocationDegrees  // latitute
     var long: CLLocationDegrees // logitude
-=======
->>>>>>> d63cd9eb5f24a4f8dbd21325cacbaf6312ed3aea
+
 }
 
 typealias TokenList = [TokenObject]
@@ -209,6 +207,7 @@ extension TokenList {
         if let data = try? Data(contentsOf: from.url()) {
             do {
                 let arr = try JSONDecoder().decode(self, from: data)
+                print("[load from file] the loaded data is: \(arr)")
                 return arr
             } catch {
                 print(error)
@@ -265,6 +264,7 @@ public class TokenController: NSObject {
     private var myTokens: TokenList!
     private var peerTokens: TokenList!
     private var backgroundTaskId: UIBackgroundTaskIdentifier?
+    private var locationManager: LocationManager!
     
     public static func startFresh() {
         File.deleteFile(url: File.myTEKs.url())
@@ -303,7 +303,8 @@ public class TokenController: NSObject {
 //        print("My token list size is : \(self.myTokens.count)")
         let curPayload = UserToken.next().data()
 //        print("My latest token payload: \(curPayload.uint64)")
-        self.myTokens.append(curPayload: curPayload, rssi: 0) //TODO: Run this line per 10 min
+        // Jiani: Only the payload field in myTokenList is useful
+        self.myTokens.append(curPayload: curPayload, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min
 //        print("My token list size is : \(self.myTokens.count)")
 //        print("My token list last data is: \(self.myTokens.lastTokenObject?.payload.uint64)")
          self.myTokens.save(to: .myTEKs)
@@ -335,7 +336,7 @@ public class TokenController: NSObject {
         
         let timer1 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(generateMyToken), userInfo: nil, repeats: true)
 
-        self.peerTokens = TokenList.load(from: .peerTokens)
+        
 //        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
 //            self.peerTokens.save(to: .peerTokens)
 //        }
@@ -345,7 +346,9 @@ public class TokenController: NSObject {
         let ctService = MyService(serviceUUID)
         ctService.addCharacteristic(tokenCharacteristic)
         
-        var rssiList: [UUID: Int] = [:]
+        var rssiList: [UUID: Int] = [:]  // a dict to store all preperial's rssi.
+        
+        self.locationManager = LocationManager()
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
 
@@ -353,21 +356,18 @@ public class TokenController: NSObject {
 //                return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
 //            }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
-<<<<<<< HEAD
                 print("[Onwrite]Received peer token: \(data.uint64)")
 //                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: 0)
+                self.peerTokens = TokenList.load(from: .peerTokens)  // load old peerTokens
                 var rssiValue = 0;
                 if rssiList[peripheral.identifier] != nil{
                     rssiValue = rssiList[peripheral.identifier]!
                 }
                 print("[Read RSSI]peripheral=\(peripheral.identifier), RSSI=\(rssiValue)")
-                self.peerTokens.append(curPayload: data, rssi: rssiValue)
-=======
-                // CW: TODO: Check how to get rssi signal
-                print("[Onwrite]Received peer token: \(data.uint64)")
-                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: 0)
-                self.peerTokens.append(curPayload: data, rssi: 0)
->>>>>>> d63cd9eb5f24a4f8dbd21325cacbaf6312ed3aea
+                let latNow = locationManager.getLatitude()
+                let longNow = locationManager.getLongitude()
+                print("[Read GPS]The current GPS is: \(latNow) \(longNow)")
+                self.peerTokens.append(curPayload: data, rssi: rssiValue, lat: latNow, long: longNow)
                 self.peerTokens.save(to: .peerTokens)
                 return true
             }
