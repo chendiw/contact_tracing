@@ -15,13 +15,13 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "io.grpc.examples.central";
-option java_outer_classname = "CentralProto";
+option java_package = "io.grpc.examples.testingauth";
+option java_outer_classname = "TestingAuthProto";
 option objc_class_prefix = "HLW";
 
-package central;
+package testingauth;
 
-service Report {
+service Auth {
     rpc sendReportToken(ReportToken) returns (Ack) {}
     rpc pollPositive(Date) returns (Batch) {}
     rpc pollNegative(Date) returns (Batch) {}

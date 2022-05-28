@@ -52,18 +52,6 @@ extension Target {
     ]
   )
 
-  static let helloWorldClient: Target = .executableTarget(
-    name: "HelloWorldClient",
-    dependencies: [
-      .grpc,
-      .helloWorldModel,
-      .nioCore,
-      .nioPosix,
-      .argumentParser,
-    ],
-    path: "Client"
-  )
-
   static let helloWorldServer: Target = .executableTarget(
     name: "HelloWorldServer",
     dependencies: [
@@ -78,11 +66,6 @@ extension Target {
 }
 
 extension Product {
-  static let helloWorldClient: Product = .executable(
-    name: "client",
-    targets: ["HelloWorldClient"]
-  )
-
   static let helloWorldServer: Product = .executable(
     name: "server",
     targets: ["HelloWorldServer"]
@@ -97,14 +80,12 @@ extension Product {
 let package = Package(
     name: "our_grpc",
     products: [
-        .helloWorldClient, 
         .helloWorldServer,
         .helloWorldModel,
     ],
     dependencies: packageDependencies,
     targets: [
         .helloWorldModel,
-        .helloWorldClient,
         .helloWorldServer,
     ]
 )

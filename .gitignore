@@ -2,3 +2,4 @@
 .build/
 Package.resolved
 contact_tracing/.DS_Store
+contact_tracing.xcodeproj/
