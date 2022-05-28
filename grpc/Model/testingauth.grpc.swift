@@ -26,102 +26,76 @@ import SwiftProtobuf
 
 
 /// Usage: instantiate `Testingauth_AuthClient`, then call methods of this protocol to make API calls.
-public protocol Testingauth_AuthClientProtocol: GRPCClient {
+internal protocol Testingauth_AuthClientProtocol: GRPCClient {
   var serviceName: String { get }
   var interceptors: Testingauth_AuthClientInterceptorFactoryProtocol? { get }
 
-  func sendReportToken(
-    _ request: Testingauth_ReportToken,
+  func startTest(
+    _ request: Testingauth_PretestTokens,
     callOptions: CallOptions?
-  ) -> UnaryCall<Testingauth_ReportToken, Testingauth_Ack>
+  ) -> UnaryCall<Testingauth_PretestTokens, Testingauth_Ack>
 
-  func pollPositive(
-    _ request: Testingauth_Date,
+  func getResult(
+    _ request: Testingauth_Check,
     callOptions: CallOptions?
-  ) -> UnaryCall<Testingauth_Date, Testingauth_Batch>
-
-  func pollNegative(
-    _ request: Testingauth_Date,
-    callOptions: CallOptions?
-  ) -> UnaryCall<Testingauth_Date, Testingauth_Batch>
+  ) -> UnaryCall<Testingauth_Check, Testingauth_TestResult>
 }
 
 extension Testingauth_AuthClientProtocol {
-  public var serviceName: String {
+  internal var serviceName: String {
     return "testingauth.Auth"
   }
 
-  /// Unary call to sendReportToken
+  /// Unary call to startTest
   ///
   /// - Parameters:
-  ///   - request: Request to send to sendReportToken.
+  ///   - request: Request to send to startTest.
   ///   - callOptions: Call options.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func sendReportToken(
-    _ request: Testingauth_ReportToken,
+  internal func startTest(
+    _ request: Testingauth_PretestTokens,
     callOptions: CallOptions? = nil
-  ) -> UnaryCall<Testingauth_ReportToken, Testingauth_Ack> {
+  ) -> UnaryCall<Testingauth_PretestTokens, Testingauth_Ack> {
     return self.makeUnaryCall(
-      path: "/testingauth.Auth/sendReportToken",
+      path: "/testingauth.Auth/startTest",
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makesendReportTokenInterceptors() ?? []
+      interceptors: self.interceptors?.makestartTestInterceptors() ?? []
     )
   }
 
-  /// Unary call to pollPositive
+  /// Unary call to getResult
   ///
   /// - Parameters:
-  ///   - request: Request to send to pollPositive.
+  ///   - request: Request to send to getResult.
   ///   - callOptions: Call options.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func pollPositive(
-    _ request: Testingauth_Date,
+  internal func getResult(
+    _ request: Testingauth_Check,
     callOptions: CallOptions? = nil
-  ) -> UnaryCall<Testingauth_Date, Testingauth_Batch> {
+  ) -> UnaryCall<Testingauth_Check, Testingauth_TestResult> {
     return self.makeUnaryCall(
-      path: "/testingauth.Auth/pollPositive",
+      path: "/testingauth.Auth/getResult",
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makepollPositiveInterceptors() ?? []
-    )
-  }
-
-  /// Unary call to pollNegative
-  ///
-  /// - Parameters:
-  ///   - request: Request to send to pollNegative.
-  ///   - callOptions: Call options.
-  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func pollNegative(
-    _ request: Testingauth_Date,
-    callOptions: CallOptions? = nil
-  ) -> UnaryCall<Testingauth_Date, Testingauth_Batch> {
-    return self.makeUnaryCall(
-      path: "/testingauth.Auth/pollNegative",
-      request: request,
-      callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makepollNegativeInterceptors() ?? []
+      interceptors: self.interceptors?.makegetResultInterceptors() ?? []
     )
   }
 }
 
-public protocol Testingauth_AuthClientInterceptorFactoryProtocol {
+internal protocol Testingauth_AuthClientInterceptorFactoryProtocol {
 
-  /// - Returns: Interceptors to use when invoking 'sendReportToken'.
-  func makesendReportTokenInterceptors() -> [ClientInterceptor<Testingauth_ReportToken, Testingauth_Ack>]
+  /// - Returns: Interceptors to use when invoking 'startTest'.
+  func makestartTestInterceptors() -> [ClientInterceptor<Testingauth_PretestTokens, Testingauth_Ack>]
 
-  /// - Returns: Interceptors to use when invoking 'pollPositive'.
-  func makepollPositiveInterceptors() -> [ClientInterceptor<Testingauth_Date, Testingauth_Batch>]
-
-  /// - Returns: Interceptors to use when invoking 'pollNegative'.
-  func makepollNegativeInterceptors() -> [ClientInterceptor<Testingauth_Date, Testingauth_Batch>]
+  /// - Returns: Interceptors to use when invoking 'getResult'.
+  func makegetResultInterceptors() -> [ClientInterceptor<Testingauth_Check, Testingauth_TestResult>]
 }
 
-public final class Testingauth_AuthClient: Testingauth_AuthClientProtocol {
-  public let channel: GRPCChannel
-  public var defaultCallOptions: CallOptions
-  public var interceptors: Testingauth_AuthClientInterceptorFactoryProtocol?
+internal final class Testingauth_AuthClient: Testingauth_AuthClientProtocol {
+  internal let channel: GRPCChannel
+  internal var defaultCallOptions: CallOptions
+  internal var interceptors: Testingauth_AuthClientInterceptorFactoryProtocol?
 
   /// Creates a client for the testingauth.Auth service.
   ///
@@ -129,7 +103,7 @@ public final class Testingauth_AuthClient: Testingauth_AuthClientProtocol {
   ///   - channel: `GRPCChannel` to the service host.
   ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
   ///   - interceptors: A factory providing interceptors for each RPC.
-  public init(
+  internal init(
     channel: GRPCChannel,
     defaultCallOptions: CallOptions = CallOptions(),
     interceptors: Testingauth_AuthClientInterceptorFactoryProtocol? = nil
@@ -141,51 +115,40 @@ public final class Testingauth_AuthClient: Testingauth_AuthClientProtocol {
 }
 
 /// To build a server, implement a class that conforms to this protocol.
-public protocol Testingauth_AuthProvider: CallHandlerProvider {
+internal protocol Testingauth_AuthProvider: CallHandlerProvider {
   var interceptors: Testingauth_AuthServerInterceptorFactoryProtocol? { get }
 
-  func sendReportToken(request: Testingauth_ReportToken, context: StatusOnlyCallContext) -> EventLoopFuture<Testingauth_Ack>
+  func startTest(request: Testingauth_PretestTokens, context: StatusOnlyCallContext) -> EventLoopFuture<Testingauth_Ack>
 
-  func pollPositive(request: Testingauth_Date, context: StatusOnlyCallContext) -> EventLoopFuture<Testingauth_Batch>
-
-  func pollNegative(request: Testingauth_Date, context: StatusOnlyCallContext) -> EventLoopFuture<Testingauth_Batch>
+  func getResult(request: Testingauth_Check, context: StatusOnlyCallContext) -> EventLoopFuture<Testingauth_TestResult>
 }
 
 extension Testingauth_AuthProvider {
-  public var serviceName: Substring { return "testingauth.Auth" }
+  internal var serviceName: Substring { return "testingauth.Auth" }
 
   /// Determines, calls and returns the appropriate request handler, depending on the request's method.
   /// Returns nil for methods not handled by this service.
-  public func handle(
+  internal func handle(
     method name: Substring,
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
     switch name {
-    case "sendReportToken":
+    case "startTest":
       return UnaryServerHandler(
         context: context,
-        requestDeserializer: ProtobufDeserializer<Testingauth_ReportToken>(),
+        requestDeserializer: ProtobufDeserializer<Testingauth_PretestTokens>(),
         responseSerializer: ProtobufSerializer<Testingauth_Ack>(),
-        interceptors: self.interceptors?.makesendReportTokenInterceptors() ?? [],
-        userFunction: self.sendReportToken(request:context:)
+        interceptors: self.interceptors?.makestartTestInterceptors() ?? [],
+        userFunction: self.startTest(request:context:)
       )
 
-    case "pollPositive":
+    case "getResult":
       return UnaryServerHandler(
         context: context,
-        requestDeserializer: ProtobufDeserializer<Testingauth_Date>(),
-        responseSerializer: ProtobufSerializer<Testingauth_Batch>(),
-        interceptors: self.interceptors?.makepollPositiveInterceptors() ?? [],
-        userFunction: self.pollPositive(request:context:)
-      )
-
-    case "pollNegative":
-      return UnaryServerHandler(
-        context: context,
-        requestDeserializer: ProtobufDeserializer<Testingauth_Date>(),
-        responseSerializer: ProtobufSerializer<Testingauth_Batch>(),
-        interceptors: self.interceptors?.makepollNegativeInterceptors() ?? [],
-        userFunction: self.pollNegative(request:context:)
+        requestDeserializer: ProtobufDeserializer<Testingauth_Check>(),
+        responseSerializer: ProtobufSerializer<Testingauth_TestResult>(),
+        interceptors: self.interceptors?.makegetResultInterceptors() ?? [],
+        userFunction: self.getResult(request:context:)
       )
 
     default:
@@ -194,17 +157,13 @@ extension Testingauth_AuthProvider {
   }
 }
 
-public protocol Testingauth_AuthServerInterceptorFactoryProtocol {
+internal protocol Testingauth_AuthServerInterceptorFactoryProtocol {
 
-  /// - Returns: Interceptors to use when handling 'sendReportToken'.
+  /// - Returns: Interceptors to use when handling 'startTest'.
   ///   Defaults to calling `self.makeInterceptors()`.
-  func makesendReportTokenInterceptors() -> [ServerInterceptor<Testingauth_ReportToken, Testingauth_Ack>]
+  func makestartTestInterceptors() -> [ServerInterceptor<Testingauth_PretestTokens, Testingauth_Ack>]
 
-  /// - Returns: Interceptors to use when handling 'pollPositive'.
+  /// - Returns: Interceptors to use when handling 'getResult'.
   ///   Defaults to calling `self.makeInterceptors()`.
-  func makepollPositiveInterceptors() -> [ServerInterceptor<Testingauth_Date, Testingauth_Batch>]
-
-  /// - Returns: Interceptors to use when handling 'pollNegative'.
-  ///   Defaults to calling `self.makeInterceptors()`.
-  func makepollNegativeInterceptors() -> [ServerInterceptor<Testingauth_Date, Testingauth_Batch>]
+  func makegetResultInterceptors() -> [ServerInterceptor<Testingauth_Check, Testingauth_TestResult>]
 }
