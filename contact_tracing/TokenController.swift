@@ -94,7 +94,7 @@ enum Command {
     }
 }
 
-extension Data {
+public extension Data {
     var uint64: UInt64 {
           get {
               if count >= 8 {
@@ -104,7 +104,16 @@ extension Data {
               }
           }
       }
+    
+    var int: Int {
+        return self.withUnsafeBytes{pointer in return pointer.load(as: Int.self)}
+    }
+    
+    var hex: String {
+        return map {String(format: "%02x", $0)}.joined()
+    }
 }
+
 
 typealias UserToken = UInt64
 extension UserToken {
@@ -191,7 +200,6 @@ struct TokenObject: Codable {
     var rssi: Int
     var lat: CLLocationDegrees  // latitute
     var long: CLLocationDegrees // logitude
-
 }
 
 typealias TokenList = [TokenObject]
