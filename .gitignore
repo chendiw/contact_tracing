@@ -2,4 +2,3 @@
 .build/
 Package.resolved
 contact_tracing/.DS_Store
-.swiftpm/
