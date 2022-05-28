@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import ArgumentParser
 import GRPC
-import HelloWorldModel
 import NIOCore
 import NIOPosix
 
@@ -37,17 +35,15 @@ func greet(name: String?, client greeter: Helloworld_GreeterClient) {
   }
 }
 
-struct HelloWorld: ParsableCommand {
-  @Option(help: "The port to connect to")
+class HelloWorld {
   var port: Int = 1234
+  var name: String = "chendi"
 
-  @Argument(help: "The name to greet")
-  var name: String?
-
-  func run() throws {
+  static func run() throws {
     // Setup an `EventLoopGroup` for the connection to run on.
     //
     // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
+    print("sloth")
     let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
     // Make sure the group is shutdown when we're done with it.
@@ -57,7 +53,7 @@ struct HelloWorld: ParsableCommand {
 
     // Configure the channel, we're not using TLS so the connection is `insecure`.
     let channel = try GRPCChannelPool.with(
-      target: .host("localhost", port: self.port),
+      target: .host("171.64.70.55", port: 1234),
       transportSecurity: .plaintext,
       eventLoopGroup: group
     )
@@ -71,8 +67,8 @@ struct HelloWorld: ParsableCommand {
     let greeter = Helloworld_GreeterClient(channel: channel)
 
     // Do the greeting.
-    greet(name: self.name, client: greeter)
+    greet(name: "chendi", client: greeter)
   }
 }
 
-HelloWorld.main()
+//HelloWorld.main()

@@ -8,7 +8,6 @@
 import UIKit
 import CoreBluetooth
 
-
 //class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
 //    var centralManager: CBCentralManager!  // ! means this is an unwrapped optional variable and if we refer to it later we can check for null-safety.
 //    var myPeripheral: CBPeripheral!
@@ -58,7 +57,11 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         print("Start Bluetooth")
-        
+        do {
+            try HelloWorld.run()
+        } catch {
+          print("Greeter failed: \(error)")
+        }
         TokenController.didFinishLaunching()
         TokenController.startFresh()  // delete previous file
         TokenController.start()
