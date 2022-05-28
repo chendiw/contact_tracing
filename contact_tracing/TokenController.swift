@@ -142,7 +142,7 @@ enum File: String {
     
     var rawValue: String {
         switch self {
-        case .myTEKs: return "myTEKs_" + String(NSDate().)
+        case .myTEKs: return "myTEKs"
         case .peerTokens: return "peerTokens"
         }
     }
