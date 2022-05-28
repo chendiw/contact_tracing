@@ -29,5 +29,13 @@
             <array>
         <string>bluetooth-central</string>
     </array>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Our APP using GPS locally to do contact tracing</string>
+
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Our APP using GPS locally to do contact tracing</string>
+
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Our APP using GPS locally to do contact tracing</string>
 </dict>
 </plist>

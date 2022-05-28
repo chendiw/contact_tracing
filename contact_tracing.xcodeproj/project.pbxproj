@@ -17,6 +17,8 @@
 		3A7667542841B76F00C9785A /* central.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7667512841B76F00C9785A /* central.grpc.swift */; };
 		3A7667552841B76F00C9785A /* central.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7667522841B76F00C9785A /* central.pb.swift */; };
 		3A7667562841B76F00C9785A /* central.proto in Sources */ = {isa = PBXBuildFile; fileRef = 3A7667532841B76F00C9785A /* central.proto */; };
+		C12C14A7283F434400C61995 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12C14A6283F434400C61995 /* LocationManager.swift */; };
+		C12C14A9283F439500C61995 /* RiskScoreController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12C14A8283F439500C61995 /* RiskScoreController.swift */; };
 		C16BE3B9281E33B60010DBAE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3B8281E33B60010DBAE /* AppDelegate.swift */; };
 		C16BE3BB281E33B60010DBAE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3BA281E33B60010DBAE /* SceneDelegate.swift */; };
 		C16BE3BD281E33B60010DBAE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3BC281E33B60010DBAE /* ViewController.swift */; };
@@ -58,6 +60,8 @@
 		3A7667512841B76F00C9785A /* central.grpc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = central.grpc.swift; sourceTree = "<group>"; };
 		3A7667522841B76F00C9785A /* central.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = central.pb.swift; sourceTree = "<group>"; };
 		3A7667532841B76F00C9785A /* central.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = central.proto; sourceTree = "<group>"; };
+		C12C14A6283F434400C61995 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		C12C14A8283F439500C61995 /* RiskScoreController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskScoreController.swift; sourceTree = "<group>"; };
 		C16BE3B5281E33B60010DBAE /* contact_tracing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = contact_tracing.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C16BE3B8281E33B60010DBAE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C16BE3BA281E33B60010DBAE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -145,6 +149,8 @@
 				C16BE3ED281E35E20010DBAE /* Peripheral.swift */,
 				C16BE3EB281E35E20010DBAE /* PeripheralManager.swift */,
 				C16BE3EE281E35E20010DBAE /* TokenController.swift */,
+				C12C14A6283F434400C61995 /* LocationManager.swift */,
+				C12C14A8283F439500C61995 /* RiskScoreController.swift */,
 				C16BE3C4281E33B70010DBAE /* Assets.xcassets */,
 				C16BE3C6281E33B70010DBAE /* LaunchScreen.storyboard */,
 				C16BE3C9281E33B70010DBAE /* Info.plist */,
@@ -318,6 +324,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C16BE3F0281E35E20010DBAE /* PeripheralManager.swift in Sources */,
+				C12C14A9283F439500C61995 /* RiskScoreController.swift in Sources */,
 				C16BE3F2281E35E20010DBAE /* Peripheral.swift in Sources */,
 				C16BE3BD281E33B60010DBAE /* ViewController.swift in Sources */,
 				C16BE3B9281E33B60010DBAE /* AppDelegate.swift in Sources */,
@@ -329,6 +336,7 @@
 				C16BE3F3281E35E20010DBAE /* TokenController.swift in Sources */,
 				C16BE3C3281E33B60010DBAE /* contact_tracing.xcdatamodeld in Sources */,
 				3A7667432840683800C9785A /* HelloWorldClient.swift in Sources */,
+				C12C14A7283F434400C61995 /* LocationManager.swift in Sources */,
 				C16BE3F1281E35E20010DBAE /* CentralManager.swift in Sources */,
 				3A76674C28406B4500C9785A /* helloworld.proto in Sources */,
 				3A76674B28406B4500C9785A /* helloworld.grpc.swift in Sources */,

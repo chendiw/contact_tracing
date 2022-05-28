@@ -9,6 +9,7 @@ import Foundation
 import CoreBluetooth
 import UserNotifications
 import UIKit
+import CoreLocation
 
 // Global static values
 // uuid's generated from "https://www.uuidgenerator.net/version4"
@@ -188,6 +189,9 @@ struct TokenObject: Codable {
     var eninterval: Int
     var payload: Data
     var rssi: Int
+    var lat: CLLocationDegrees  // latitute
+    var long: CLLocationDegrees // logitude
+
 }
 
 typealias TokenList = [TokenObject]
@@ -203,6 +207,7 @@ extension TokenList {
         if let data = try? Data(contentsOf: from.url()) {
             do {
                 let arr = try JSONDecoder().decode(self, from: data)
+                print("[load from file] the loaded data is: \(arr)")
                 return arr
             } catch {
                 print(error)
@@ -221,8 +226,9 @@ extension TokenList {
     }
 
     
-    mutating func append(curPayload: Data, rssi: NSNumber) {
-        let token = TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: 0)
+
+    mutating func append(curPayload: Data, rssi: Int, lat: CLLocationDegrees, long: CLLocationDegrees) {
+        let token = TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: rssi, lat: lat, long: long)
         self.append(token)
     }
     
@@ -258,6 +264,7 @@ public class TokenController: NSObject {
     private var myTokens: TokenList!
     private var peerTokens: TokenList!
     private var backgroundTaskId: UIBackgroundTaskIdentifier?
+    private var locationManager: LocationManager!
     
     public static func startFresh() {
         File.deleteFile(url: File.myTEKs.url())
@@ -296,7 +303,8 @@ public class TokenController: NSObject {
 //        print("My token list size is : \(self.myTokens.count)")
         let curPayload = UserToken.next().data()
 //        print("My latest token payload: \(curPayload.uint64)")
-        self.myTokens.append(curPayload: curPayload, rssi: 0) //TODO: Run this line per 10 min
+        // Jiani: Only the payload field in myTokenList is useful
+        self.myTokens.append(curPayload: curPayload, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min
 //        print("My token list size is : \(self.myTokens.count)")
 //        print("My token list last data is: \(self.myTokens.lastTokenObject?.payload.uint64)")
          self.myTokens.save(to: .myTEKs)
@@ -319,6 +327,7 @@ public class TokenController: NSObject {
         self.peerTokens = []
         
         super.init()
+        
         // init token files
         File.createFile(url: File.myTEKs.url())
         File.createFile(url: File.peerTokens.url())
@@ -327,7 +336,7 @@ public class TokenController: NSObject {
         
         let timer1 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(generateMyToken), userInfo: nil, repeats: true)
 
-        self.peerTokens = TokenList.load(from: .peerTokens)
+        
 //        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
 //            self.peerTokens.save(to: .peerTokens)
 //        }
@@ -336,6 +345,10 @@ public class TokenController: NSObject {
         let tokenCharacteristic = MyCharacteristic(characteristicUUID)
         let ctService = MyService(serviceUUID)
         ctService.addCharacteristic(tokenCharacteristic)
+        
+        var rssiList: [UUID: Int] = [:]  // a dict to store all preperial's rssi.
+        
+        self.locationManager = LocationManager()
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
 
@@ -343,21 +356,30 @@ public class TokenController: NSObject {
 //                return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
 //            }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
-                // CW: TODO: Check how to get rssi signal
                 print("[Onwrite]Received peer token: \(data.uint64)")
-                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: 0)
-                self.peerTokens.append(curPayload: data, rssi: 0)
+//                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: 0)
+                self.peerTokens = TokenList.load(from: .peerTokens)  // load old peerTokens
+                var rssiValue = 0;
+                if rssiList[peripheral.identifier] != nil{
+                    rssiValue = rssiList[peripheral.identifier]!
+                }
+                print("[Read RSSI]peripheral=\(peripheral.identifier), RSSI=\(rssiValue)")
+                let latNow = locationManager.getLatitude()
+                let longNow = locationManager.getLongitude()
+                print("[Read GPS]The current GPS is: \(latNow) \(longNow)")
+                self.peerTokens.append(curPayload: data, rssi: rssiValue, lat: latNow, long: longNow)
                 self.peerTokens.save(to: .peerTokens)
                 return true
             }
         
 //        let commandSequence: [Command] = [Command.readRSSI, Command.write(value: self.myTokens.lastTokenObject?.payload)]
         centralManager = CentralManager(services: [ctService], queue: queue)
-            // TODO: what does [unowned self] do?
 //            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
             .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
-                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
+//                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
+                rssiList[peripheral.id] = Int(truncating: RSSI)  // change NSNumber to Ints
+                print("[Store RSSI]peripheral=\(peripheral.id), RSSI=\(rssiList[peripheral.id]), error=\(String(describing: error))")
                 guard error == nil else {
                     self.centralManager?.disconnect(peripheral)
                     return
