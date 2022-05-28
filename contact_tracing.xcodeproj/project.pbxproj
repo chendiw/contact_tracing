@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3A7132E62840537B00309F1F /* CGRPCZlib in Frameworks */ = {isa = PBXBuildFile; productRef = 3A7132E52840537B00309F1F /* CGRPCZlib */; };
+		3A7132E82840537B00309F1F /* GRPC in Frameworks */ = {isa = PBXBuildFile; productRef = 3A7132E72840537B00309F1F /* GRPC */; };
+		3A7667432840683800C9785A /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7667422840683800C9785A /* Client.swift */; };
+		3A766746284068C300C9785A /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 3A766745284068C300C9785A /* ArgumentParser */; };
+		3A76674A28406B4500C9785A /* helloworld.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A76674728406B4400C9785A /* helloworld.pb.swift */; };
+		3A76674B28406B4500C9785A /* helloworld.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A76674828406B4400C9785A /* helloworld.grpc.swift */; };
+		3A76674C28406B4500C9785A /* helloworld.proto in Sources */ = {isa = PBXBuildFile; fileRef = 3A76674928406B4500C9785A /* helloworld.proto */; };
 		C16BE3B9281E33B60010DBAE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3B8281E33B60010DBAE /* AppDelegate.swift */; };
 		C16BE3BB281E33B60010DBAE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3BA281E33B60010DBAE /* SceneDelegate.swift */; };
 		C16BE3BD281E33B60010DBAE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3BC281E33B60010DBAE /* ViewController.swift */; };
@@ -41,6 +48,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3A7667422840683800C9785A /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
+		3A76674728406B4400C9785A /* helloworld.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = helloworld.pb.swift; sourceTree = "<group>"; };
+		3A76674828406B4400C9785A /* helloworld.grpc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = helloworld.grpc.swift; sourceTree = "<group>"; };
+		3A76674928406B4500C9785A /* helloworld.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = helloworld.proto; sourceTree = "<group>"; };
 		C16BE3B5281E33B60010DBAE /* contact_tracing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = contact_tracing.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C16BE3B8281E33B60010DBAE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C16BE3BA281E33B60010DBAE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -66,6 +77,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A766746284068C300C9785A /* ArgumentParser in Frameworks */,
+				3A7132E82840537B00309F1F /* GRPC in Frameworks */,
+				3A7132E62840537B00309F1F /* CGRPCZlib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,9 +100,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3A7132ED2840557500309F1F /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
 		C16BE3AC281E33B50010DBAE = {
 			isa = PBXGroup;
 			children = (
+				3A7132ED2840557500309F1F /* Packages */,
 				C16BE3B7281E33B60010DBAE /* contact_tracing */,
 				C16BE3D1281E33B70010DBAE /* contact_tracingTests */,
 				C16BE3DB281E33B70010DBAE /* contact_tracingUITests */,
@@ -121,6 +143,10 @@
 				C16BE3C6281E33B70010DBAE /* LaunchScreen.storyboard */,
 				C16BE3C9281E33B70010DBAE /* Info.plist */,
 				C16BE3C1281E33B60010DBAE /* contact_tracing.xcdatamodeld */,
+				3A7667422840683800C9785A /* Client.swift */,
+				3A76674828406B4400C9785A /* helloworld.grpc.swift */,
+				3A76674728406B4400C9785A /* helloworld.pb.swift */,
+				3A76674928406B4500C9785A /* helloworld.proto */,
 			);
 			path = contact_tracing;
 			sourceTree = "<group>";
@@ -158,6 +184,11 @@
 			dependencies = (
 			);
 			name = contact_tracing;
+			packageProductDependencies = (
+				3A7132E52840537B00309F1F /* CGRPCZlib */,
+				3A7132E72840537B00309F1F /* GRPC */,
+				3A766745284068C300C9785A /* ArgumentParser */,
+			);
 			productName = contact_tracing;
 			productReference = C16BE3B5281E33B60010DBAE /* contact_tracing.app */;
 			productType = "com.apple.product-type.application";
@@ -230,6 +261,10 @@
 				Base,
 			);
 			mainGroup = C16BE3AC281E33B50010DBAE;
+			packageReferences = (
+				3A7132E42840537B00309F1F /* XCRemoteSwiftPackageReference "grpc-swift" */,
+				3A766744284068C300C9785A /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+			);
 			productRefGroup = C16BE3B6281E33B60010DBAE /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -277,10 +312,14 @@
 				C16BE3F2281E35E20010DBAE /* Peripheral.swift in Sources */,
 				C16BE3BD281E33B60010DBAE /* ViewController.swift in Sources */,
 				C16BE3B9281E33B60010DBAE /* AppDelegate.swift in Sources */,
+				3A76674A28406B4500C9785A /* helloworld.pb.swift in Sources */,
 				C16BE3BB281E33B60010DBAE /* SceneDelegate.swift in Sources */,
 				C16BE3F3281E35E20010DBAE /* TokenController.swift in Sources */,
 				C16BE3C3281E33B60010DBAE /* contact_tracing.xcdatamodeld in Sources */,
+				3A7667432840683800C9785A /* Client.swift in Sources */,
 				C16BE3F1281E35E20010DBAE /* CentralManager.swift in Sources */,
+				3A76674C28406B4500C9785A /* helloworld.proto in Sources */,
+				3A76674B28406B4500C9785A /* helloworld.grpc.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -457,7 +496,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 48KFXK6DK6;
+				DEVELOPMENT_TEAM = KDKRGSZ2RQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = contact_tracing/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -485,7 +524,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 48KFXK6DK6;
+				DEVELOPMENT_TEAM = KDKRGSZ2RQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = contact_tracing/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -622,6 +661,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3A7132E42840537B00309F1F /* XCRemoteSwiftPackageReference "grpc-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/grpc/grpc-swift.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		3A766744284068C300C9785A /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3A7132E52840537B00309F1F /* CGRPCZlib */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A7132E42840537B00309F1F /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = CGRPCZlib;
+		};
+		3A7132E72840537B00309F1F /* GRPC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A7132E42840537B00309F1F /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = GRPC;
+		};
+		3A766745284068C300C9785A /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3A766744284068C300C9785A /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		C16BE3C1281E33B60010DBAE /* contact_tracing.xcdatamodeld */ = {
