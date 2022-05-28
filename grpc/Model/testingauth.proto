@@ -22,23 +22,23 @@ option objc_class_prefix = "HLW";
 package testingauth;
 
 service Auth {
-    rpc sendReportToken(ReportToken) returns (Ack) {}
-    rpc pollPositive(Date) returns (Batch) {}
-    rpc pollNegative(Date) returns (Batch) {}
+    rpc startTest(PretestTokens) returns (Ack) {}
+    rpc getResult(Check) returns (TestResult) {}
 }
 
-message ReportToken {
-    string token = 1;
+message PretestTokens {
+    repeated string pretest = 1;
 }
 
 message Ack {
     int32 ack = 1;
 }
 
-message Date {
+message Check {
     string date = 1;
+    string token = 2;
 }
 
-message Batch {
-  repeated string token = 1;
+message TestResult {
+    string result = 1;
 }
