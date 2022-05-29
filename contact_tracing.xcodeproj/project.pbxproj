@@ -33,6 +33,11 @@
 		C16BE3F1281E35E20010DBAE /* CentralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3EC281E35E20010DBAE /* CentralManager.swift */; };
 		C16BE3F2281E35E20010DBAE /* Peripheral.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3ED281E35E20010DBAE /* Peripheral.swift */; };
 		C16BE3F3281E35E20010DBAE /* TokenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3EE281E35E20010DBAE /* TokenController.swift */; };
+		C1C471922843558900799C0D /* GreeterProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C4718B2843558900799C0D /* GreeterProvider.swift */; };
+		C1C471932843558900799C0D /* HelloWorldServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C4718C2843558900799C0D /* HelloWorldServer.swift */; };
+		C1C471942843558900799C0D /* TAClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C4718D2843558900799C0D /* TAClient.swift */; };
+		C1C471952843558900799C0D /* CryptoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C4718E2843558900799C0D /* CryptoTests.swift */; };
+		C1C471962843558900799C0D /* Crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C4718F2843558900799C0D /* Crypto.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +85,11 @@
 		C16BE3EC281E35E20010DBAE /* CentralManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CentralManager.swift; sourceTree = "<group>"; };
 		C16BE3ED281E35E20010DBAE /* Peripheral.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Peripheral.swift; sourceTree = "<group>"; };
 		C16BE3EE281E35E20010DBAE /* TokenController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenController.swift; sourceTree = "<group>"; };
+		C1C4718B2843558900799C0D /* GreeterProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GreeterProvider.swift; sourceTree = "<group>"; };
+		C1C4718C2843558900799C0D /* HelloWorldServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HelloWorldServer.swift; sourceTree = "<group>"; };
+		C1C4718D2843558900799C0D /* TAClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TAClient.swift; sourceTree = "<group>"; };
+		C1C4718E2843558900799C0D /* CryptoTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoTests.swift; sourceTree = "<group>"; };
+		C1C4718F2843558900799C0D /* Crypto.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Crypto.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,6 +152,11 @@
 			isa = PBXGroup;
 			children = (
 				C16BE3B8281E33B60010DBAE /* AppDelegate.swift */,
+				C1C4718B2843558900799C0D /* GreeterProvider.swift */,
+				C1C4718C2843558900799C0D /* HelloWorldServer.swift */,
+				C1C4718D2843558900799C0D /* TAClient.swift */,
+				C1C4718E2843558900799C0D /* CryptoTests.swift */,
+				C1C4718F2843558900799C0D /* Crypto.swift */,
 				C16BE3BA281E33B60010DBAE /* SceneDelegate.swift */,
 				C16BE3BC281E33B60010DBAE /* ViewController.swift */,
 				C16BE3BE281E33B60010DBAE /* Main.storyboard */,
@@ -328,10 +343,13 @@
 				C16BE3F2281E35E20010DBAE /* Peripheral.swift in Sources */,
 				C16BE3BD281E33B60010DBAE /* ViewController.swift in Sources */,
 				C16BE3B9281E33B60010DBAE /* AppDelegate.swift in Sources */,
+				C1C471922843558900799C0D /* GreeterProvider.swift in Sources */,
 				3A7667552841B76F00C9785A /* central.pb.swift in Sources */,
 				3A76674A28406B4500C9785A /* helloworld.pb.swift in Sources */,
+				C1C471962843558900799C0D /* Crypto.swift in Sources */,
 				3A7667542841B76F00C9785A /* central.grpc.swift in Sources */,
 				3A7667562841B76F00C9785A /* central.proto in Sources */,
+				C1C471952843558900799C0D /* CryptoTests.swift in Sources */,
 				C16BE3BB281E33B60010DBAE /* SceneDelegate.swift in Sources */,
 				C16BE3F3281E35E20010DBAE /* TokenController.swift in Sources */,
 				C16BE3C3281E33B60010DBAE /* contact_tracing.xcdatamodeld in Sources */,
@@ -339,7 +357,9 @@
 				C12C14A7283F434400C61995 /* LocationManager.swift in Sources */,
 				C16BE3F1281E35E20010DBAE /* CentralManager.swift in Sources */,
 				3A76674C28406B4500C9785A /* helloworld.proto in Sources */,
+				C1C471942843558900799C0D /* TAClient.swift in Sources */,
 				3A76674B28406B4500C9785A /* helloworld.grpc.swift in Sources */,
+				C1C471932843558900799C0D /* HelloWorldServer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

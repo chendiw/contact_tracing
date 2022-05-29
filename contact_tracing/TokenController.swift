@@ -150,9 +150,10 @@ enum File: String {
     case peerTokens
     
     var rawValue: String {
+
         switch self {
-        case .myTEKs: return "myTEKs"
-        case .peerTokens: return "peerTokens"
+            case .myTEKs: return "myTEKs"
+            case .peerTokens: return "peerTokens"
         }
     }
     
@@ -188,7 +189,21 @@ enum File: String {
     func url() -> URL {
         let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
         let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue)!.appendingPathExtension("txt")
+        let date = Date()
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: date)
+        print("[Today] Today's date is: \(day)")
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + String(day))!.appendingPathExtension("txt")
+        return fileUrl
+    }
+    
+    func dayURL(date: Date) -> URL {
+        let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
+        let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: date)
+        print("[dayURL] Today's date is: \(day)")
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + String(day))!.appendingPathExtension("txt")
         return fileUrl
     }
 }
