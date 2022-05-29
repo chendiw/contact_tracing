@@ -12,7 +12,7 @@ import NIOPosix
 
 public class TAClient {
     var port: Int = 1234
-    var host_ip: String = "171.64.70.55"
+    var host_ip: String = "localhost"
     var client: Testingauth_AuthClient
     var tested: Bool = false
     var getResult: Bool = false
@@ -25,9 +25,9 @@ public class TAClient {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
         // Make sure the group is shutdown when we're done with it.
-        defer {
-          try! group.syncShutdownGracefully()
-        }
+//        defer {
+//          try! group.syncShutdownGracefully()
+//        }
 
         // Configure the channel, we're not using TLS so the connection is `insecure`.
         let channel = try! GRPCChannelPool.with(
@@ -37,9 +37,9 @@ public class TAClient {
         )
 
         // Close the connection when we're done with it.
-        defer {
-          try! channel.close().wait()
-        }
+//        defer {
+//          try! channel.close().wait()
+//        }
         
         // Provide the connection to the generated client.
         self.client = Testingauth_AuthClient(channel: channel)
@@ -47,12 +47,14 @@ public class TAClient {
     
     public func prepStartTest() {
         // Construct list of pretest tokens (currently set to 3)
-        let num_pretestTokens = 3
+        let num_pretestTokens = 1
         let allTokens = TokenList.load(from: .myTEKs)
         let pretestTokenObjects: [TokenObject] = allTokens.suffix(num_pretestTokens)
         var pretestTokens: [String] = []
         for t in pretestTokenObjects {
             pretestTokens.append(t.payload.string)
+            print("String-data Equal? \(t.payload == t.payload.string.data)")
+            print("Uint64-data Equal? \(t.payload == t.payload.uint64.data)")
         }
         
         // Form the request with the name, if one was provided.
