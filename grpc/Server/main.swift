@@ -1,25 +1,30 @@
-/*
- * Copyright 2019, gRPC Authors All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-import ArgumentParser
 import GRPC
-import HelloWorldModel
+import ArgumentParser
+import testAuthModel
 import NIOCore
 import NIOPosix
 
-struct HelloWorld: ParsableCommand {
+class TestAuthProvider: Testingauth_AuthProvider {
+  var interceptors: Testingauth_AuthServerInterceptorFactoryProtocol?
+
+  func startTest(request: Testingauth_PretestTokens, context: StatusOnlyCallContext) 
+  -> EventLoopFuture<Testingauth_Ack> {
+    let response = Testingauth_Ack.with {
+      $0.ack = 0
+    }
+    return context.eventLoop.makeSucceededFuture(response)
+  }
+
+  func getResult(request: Testingauth_Check, context: StatusOnlyCallContext) 
+  -> EventLoopFuture<Testingauth_TestResult> {
+    let response = Testingauth_TestResult.with {
+      $0.result = "connection ok"
+    }
+    return context.eventLoop.makeSucceededFuture(response)
+  }
+}
+
+struct TestAuth: ParsableCommand {
   @Option(help: "The port to listen on for new connections")
   var port = 1234
 
@@ -31,13 +36,13 @@ struct HelloWorld: ParsableCommand {
 
     // Start the server and print its address once it has started.
     let server = Server.insecure(group: group)
-      .withServiceProviders([GreeterProvider()])
+      .withServiceProviders([TestAuthProvider()])
       .bind(host: "localhost", port: self.port)
 
     server.map {
       $0.channel.localAddress
     }.whenSuccess { address in
-      print("server started on port \(address!.port!)")
+      print("testauth server started on port \(address!.port!)")
     }
 
     // Wait on the server's `onClose` future to stop the program from exiting.
@@ -47,4 +52,4 @@ struct HelloWorld: ParsableCommand {
   }
 }
 
-HelloWorld.main()
+TestAuth.main()
