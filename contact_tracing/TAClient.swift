@@ -53,7 +53,6 @@ public class TAClient {
         var pretestTokens: [UInt64] = []
         for t in pretestTokenObjects {
             pretestTokens.append(t.payload.uint64)
-            print("Uint64-data Equal? \(t.payload == t.payload.uint64.data)")
             print("cur pretestToken: \(pretestTokens.last)")
         }
         
