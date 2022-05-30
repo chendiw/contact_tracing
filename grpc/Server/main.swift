@@ -10,7 +10,7 @@ class TestAuthProvider: Testingauth_AuthProvider {
   func startTest(request: Testingauth_PretestTokens, context: StatusOnlyCallContext) 
   -> EventLoopFuture<Testingauth_Ack> {
     let response = Testingauth_Ack.with {
-      $0.ack = 0
+      $0.ack = true
     }
     return context.eventLoop.makeSucceededFuture(response)
   }
@@ -18,7 +18,8 @@ class TestAuthProvider: Testingauth_AuthProvider {
   func getResult(request: Testingauth_Check, context: StatusOnlyCallContext) 
   -> EventLoopFuture<Testingauth_TestResult> {
     let response = Testingauth_TestResult.with {
-      $0.result = "connection ok"
+      $0.ready = true
+      $0.result = 1
     }
     return context.eventLoop.makeSucceededFuture(response)
   }

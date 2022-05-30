@@ -20,9 +20,9 @@
 		7179C8072842A5C400C29FC2 /* Crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7179C8062842A5C300C29FC2 /* Crypto.swift */; };
 		7179C8092842A5DA00C29FC2 /* CryptoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7179C8082842A5DA00C29FC2 /* CryptoTests.swift */; };
 		7179C80D2842C8B800C29FC2 /* TAClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7179C80C2842C8B800C29FC2 /* TAClient.swift */; };
-		7179C8142842F09B00C29FC2 /* testingauth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7179C8122842F09A00C29FC2 /* testingauth.pb.swift */; };
-		7179C8152842F09B00C29FC2 /* testingauth.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7179C8132842F09B00C29FC2 /* testingauth.grpc.swift */; };
 		7179C8172843093500C29FC2 /* DataConversions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7179C8162843093500C29FC2 /* DataConversions.swift */; };
+		7179C90528444B5500C29FC2 /* testingauth.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7179C90328444B5500C29FC2 /* testingauth.grpc.swift */; };
+		7179C90628444B5500C29FC2 /* testingauth.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7179C90428444B5500C29FC2 /* testingauth.pb.swift */; };
 		C12C14A7283F434400C61995 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12C14A6283F434400C61995 /* LocationManager.swift */; };
 		C12C14A9283F439500C61995 /* RiskScoreController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12C14A8283F439500C61995 /* RiskScoreController.swift */; };
 		C16BE3B9281E33B60010DBAE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3B8281E33B60010DBAE /* AppDelegate.swift */; };
@@ -69,9 +69,9 @@
 		7179C8062842A5C300C29FC2 /* Crypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Crypto.swift; sourceTree = "<group>"; };
 		7179C8082842A5DA00C29FC2 /* CryptoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoTests.swift; sourceTree = "<group>"; };
 		7179C80C2842C8B800C29FC2 /* TAClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TAClient.swift; sourceTree = "<group>"; };
-		7179C8122842F09A00C29FC2 /* testingauth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = testingauth.pb.swift; path = grpc/Model/testingauth.pb.swift; sourceTree = SOURCE_ROOT; };
-		7179C8132842F09B00C29FC2 /* testingauth.grpc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = testingauth.grpc.swift; path = grpc/Model/testingauth.grpc.swift; sourceTree = SOURCE_ROOT; };
 		7179C8162843093500C29FC2 /* DataConversions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataConversions.swift; sourceTree = "<group>"; };
+		7179C90328444B5500C29FC2 /* testingauth.grpc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = testingauth.grpc.swift; path = grpc/Model/testingauth.grpc.swift; sourceTree = SOURCE_ROOT; };
+		7179C90428444B5500C29FC2 /* testingauth.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = testingauth.pb.swift; path = grpc/Model/testingauth.pb.swift; sourceTree = SOURCE_ROOT; };
 		C12C14A6283F434400C61995 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		C12C14A8283F439500C61995 /* RiskScoreController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskScoreController.swift; sourceTree = "<group>"; };
 		C16BE3B5281E33B60010DBAE /* contact_tracing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = contact_tracing.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -172,8 +172,8 @@
 				C16BE3C1281E33B60010DBAE /* contact_tracing.xcdatamodeld */,
 				3A7667422840683800C9785A /* HelloWorldClient.swift */,
 				7179C80C2842C8B800C29FC2 /* TAClient.swift */,
-				7179C8132842F09B00C29FC2 /* testingauth.grpc.swift */,
-				7179C8122842F09A00C29FC2 /* testingauth.pb.swift */,
+				7179C90328444B5500C29FC2 /* testingauth.grpc.swift */,
+				7179C90428444B5500C29FC2 /* testingauth.pb.swift */,
 				3A76674828406B4400C9785A /* helloworld.grpc.swift */,
 				3A76674728406B4400C9785A /* helloworld.pb.swift */,
 				3A7667512841B76F00C9785A /* central.grpc.swift */,
@@ -343,10 +343,11 @@
 			files = (
 				C16BE3F0281E35E20010DBAE /* PeripheralManager.swift in Sources */,
 				C12C14A9283F439500C61995 /* RiskScoreController.swift in Sources */,
+				7179C90628444B5500C29FC2 /* testingauth.pb.swift in Sources */,
 				C16BE3F2281E35E20010DBAE /* Peripheral.swift in Sources */,
 				7179C8092842A5DA00C29FC2 /* CryptoTests.swift in Sources */,
 				C16BE3BD281E33B60010DBAE /* ViewController.swift in Sources */,
-				7179C8152842F09B00C29FC2 /* testingauth.grpc.swift in Sources */,
+				7179C90528444B5500C29FC2 /* testingauth.grpc.swift in Sources */,
 				C16BE3B9281E33B60010DBAE /* AppDelegate.swift in Sources */,
 				3A7667552841B76F00C9785A /* central.pb.swift in Sources */,
 				3A76674A28406B4500C9785A /* helloworld.pb.swift in Sources */,
@@ -357,7 +358,6 @@
 				C16BE3C3281E33B60010DBAE /* contact_tracing.xcdatamodeld in Sources */,
 				7179C8072842A5C400C29FC2 /* Crypto.swift in Sources */,
 				7179C8172843093500C29FC2 /* DataConversions.swift in Sources */,
-				7179C8142842F09B00C29FC2 /* testingauth.pb.swift in Sources */,
 				3A7667432840683800C9785A /* HelloWorldClient.swift in Sources */,
 				C12C14A7283F434400C61995 /* LocationManager.swift in Sources */,
 				C16BE3F1281E35E20010DBAE /* CentralManager.swift in Sources */,

@@ -27,18 +27,19 @@ service Auth {
 }
 
 message PretestTokens {
-    repeated string pretest = 1;
+    repeated uint64 pretest = 1;
 }
 
 message Ack {
-    int32 ack = 1;
+    bool ack = 1;
 }
 
 message Check {
     string date = 1;
-    string token = 2;
+    uint64 token = 2;
 }
 
 message TestResult {
-    string result = 1;
+    bool ready = 1;
+    uint64 result = 2;
 }
