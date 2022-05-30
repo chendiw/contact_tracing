@@ -15,6 +15,19 @@ enum TAFile: String {
           case .receivedTEKFile: return "receivedTEKFile"
         }
     }
+
+    static func deleteFile(url: URL) {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: url.path) else {
+            print("Cannot delete non-existent files: \(url)!")
+            return
+        }
+        do {
+            try fm.removeItem(atPath: url.path)
+        } catch let error as NSError {
+            print("Error: \(error.domain)")
+        }
+    }
     
     func url() -> URL {
         let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
@@ -61,14 +74,16 @@ extension UserIdToTEKs {
 class TestAuthProvider: Testingauth_AuthProvider {
   var interceptors: Testingauth_AuthServerInterceptorFactoryProtocol?
   var receivedTokens: [UInt64: [UInt64]] = [0:[0]]
+  let daysUntilResult: Int = 2
 
   func startTest(request: Testingauth_PretestTokens, context: StatusOnlyCallContext) 
   -> EventLoopFuture<Testingauth_Ack> {
     // generate userId when start test
     let userId = assignUserId()
-    saveUserProfile(userId: userId, tokens: request.pretest)
+    saveUserProfileStart(userId: userId, tokens: request.pretest)
     testSavedSuccess(userId: userId)
     let response = Testingauth_Ack.with {
+      $0.userID = userId
       $0.ack = true
     }
     return context.eventLoop.makeSucceededFuture(response)
@@ -76,6 +91,8 @@ class TestAuthProvider: Testingauth_AuthProvider {
 
   func getResult(request: Testingauth_Check, context: StatusOnlyCallContext) 
   -> EventLoopFuture<Testingauth_TestResult> {
+    let userId = request.userID
+    
     let response = Testingauth_TestResult.with {
       $0.ready = true
       $0.result = 1
@@ -87,7 +104,7 @@ class TestAuthProvider: Testingauth_AuthProvider {
     return UInt64.random(in: 0 ... UInt64.max)
   }
 
-  func saveUserProfile(userId: UInt64, tokens: [UInt64]) {
+  func saveUserProfileStart(userId: UInt64, tokens: [UInt64]) {
     self.receivedTokens = UserIdToTEKs.load(from: .receivedTEKFile)
     for t in tokens {
       self.receivedTokens.append(userId: userId, token: t)
@@ -97,7 +114,18 @@ class TestAuthProvider: Testingauth_AuthProvider {
 
   func testSavedSuccess(userId: UInt64) {
     let curTokens = UserIdToTEKs.load(from: .receivedTEKFile)
-    print("cur tokens count: \(curTokens[userId]!.count)")
+    assert(curTokens[userId]!.count == 3)
+  }
+
+  func updateUserProfile(userId: UInt64, token: UInt64) -> (Bool, UInt64) {
+    self.receivedTokens = UserIdToTEKs.load(from: .receivedTEKFile)
+    assert(self.receivedTokens[userId] != nil && self.receivedTokens[userId]!.count==3)
+    self.receivedTokens[userId]!.append(token)
+    if self.receivedTokens[userId]!.count == 3 + self.daysUntilResult {
+      // return (true, )
+    } else {
+      return (false, 0)
+    }
   }
 }
 

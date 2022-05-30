@@ -31,15 +31,20 @@ message PretestTokens {
 }
 
 message Ack {
-    bool ack = 1;
+    uint64 userId = 1;
+    bool ack = 2;
 }
 
 message Check {
-    string date = 1;
-    uint64 token = 2;
+    uint64 userId = 1;
+    string date = 2;
+    uint64 token = 3;
 }
 
 message TestResult {
     bool ready = 1;
-    uint64 result = 2;
+    uint64 taId = 2;
+    uint64 seq = 3;
+    bool result = 4;
+    uint64 signature = 5;
 }
