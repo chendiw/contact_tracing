@@ -13,7 +13,9 @@ class ViewController: UIViewController {
     
     func startTAClient() {
         self.myTAClient.prepStartTest()
-//        self.myTAClient.prepGetResult()
+        for i in 0..<2 {
+            self.myTAClient.prepGetResult()
+        }
     }
     
     override func viewDidLoad() {

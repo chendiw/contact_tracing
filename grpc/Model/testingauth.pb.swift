@@ -87,7 +87,7 @@ public struct Testingauth_TestResult {
 
   public var seq: UInt64 = 0
 
-  public var result: Bool = false
+  public var result: UInt64 = 0 // 1 as positive, 0 as negative
 
   public var signature: UInt64 = 0
 
@@ -240,7 +240,7 @@ extension Testingauth_TestResult: SwiftProtobuf.Message, SwiftProtobuf._MessageI
       case 1: try { try decoder.decodeSingularBoolField(value: &self.ready) }()
       case 2: try { try decoder.decodeSingularUInt64Field(value: &self.taID) }()
       case 3: try { try decoder.decodeSingularUInt64Field(value: &self.seq) }()
-      case 4: try { try decoder.decodeSingularBoolField(value: &self.result) }()
+      case 4: try { try decoder.decodeSingularUInt64Field(value: &self.result) }()
       case 5: try { try decoder.decodeSingularUInt64Field(value: &self.signature) }()
       default: break
       }
@@ -257,8 +257,8 @@ extension Testingauth_TestResult: SwiftProtobuf.Message, SwiftProtobuf._MessageI
     if self.seq != 0 {
       try visitor.visitSingularUInt64Field(value: self.seq, fieldNumber: 3)
     }
-    if self.result != false {
-      try visitor.visitSingularBoolField(value: self.result, fieldNumber: 4)
+    if self.result != 0 {
+      try visitor.visitSingularUInt64Field(value: self.result, fieldNumber: 4)
     }
     if self.signature != 0 {
       try visitor.visitSingularUInt64Field(value: self.signature, fieldNumber: 5)

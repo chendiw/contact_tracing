@@ -10,13 +10,21 @@ import GRPC
 import NIOCore
 import NIOPosix
 
+struct TestResultMsg: Codable {
+    var taID: UInt64
+    var seq: UInt64
+    var result: UInt64
+    var signature: UInt64
+}
+
 public class TAClient {
     var port: Int = 1234
     var host_ip: String = "localhost"
     var client: Testingauth_AuthClient
     var tested: Bool = false
     var getResult: Bool = false
-    var result: UInt64 = 0
+    var result: TestResultMsg = TestResultMsg(taID: 0, seq: 0, result: 0, signature: 0)
+    var userId: UInt64 = 0
     
     init() {
         // Setup an `EventLoopGroup` for the connection to run on.
@@ -68,6 +76,7 @@ public class TAClient {
         do {
             let response = try requestStartTest.response.wait()
             self.tested = response.ack
+            self.userId = response.userID
             print("Ack received: \(response.ack)")
         } catch {
             print("Start test failed: \(error)")
@@ -80,6 +89,7 @@ public class TAClient {
         
         // Form the request with the name, if one was provided.
         let request = Testingauth_Check.with {
+            $0.userID = self.userId
             $0.date = Date.now.formatted()
             $0.token = curToken
         }
@@ -94,7 +104,7 @@ public class TAClient {
             // if result is not empty string
             if response.ready == true {
                 self.getResult = true
-                self.result = response.result
+                self.result = TestResultMsg(taID: response.taID, seq: response.seq, result: response.result, signature: response.signature)
             }
         } catch {
             print("Get Result failed: \(error)")

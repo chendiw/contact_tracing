@@ -79,6 +79,9 @@ extension Product {
 
 let package = Package(
     name: "grpc",
+    platforms: [
+        .macOS(.v11)
+    ],
     products: [
         .testAuthServer,
         .testAuthModel,
