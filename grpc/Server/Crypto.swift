@@ -5,8 +5,7 @@
 //
 import Foundation
 import CryptoKit
-//import CryptoSwift
-// CRNG(16)
+
 func crng(count: Int) -> Data {
     var bytes = [UInt8](repeating: 0, count: count)
 
@@ -29,13 +28,13 @@ func crng(count: Int) -> Data {
 // Experiment with whether tek_i should be UserToken.data() or result from crng(16)
 func getRPIKey(tek: Data) -> SymmetricKey {
     let resultKey = HKDF<SHA256>.deriveKey(inputKeyMaterial: SymmetricKey.init(data: tek), info: "EN-RPIK".data(using: .utf8)!, outputByteCount: 16)
-    let resultKey64 = resultKey.withUnsafeBytes {return Data(Array($0)).base64EncodedString()}
+    let _ = resultKey.withUnsafeBytes {return Data(Array($0)).base64EncodedString()}
 //    print("RPI Key base64: \(resultKey64)")
     return resultKey
 }
 
 // AES_128(RPIK_i, PaddedData_j)
-// result: ciphertext(RPI)||nonce||tag = bluetooth payload
+// result: ciphertext||nonce||tag
 func getRPI(rpi_key: SymmetricKey, nonce: Data?, eninterval: Int) -> Data {
     var plaintext = "EN-RPI".data(using: .utf8)! // 6 bytes
 //    print("plaintext length: \(plaintext.count)")

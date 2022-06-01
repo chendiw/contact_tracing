@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import GRPC
-import HelloWorldModel
+//import HelloWorldModel
 import NIOCore
 
 class GreeterProvider: Helloworld_GreeterProvider {

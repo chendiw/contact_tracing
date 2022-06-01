@@ -92,10 +92,6 @@ enum Command {
 
 typealias UserToken = UInt64
 extension UserToken {
-    func data() -> Data {
-        return Swift.withUnsafeBytes(of: self) { Data($0) }
-    }
-    
     init?(data: Data) {
         var value: UserToken = 0
         guard data.count >= MemoryLayout.size(ofValue: value) else { return nil }
@@ -119,11 +115,14 @@ let KeepPeerIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
 enum File: String {
     case myTEKs
     case peerTokens
+    case myExposureKey
     
     var rawValue: String {
+
         switch self {
-        case .myTEKs: return "myTEKs"
-        case .peerTokens: return "peerTokens"
+            case .myTEKs: return "myTEKs"
+            case .peerTokens: return "peerTokens"
+            case .myExposureKey: return "myExposureKey"
         }
     }
     
@@ -132,14 +131,22 @@ enum File: String {
         guard !fm.fileExists(atPath: url.path) else {
             return
         }
-        let emptyData:[String:Int] = ["Start":ENInterval.value()]
-        let plistContent = NSDictionary(dictionary: emptyData)
-        let success:Bool = plistContent.write(toFile: url.path, atomically: false)
-        if success {
-            print("File: \(url) creation successful")
-        } else {
-            print("Error creating file \(url)")
+        let emptyData: [TokenObject] = []
+        do {
+            let data = try JSONEncoder().encode(emptyData)
+            try data.write(to: url)
+        } catch {
+            print("Save EmptyData Error: \(error)")
         }
+//        try data.write(to: to.url())
+//        let plistContent = NSDictionary(dictionary: emptyData)
+        
+//        let success:Bool = data.write(toFile: url.path, atomically: false)
+//        if success {
+//            print("File: \(url) creation successful")
+//        } else {
+//            print("Error creating file \(url)")
+//        }
     }
     
     static func deleteFile(url: URL) {
@@ -158,7 +165,25 @@ enum File: String {
     func url() -> URL {
         let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
         let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue)!.appendingPathExtension("txt")
+        let date = Date()
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: date)
+        let month = calendar.component(.month, from: date)
+        let name = String(month) + "-" + String(day)
+        print("[Today] Today's date is: \(name)")
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + name )!.appendingPathExtension("txt")
+        return fileUrl
+    }
+    
+    func dayURL(date: Date) -> URL {
+        let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
+        let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: date)
+        let month = calendar.component(.month, from: date)
+        let name = String(month) + "-" + String(day)
+        print("[dayURL] Today's date is: \(name)")
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + name)!.appendingPathExtension("txt")
         return fileUrl
     }
 }
@@ -188,7 +213,20 @@ extension TokenList {
                 print("[load from file] the loaded data is: \(arr)")
                 return arr
             } catch {
-                print(error)
+                print("This is the error when load: ", error)
+            }
+        }
+        return TokenList()
+    }
+    
+    static func dayLoad(from: File, day: Date) -> TokenList {
+        if let data = try? Data(contentsOf: from.dayURL(date: day)) {
+            do {
+                let arr = try JSONDecoder().decode(self, from: data)
+                print("[load from file] the loaded data is: \(arr)")
+                return arr
+            } catch {
+                print("This is the error when dayLoad: ", error)
             }
         }
         return TokenList()
@@ -278,13 +316,14 @@ public class TokenController: NSObject {
         // load from different files
          self.myTokens = TokenList.load(from: .myTEKs)
 //        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
-//        print("My token list size is : \(self.myTokens.count)")
-        let curPayload = UserToken.next().data()
+        print("My token list size is : \(self.myTokens.count)")
+        
+        // TODO: change to crypto function.
+        let curPayload = UserToken.next().data
 //        print("My latest token payload: \(curPayload.uint64)")
         // Jiani: Only the payload field in myTokenList is useful
         self.myTokens.append(curPayload: curPayload, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min
-//        print("My token list size is : \(self.myTokens.count)")
-//        print("My token list last data is: \(self.myTokens.lastTokenObject?.payload.uint64)")
+        print("My token list last data is: \(self.myTokens)")
          self.myTokens.save(to: .myTEKs)
 
     }
@@ -314,18 +353,18 @@ public class TokenController: NSObject {
         
         let timer1 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(generateMyToken), userInfo: nil, repeats: true)
 
-        
+
 //        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
 //            self.peerTokens.save(to: .peerTokens)
 //        }
-        
+
         // object of characteristic nad service
         let tokenCharacteristic = MyCharacteristic(characteristicUUID)
         let ctService = MyService(serviceUUID)
         ctService.addCharacteristic(tokenCharacteristic)
-        
+
         var rssiList: [UUID: Int] = [:]  // a dict to store all preperial's rssi.
-        
+
         self.locationManager = LocationManager()
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
@@ -344,7 +383,7 @@ public class TokenController: NSObject {
                 self.peerTokens.save(to: .peerTokens)
                 return true
             }
-        
+
         centralManager = CentralManager(services: [ctService], queue: queue)
             .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
@@ -358,7 +397,7 @@ public class TokenController: NSObject {
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
-        
+
         let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
             
         

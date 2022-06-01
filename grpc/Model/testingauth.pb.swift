@@ -39,7 +39,7 @@ public struct Testingauth_PretestTokens {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var pretest: [String] = []
+  public var pretest: [UInt64] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -51,7 +51,9 @@ public struct Testingauth_Ack {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var ack: Int32 = 0
+  public var userID: UInt64 = 0
+
+  public var ack: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -63,9 +65,11 @@ public struct Testingauth_Check {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  public var userID: UInt64 = 0
+
   public var date: String = String()
 
-  public var token: String = String()
+  public var token: UInt64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -77,7 +81,15 @@ public struct Testingauth_TestResult {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var result: String = String()
+  public var ready: Bool = false
+
+  public var taID: UInt64 = 0
+
+  public var seq: UInt64 = 0
+
+  public var result: UInt64 = 0 // 1 as positive, 0 as negative
+
+  public var signature: UInt64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -107,7 +119,7 @@ extension Testingauth_PretestTokens: SwiftProtobuf.Message, SwiftProtobuf._Messa
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeRepeatedStringField(value: &self.pretest) }()
+      case 1: try { try decoder.decodeRepeatedUInt64Field(value: &self.pretest) }()
       default: break
       }
     }
@@ -115,7 +127,7 @@ extension Testingauth_PretestTokens: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.pretest.isEmpty {
-      try visitor.visitRepeatedStringField(value: self.pretest, fieldNumber: 1)
+      try visitor.visitPackedUInt64Field(value: self.pretest, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -130,7 +142,8 @@ extension Testingauth_PretestTokens: SwiftProtobuf.Message, SwiftProtobuf._Messa
 extension Testingauth_Ack: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Ack"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "ack"),
+    1: .same(proto: "userId"),
+    2: .same(proto: "ack"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -139,20 +152,25 @@ extension Testingauth_Ack: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularInt32Field(value: &self.ack) }()
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.userID) }()
+      case 2: try { try decoder.decodeSingularBoolField(value: &self.ack) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.ack != 0 {
-      try visitor.visitSingularInt32Field(value: self.ack, fieldNumber: 1)
+    if self.userID != 0 {
+      try visitor.visitSingularUInt64Field(value: self.userID, fieldNumber: 1)
+    }
+    if self.ack != false {
+      try visitor.visitSingularBoolField(value: self.ack, fieldNumber: 2)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Testingauth_Ack, rhs: Testingauth_Ack) -> Bool {
+    if lhs.userID != rhs.userID {return false}
     if lhs.ack != rhs.ack {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -162,8 +180,9 @@ extension Testingauth_Ack: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 extension Testingauth_Check: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Check"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "date"),
-    2: .same(proto: "token"),
+    1: .same(proto: "userId"),
+    2: .same(proto: "date"),
+    3: .same(proto: "token"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -172,24 +191,29 @@ extension Testingauth_Check: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.date) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.token) }()
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.userID) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.date) }()
+      case 3: try { try decoder.decodeSingularUInt64Field(value: &self.token) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.date.isEmpty {
-      try visitor.visitSingularStringField(value: self.date, fieldNumber: 1)
+    if self.userID != 0 {
+      try visitor.visitSingularUInt64Field(value: self.userID, fieldNumber: 1)
     }
-    if !self.token.isEmpty {
-      try visitor.visitSingularStringField(value: self.token, fieldNumber: 2)
+    if !self.date.isEmpty {
+      try visitor.visitSingularStringField(value: self.date, fieldNumber: 2)
+    }
+    if self.token != 0 {
+      try visitor.visitSingularUInt64Field(value: self.token, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Testingauth_Check, rhs: Testingauth_Check) -> Bool {
+    if lhs.userID != rhs.userID {return false}
     if lhs.date != rhs.date {return false}
     if lhs.token != rhs.token {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -200,7 +224,11 @@ extension Testingauth_Check: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
 extension Testingauth_TestResult: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".TestResult"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "result"),
+    1: .same(proto: "ready"),
+    2: .same(proto: "taId"),
+    3: .same(proto: "seq"),
+    4: .same(proto: "result"),
+    5: .same(proto: "signature"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -209,21 +237,41 @@ extension Testingauth_TestResult: SwiftProtobuf.Message, SwiftProtobuf._MessageI
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.result) }()
+      case 1: try { try decoder.decodeSingularBoolField(value: &self.ready) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.taID) }()
+      case 3: try { try decoder.decodeSingularUInt64Field(value: &self.seq) }()
+      case 4: try { try decoder.decodeSingularUInt64Field(value: &self.result) }()
+      case 5: try { try decoder.decodeSingularUInt64Field(value: &self.signature) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.result.isEmpty {
-      try visitor.visitSingularStringField(value: self.result, fieldNumber: 1)
+    if self.ready != false {
+      try visitor.visitSingularBoolField(value: self.ready, fieldNumber: 1)
+    }
+    if self.taID != 0 {
+      try visitor.visitSingularUInt64Field(value: self.taID, fieldNumber: 2)
+    }
+    if self.seq != 0 {
+      try visitor.visitSingularUInt64Field(value: self.seq, fieldNumber: 3)
+    }
+    if self.result != 0 {
+      try visitor.visitSingularUInt64Field(value: self.result, fieldNumber: 4)
+    }
+    if self.signature != 0 {
+      try visitor.visitSingularUInt64Field(value: self.signature, fieldNumber: 5)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Testingauth_TestResult, rhs: Testingauth_TestResult) -> Bool {
+    if lhs.ready != rhs.ready {return false}
+    if lhs.taID != rhs.taID {return false}
+    if lhs.seq != rhs.seq {return false}
     if lhs.result != rhs.result {return false}
+    if lhs.signature != rhs.signature {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

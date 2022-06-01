@@ -1,4 +1,4 @@
-// swift-tools-version: 5.6
+// swift-tools-version: 5.5
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -26,7 +26,7 @@ let packageDependencies: [Package.Dependency] = [
 ]
 
 extension Target.Dependency {
-    static let helloWorldModel: Self = .target(name: "HelloWorldModel")
+    static let testAuthModel: Self = .target(name: "testAuthModel")
     static let argumentParser: Self = .product(
         name: "ArgumentParser",
         package: "swift-argument-parser"
@@ -39,8 +39,8 @@ extension Target.Dependency {
 }
 
 extension Target {
-  static let helloWorldModel: Target = .target(
-    name: "HelloWorldModel",
+  static let testAuthModel: Target = .target(
+    name: "testAuthModel",
     dependencies: [
       .grpc,
       .nio,
@@ -48,15 +48,15 @@ extension Target {
     ],
     path: "Model",
     exclude: [
-      "helloworld.proto",
+      "testingauth.proto"
     ]
   )
 
-  static let helloWorldServer: Target = .executableTarget(
-    name: "HelloWorldServer",
+  static let testAuthServer: Target = .executableTarget(
+    name: "testAuthServer",
     dependencies: [
       .grpc,
-      .helloWorldModel,
+      .testAuthModel,
       .nioCore,
       .nioPosix,
       .argumentParser,
@@ -91,14 +91,14 @@ extension Target {
 }
 
 extension Product {
-  static let helloWorldServer: Product = .executable(
-    name: "server",
-    targets: ["HelloWorldServer"]
+  static let testAuthServer: Product = .executable(
+    name: "testAuthServer",
+    targets: ["testAuthServer"]
   )
 
-  static let helloWorldModel: Product = .library(
-    name: "model",
-    targets: ["HelloWorldModel"]
+  static let testAuthModel: Product = .library(
+    name: "testAuthModel",
+    targets: ["testAuthModel"]
   )
 
   static let centralServer: Product = .executable(
@@ -113,19 +113,18 @@ extension Product {
 }
 
 let package = Package(
-    name: "our_grpc",
+    name: "grpc",
+    platforms: [
+        .macOS(.v11)
+    ],
     products: [
-        .helloWorldServer,
-        .helloWorldModel,
-        .centralServer,
-        .centralModel,
+        .testAuthServer,
+        .testAuthModel,
     ],
     dependencies: packageDependencies,
     targets: [
-        .helloWorldModel,
-        .helloWorldServer,
-        .centralModel,
-        .centralServer,
-    ]
+        .testAuthModel,
+        .testAuthServer,
+    ],
 )
 

@@ -53,32 +53,32 @@ class Peripheral: NSObject {
                 } //withresponse to log whether write is sucessful to backend
             case .readRSSI:
                 self.peripheral.readRSSI()
-            case .scheduleCommands(let newCommands, let withTimeInterval, let repeatCount):
-                        if repeatCount == 0 {
-                            // Schedule finished
-                            if let c = nextCommand() {
-                                executeCommand(c)
-                            }
-                            return
-                        }
-                        print("Before timer")
-            timer = Timer.scheduledTimer(withTimeInterval: withTimeInterval, repeats: true) { [weak self] timer in
-//                            self?.queue.async {
-                                // Finish off current commands
-                                print("Executed timer")
-                                var nextCommands = self?.commands ?? []
-                                // Add new scheduled ocmmands for this round
-                                nextCommands.append(contentsOf: newCommands)
-                                // Mark the next scheduling event
-                                nextCommands.append(.scheduleCommands(commands: newCommands, withTimeInterval: withTimeInterval, repeatCount: repeatCount - 1))
-                                self?.commands = nextCommands
-                                print("Current iteration of commands: \(self?.commands)")
-                                if let c = self?.nextCommand() {
-                                    print("next command after schedule: \(c)")
-                                    self?.executeCommand(c)
-                                }
+//            case .scheduleCommands(let newCommands, let withTimeInterval, let repeatCount):
+//                        if repeatCount == 0 {
+//                            // Schedule finished
+//                            if let c = nextCommand() {
+//                                executeCommand(c)
 //                            }
-                        }
+//                            return
+//                        }
+//                        print("Before timer")
+//                timer = Timer.scheduledTimer(withTimeInterval: withTimeInterval, repeats: true) { [weak self] timer in
+////                            self?.queue.async {
+//                                // Finish off current commands
+//                                print("Executed timer")
+//                                var nextCommands = self?.commands ?? []
+//                                // Add new scheduled ocmmands for this round
+//                                nextCommands.append(contentsOf: newCommands)
+//                                // Mark the next scheduling event
+//                                nextCommands.append(.scheduleCommands(commands: newCommands, withTimeInterval: withTimeInterval, repeatCount: repeatCount - 1))
+//                                self?.commands = nextCommands
+//                                print("Current iteration of commands: \(self?.commands)")
+//                                if let c = self?.nextCommand() {
+//                                    print("next command after schedule: \(c)")
+//                                    self?.executeCommand(c)
+//                                }
+////                            }
+//                        }
 //                        RunLoop.current.add(timer!, forMode: .common)
             case .cancel(callback: let callback):
                 callback(self)
