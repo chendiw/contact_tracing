@@ -2,16 +2,39 @@ import GRPC
 import HelloWorldModel
 import NIOCore
 
-class AuthProvider: Helloworld_GreeterProvider {
-  var interceptors: Helloworld_GreeterServerInterceptorFactoryProtocol?
+class CentralProvider: Central_CentralProvider {
+  var interceptors: Central_CentralClientInterceptorFactoryProtocol?
 
-  func sendReportToken(
-    request: Helloworld_HelloRequest,
+  func sendExposureKeys(
+    request: Central_ExposureKeys,
     context: StatusOnlyCallContext
-  ) -> EventLoopFuture<Helloworld_HelloReply> {
-    let recipient = request.name.isEmpty ? "stranger" : request.name
-    let response = Helloworld_HelloReply.with {
-      $0.message = "Hello \(recipient)!"
+  ) -> EventLoopFuture<Central_Ack> {
+    // need to save tokens to appropriate file
+    FileManager.default.createDirectory(atPath: "/ab/cd/", withIntermediateDirectories: true, attributes: nil)
+    let response = Central_Ack.with {
+      $0.ack = 1
+    }
+    return context.eventLoop.makeSucceededFuture(response)
+  }
+
+  func pollPositive(
+    request: Central_Date,
+    context: StatusOnlyCallContext
+  ) -> EventLoopFuture<Central_Batch> {
+    // need to pull tokens from appropriate file
+    let response = Central_Batch.with {
+      
+    }
+    return context.eventLoop.makeSucceededFuture(response)
+  }
+
+  func pollNegative(
+    request: Central_Date,
+    context: StatusOnlyCallContext
+  ) -> EventLoopFuture<Central_Batch> {
+    // need to pull tokens from appropriate file
+    let response = Central_Batch.with {
+      
     }
     return context.eventLoop.makeSucceededFuture(response)
   }

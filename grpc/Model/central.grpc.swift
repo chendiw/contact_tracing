@@ -30,10 +30,10 @@ public protocol Central_CentralClientProtocol: GRPCClient {
   var serviceName: String { get }
   var interceptors: Central_CentralClientInterceptorFactoryProtocol? { get }
 
-  func sendReportToken(
-    _ request: Central_ReportToken,
+  func sendExposureKeys(
+    _ request: Central_ExposureKeys,
     callOptions: CallOptions?
-  ) -> UnaryCall<Central_ReportToken, Central_Ack>
+  ) -> UnaryCall<Central_ExposureKeys, Central_Ack>
 
   func pollPositive(
     _ request: Central_Date,
@@ -51,21 +51,21 @@ extension Central_CentralClientProtocol {
     return "central.Central"
   }
 
-  /// Unary call to sendReportToken
+  /// Unary call to sendExposureKeys
   ///
   /// - Parameters:
-  ///   - request: Request to send to sendReportToken.
+  ///   - request: Request to send to sendExposureKeys.
   ///   - callOptions: Call options.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func sendReportToken(
-    _ request: Central_ReportToken,
+  public func sendExposureKeys(
+    _ request: Central_ExposureKeys,
     callOptions: CallOptions? = nil
-  ) -> UnaryCall<Central_ReportToken, Central_Ack> {
+  ) -> UnaryCall<Central_ExposureKeys, Central_Ack> {
     return self.makeUnaryCall(
-      path: "/central.Central/sendReportToken",
+      path: "/central.Central/sendExposureKeys",
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makesendReportTokenInterceptors() ?? []
+      interceptors: self.interceptors?.makesendExposureKeysInterceptors() ?? []
     )
   }
 
@@ -108,8 +108,8 @@ extension Central_CentralClientProtocol {
 
 public protocol Central_CentralClientInterceptorFactoryProtocol {
 
-  /// - Returns: Interceptors to use when invoking 'sendReportToken'.
-  func makesendReportTokenInterceptors() -> [ClientInterceptor<Central_ReportToken, Central_Ack>]
+  /// - Returns: Interceptors to use when invoking 'sendExposureKeys'.
+  func makesendExposureKeysInterceptors() -> [ClientInterceptor<Central_ExposureKeys, Central_Ack>]
 
   /// - Returns: Interceptors to use when invoking 'pollPositive'.
   func makepollPositiveInterceptors() -> [ClientInterceptor<Central_Date, Central_Batch>]
@@ -144,7 +144,7 @@ public final class Central_CentralClient: Central_CentralClientProtocol {
 public protocol Central_CentralProvider: CallHandlerProvider {
   var interceptors: Central_CentralServerInterceptorFactoryProtocol? { get }
 
-  func sendReportToken(request: Central_ReportToken, context: StatusOnlyCallContext) -> EventLoopFuture<Central_Ack>
+  func sendExposureKeys(request: Central_ExposureKeys, context: StatusOnlyCallContext) -> EventLoopFuture<Central_Ack>
 
   func pollPositive(request: Central_Date, context: StatusOnlyCallContext) -> EventLoopFuture<Central_Batch>
 
@@ -161,13 +161,13 @@ extension Central_CentralProvider {
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
     switch name {
-    case "sendReportToken":
+    case "sendExposureKeys":
       return UnaryServerHandler(
         context: context,
-        requestDeserializer: ProtobufDeserializer<Central_ReportToken>(),
+        requestDeserializer: ProtobufDeserializer<Central_ExposureKeys>(),
         responseSerializer: ProtobufSerializer<Central_Ack>(),
-        interceptors: self.interceptors?.makesendReportTokenInterceptors() ?? [],
-        userFunction: self.sendReportToken(request:context:)
+        interceptors: self.interceptors?.makesendExposureKeysInterceptors() ?? [],
+        userFunction: self.sendExposureKeys(request:context:)
       )
 
     case "pollPositive":
@@ -196,9 +196,9 @@ extension Central_CentralProvider {
 
 public protocol Central_CentralServerInterceptorFactoryProtocol {
 
-  /// - Returns: Interceptors to use when handling 'sendReportToken'.
+  /// - Returns: Interceptors to use when handling 'sendExposureKeys'.
   ///   Defaults to calling `self.makeInterceptors()`.
-  func makesendReportTokenInterceptors() -> [ServerInterceptor<Central_ReportToken, Central_Ack>]
+  func makesendExposureKeysInterceptors() -> [ServerInterceptor<Central_ExposureKeys, Central_Ack>]
 
   /// - Returns: Interceptors to use when handling 'pollPositive'.
   ///   Defaults to calling `self.makeInterceptors()`.

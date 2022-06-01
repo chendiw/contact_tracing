@@ -123,12 +123,12 @@ class CentralClient {
         // Provide the connection to the generated client.
         let central_client = Central_CentralClient(channel: channel)
 
-        let request = Central_ReportToken.with {
-            $0.token = 1209024
+        let request = Central_ExposureKeys.with {
+            $0.token1 = 1209024
         }
 
         // Make the RPC call to the server.
-        let report = central_client.sendReportToken(request)
+        let report = central_client.sendExposureKeys(request)
 
         // wait() on the response to stop the program from exiting before the response is received.
         do {

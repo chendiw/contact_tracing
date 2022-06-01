@@ -63,6 +63,31 @@ extension Target {
     ],
     path: "Server"
   )
+
+  static let centralModel: Target = .target(
+    name: "CentralModel",
+    dependencies: [
+      .grpc,
+      .nio,
+      .protobuf,
+    ],
+    path: "Model",
+    exclude: [
+      "central.proto",
+    ]
+  )
+
+  static let centralServer: Target = .executableTarget(
+    name: "CentralServer",
+    dependencies: [
+      .grpc,
+      .helloWorldModel,
+      .nioCore,
+      .nioPosix,
+      .argumentParser,
+    ],
+    path: "Server"
+  )
 }
 
 extension Product {
@@ -75,6 +100,16 @@ extension Product {
     name: "model",
     targets: ["HelloWorldModel"]
   )
+
+  static let centralServer: Product = .executable(
+    name: "CentralServer",
+    targets: ["CentralServer"]
+  )
+
+  static let centralModel: Product = .library(
+    name: "CentralModel",
+    targets: ["CentralModel"]
+  )
 }
 
 let package = Package(
@@ -82,11 +117,15 @@ let package = Package(
     products: [
         .helloWorldServer,
         .helloWorldModel,
+        .centralServer,
+        .centralModel,
     ],
     dependencies: packageDependencies,
     targets: [
         .helloWorldModel,
         .helloWorldServer,
+        .centralModel,
+        .centralServer,
     ]
 )
 

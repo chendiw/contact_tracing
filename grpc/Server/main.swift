@@ -15,11 +15,11 @@
  */
 import ArgumentParser
 import GRPC
-import HelloWorldModel
+import CentralModel
 import NIOCore
 import NIOPosix
 
-struct HelloWorld: ParsableCommand {
+struct Central: ParsableCommand {
   @Option(help: "The port to listen on for new connections")
   var port = 1234
 
@@ -31,7 +31,7 @@ struct HelloWorld: ParsableCommand {
 
     // Start the server and print its address once it has started.
     let server = Server.insecure(group: group)
-      .withServiceProviders([GreeterProvider()])
+      .withServiceProviders([CentralProvider()])
       .bind(host: "localhost", port: self.port)
 
     server.map {
@@ -47,4 +47,4 @@ struct HelloWorld: ParsableCommand {
   }
 }
 
-HelloWorld.main()
+Central.main()

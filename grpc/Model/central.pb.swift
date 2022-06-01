@@ -34,16 +34,77 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct Central_ReportToken {
+public struct Central_ExposureKeys {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var token: UInt64 = 0
+  public var token1: UInt64 = 0
+
+  public var token2: UInt64 = 0
+
+  public var token3: UInt64 = 0
+
+  public var token4: UInt64 = 0
+
+  public var token5: UInt64 = 0
+
+  public var date1: Central_Date {
+    get {return _date1 ?? Central_Date()}
+    set {_date1 = newValue}
+  }
+  /// Returns true if `date1` has been explicitly set.
+  public var hasDate1: Bool {return self._date1 != nil}
+  /// Clears the value of `date1`. Subsequent reads from it will return its default value.
+  public mutating func clearDate1() {self._date1 = nil}
+
+  public var date2: Central_Date {
+    get {return _date2 ?? Central_Date()}
+    set {_date2 = newValue}
+  }
+  /// Returns true if `date2` has been explicitly set.
+  public var hasDate2: Bool {return self._date2 != nil}
+  /// Clears the value of `date2`. Subsequent reads from it will return its default value.
+  public mutating func clearDate2() {self._date2 = nil}
+
+  public var date3: Central_Date {
+    get {return _date3 ?? Central_Date()}
+    set {_date3 = newValue}
+  }
+  /// Returns true if `date3` has been explicitly set.
+  public var hasDate3: Bool {return self._date3 != nil}
+  /// Clears the value of `date3`. Subsequent reads from it will return its default value.
+  public mutating func clearDate3() {self._date3 = nil}
+
+  public var date4: Central_Date {
+    get {return _date4 ?? Central_Date()}
+    set {_date4 = newValue}
+  }
+  /// Returns true if `date4` has been explicitly set.
+  public var hasDate4: Bool {return self._date4 != nil}
+  /// Clears the value of `date4`. Subsequent reads from it will return its default value.
+  public mutating func clearDate4() {self._date4 = nil}
+
+  public var date5: Central_Date {
+    get {return _date5 ?? Central_Date()}
+    set {_date5 = newValue}
+  }
+  /// Returns true if `date5` has been explicitly set.
+  public var hasDate5: Bool {return self._date5 != nil}
+  /// Clears the value of `date5`. Subsequent reads from it will return its default value.
+  public mutating func clearDate5() {self._date5 = nil}
+
+  public var pos: Int32 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
+
+  fileprivate var _date1: Central_Date? = nil
+  fileprivate var _date2: Central_Date? = nil
+  fileprivate var _date3: Central_Date? = nil
+  fileprivate var _date4: Central_Date? = nil
+  fileprivate var _date5: Central_Date? = nil
 }
 
 public struct Central_Ack {
@@ -83,7 +144,7 @@ public struct Central_Batch {
 }
 
 #if swift(>=5.5) && canImport(_Concurrency)
-extension Central_ReportToken: @unchecked Sendable {}
+extension Central_ExposureKeys: @unchecked Sendable {}
 extension Central_Ack: @unchecked Sendable {}
 extension Central_Date: @unchecked Sendable {}
 extension Central_Batch: @unchecked Sendable {}
@@ -93,10 +154,20 @@ extension Central_Batch: @unchecked Sendable {}
 
 fileprivate let _protobuf_package = "central"
 
-extension Central_ReportToken: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".ReportToken"
+extension Central_ExposureKeys: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ExposureKeys"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "token"),
+    1: .same(proto: "token1"),
+    2: .same(proto: "token2"),
+    3: .same(proto: "token3"),
+    4: .same(proto: "token4"),
+    5: .same(proto: "token5"),
+    6: .same(proto: "date1"),
+    7: .same(proto: "date2"),
+    8: .same(proto: "date3"),
+    9: .same(proto: "date4"),
+    10: .same(proto: "date5"),
+    11: .same(proto: "pos"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -105,21 +176,75 @@ extension Central_ReportToken: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.token) }()
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.token1) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.token2) }()
+      case 3: try { try decoder.decodeSingularUInt64Field(value: &self.token3) }()
+      case 4: try { try decoder.decodeSingularUInt64Field(value: &self.token4) }()
+      case 5: try { try decoder.decodeSingularUInt64Field(value: &self.token5) }()
+      case 6: try { try decoder.decodeSingularMessageField(value: &self._date1) }()
+      case 7: try { try decoder.decodeSingularMessageField(value: &self._date2) }()
+      case 8: try { try decoder.decodeSingularMessageField(value: &self._date3) }()
+      case 9: try { try decoder.decodeSingularMessageField(value: &self._date4) }()
+      case 10: try { try decoder.decodeSingularMessageField(value: &self._date5) }()
+      case 11: try { try decoder.decodeSingularInt32Field(value: &self.pos) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.token != 0 {
-      try visitor.visitSingularUInt64Field(value: self.token, fieldNumber: 1)
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.token1 != 0 {
+      try visitor.visitSingularUInt64Field(value: self.token1, fieldNumber: 1)
+    }
+    if self.token2 != 0 {
+      try visitor.visitSingularUInt64Field(value: self.token2, fieldNumber: 2)
+    }
+    if self.token3 != 0 {
+      try visitor.visitSingularUInt64Field(value: self.token3, fieldNumber: 3)
+    }
+    if self.token4 != 0 {
+      try visitor.visitSingularUInt64Field(value: self.token4, fieldNumber: 4)
+    }
+    if self.token5 != 0 {
+      try visitor.visitSingularUInt64Field(value: self.token5, fieldNumber: 5)
+    }
+    try { if let v = self._date1 {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+    } }()
+    try { if let v = self._date2 {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+    } }()
+    try { if let v = self._date3 {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+    } }()
+    try { if let v = self._date4 {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
+    } }()
+    try { if let v = self._date5 {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
+    } }()
+    if self.pos != 0 {
+      try visitor.visitSingularInt32Field(value: self.pos, fieldNumber: 11)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Central_ReportToken, rhs: Central_ReportToken) -> Bool {
-    if lhs.token != rhs.token {return false}
+  public static func ==(lhs: Central_ExposureKeys, rhs: Central_ExposureKeys) -> Bool {
+    if lhs.token1 != rhs.token1 {return false}
+    if lhs.token2 != rhs.token2 {return false}
+    if lhs.token3 != rhs.token3 {return false}
+    if lhs.token4 != rhs.token4 {return false}
+    if lhs.token5 != rhs.token5 {return false}
+    if lhs._date1 != rhs._date1 {return false}
+    if lhs._date2 != rhs._date2 {return false}
+    if lhs._date3 != rhs._date3 {return false}
+    if lhs._date4 != rhs._date4 {return false}
+    if lhs._date5 != rhs._date5 {return false}
+    if lhs.pos != rhs.pos {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
