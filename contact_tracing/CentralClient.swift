@@ -35,7 +35,7 @@ class CentralClient {
         }
 
         // Provide the connection to the generated client.
-        let central_client = Central_ReportClient(channel: channel)
+        let central_client = Central_CentralClient(channel: channel)
 
         let request = Central_Date.with {
             $0.date = "1/1/2022"
@@ -78,7 +78,7 @@ class CentralClient {
         }
 
         // Provide the connection to the generated client.
-        let central_client = Central_ReportClient(channel: channel)
+        let central_client = Central_CentralClient(channel: channel)
 
         let request = Central_Date.with {
             $0.date = "1/1/2022"
@@ -121,10 +121,10 @@ class CentralClient {
         }
 
         // Provide the connection to the generated client.
-        let central_client = Central_ReportClient(channel: channel)
+        let central_client = Central_CentralClient(channel: channel)
 
         let request = Central_ReportToken.with {
-            $0.token = "??"
+            $0.token = 1209024
         }
 
         // Make the RPC call to the server.
