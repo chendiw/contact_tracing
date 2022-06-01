@@ -36,3 +36,9 @@ public extension String {
         return Data(self.utf8)
     }
 }
+
+public extension UInt64 {
+    var data: Data {
+        return Swift.withUnsafeBytes(of: self) { Data($0) }
+    }
+}

@@ -92,10 +92,6 @@ enum Command {
 
 typealias UserToken = UInt64
 extension UserToken {
-    func data() -> Data {
-        return Swift.withUnsafeBytes(of: self) { Data($0) }
-    }
-    
     init?(data: Data) {
         var value: UserToken = 0
         guard data.count >= MemoryLayout.size(ofValue: value) else { return nil }
@@ -294,12 +290,11 @@ public class TokenController: NSObject {
          self.myTokens = TokenList.load(from: .myTEKs)
 //        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
 //        print("My token list size is : \(self.myTokens.count)")
-        let curPayload = UserToken.next().data()
+        let curPayload = UserToken.next().data
 //        print("My latest token payload: \(curPayload.uint64)")
         // Jiani: Only the payload field in myTokenList is useful
         self.myTokens.append(curPayload: curPayload, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min
-//        print("My token list size is : \(self.myTokens.count)")
-//        print("My token list last data is: \(self.myTokens.lastTokenObject?.payload.uint64)")
+        print("My token list last data is: \(self.myTokens.lastTokenObject?.payload.uint64)")
          self.myTokens.save(to: .myTEKs)
 
     }
@@ -329,18 +324,18 @@ public class TokenController: NSObject {
         
         let timer1 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(generateMyToken), userInfo: nil, repeats: true)
 
-        
+
 //        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
 //            self.peerTokens.save(to: .peerTokens)
 //        }
-        
+
         // object of characteristic nad service
         let tokenCharacteristic = MyCharacteristic(characteristicUUID)
         let ctService = MyService(serviceUUID)
         ctService.addCharacteristic(tokenCharacteristic)
-        
+
         var rssiList: [UUID: Int] = [:]  // a dict to store all preperial's rssi.
-        
+
         self.locationManager = LocationManager()
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
@@ -359,7 +354,7 @@ public class TokenController: NSObject {
                 self.peerTokens.save(to: .peerTokens)
                 return true
             }
-        
+
         centralManager = CentralManager(services: [ctService], queue: queue)
             .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
@@ -373,7 +368,7 @@ public class TokenController: NSObject {
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
-        
+
         let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
             
         
