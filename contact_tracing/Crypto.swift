@@ -79,6 +79,7 @@ func getAEMKey(tek: Data) -> SymmetricKey {
 }
 
 // TODO: AES-128-CTR encrypt metadata
+
 // Generate (private key, public key) pair for digital signature
 func sigKeyGen() -> (Curve25519.Signing.PrivateKey, Curve25519.Signing.PublicKey) {
     let privateKey = Curve25519.Signing.PrivateKey();
@@ -89,12 +90,12 @@ func sigKeyGen() -> (Curve25519.Signing.PrivateKey, Curve25519.Signing.PublicKey
 
 // sign(TA_sk, concat_teks) TODO: add timestamp info to avoid replay attack
 func sign(pri_key: Curve25519.Signing.PrivateKey, content: Data) -> Data {
-//    let hash = SHA256.hash(data: content)
-    let digestSignature = try! pri_key.signature(for: content)
+    let hash = SHA256.hash(data: content)
+    let digestSignature = try! pri_key.signature(for: Data(hash))
     return digestSignature
 }
 
 // verify(TA_pk, signature, concat_teks)
-func verifySign(pub_key: Curve25519.Signing.PublicKey, signature: Data, content: Data) -> Bool {
-    return pub_key.isValidSignature(signature, for: content)
+func verifySign(pub_key: Curve25519.Signing.PublicKey, signature: Data, digest: SHA256Digest) -> Bool {
+    return pub_key.isValidSignature(signature, for: Data(digest))
 }

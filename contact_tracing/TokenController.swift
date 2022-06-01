@@ -17,6 +17,7 @@ public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137
 public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
 public let peripheralName = "CT-Peripheral-test1"
 public let tokenGenInterval: TimeInterval = 20 //re-exchange tokens per 10 min
+
 class MyService {
     private var uuid: CBUUID
     private var service: CBMutableService
@@ -74,18 +75,13 @@ enum Command {
     case write(value: Data?)
     case readRSSI
     case cancel(callback: (Peripheral) -> Void)
-    case scheduleCommands(commands: [Command], withTimeInterval: TimeInterval, repeatCount: Int) //TODO
     case clear
     var description: String {
         switch self {
-//        case .read:
-//            return "read"
         case .write:
             return "write"
         case .readRSSI:
             return "readRSSI"
-        case .scheduleCommands:
-            return "schedule"
         case .cancel:
             return "cancel"
         case .clear:
@@ -93,27 +89,6 @@ enum Command {
         }
     }
 }
-
-public extension Data {
-    var uint64: UInt64 {
-          get {
-              if count >= 8 {
-                  return self.withUnsafeBytes { $0.load(as: UInt64.self) }
-              } else {
-                  return (self + Data(repeating: 0, count: 8 - count)).uint64
-              }
-          }
-      }
-    
-    var int: Int {
-        return self.withUnsafeBytes{pointer in return pointer.load(as: Int.self)}
-    }
-    
-    var hex: String {
-        return map {String(format: "%02x", $0)}.joined()
-    }
-}
-
 
 typealias UserToken = UInt64
 extension UserToken {
@@ -133,10 +108,6 @@ extension UserToken {
         // This is cryptographically random
         let curRandom = UInt64.random(in: 0 ... UInt64.max)
         return UserToken(curRandom)
-        // For testing:
-//        let encodeUInt = "test1"
-////        let uint64 = UInt64(encodeUInt)
-//        return UserToken(data: encodeUInt.data(using: .utf8)!)!
     }
 }
 
@@ -160,7 +131,6 @@ enum File: String {
     static func createFile(url: URL) {
         let fm = FileManager.default
         guard !fm.fileExists(atPath: url.path) else {
-//            print("\(url) already exists!")
             return
         }
         let emptyData:[String:Int] = ["Start":ENInterval.value()]
@@ -374,13 +344,8 @@ public class TokenController: NSObject {
         self.locationManager = LocationManager()
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
-
-//            .onReadClosure{[unowned self] (peripheral, tokenCharacteristic) in
-//                return self.myTokens.lastTokenObject?.payload // lastTokenObject should not be nil
-//            }
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
                 print("[Onwrite]Received peer token: \(data.uint64)")
-//                let curToken = TokenObject(eninterval: ENInterval.value(), payload: data, rssi: 0)
                 self.peerTokens = TokenList.load(from: .peerTokens)  // load old peerTokens
                 var rssiValue = 0;
                 if rssiList[peripheral.identifier] != nil{
@@ -395,12 +360,9 @@ public class TokenController: NSObject {
                 return true
             }
         
-//        let commandSequence: [Command] = [Command.readRSSI, Command.write(value: self.myTokens.lastTokenObject?.payload)]
         centralManager = CentralManager(services: [ctService], queue: queue)
-//            .addCommandCallback(command: .scheduleCommands(commands: commandSequence, withTimeInterval: scheduleCommandsInterval, repeatCount: 2))
             .addCommandCallback(command: .readRSSI)
             .didReadRSSICallback({ [unowned self] peripheral, RSSI, error in
-//                print("peripheral=\(peripheral.id), RSSI=\(RSSI), error=\(String(describing: error))")
                 rssiList[peripheral.id] = Int(truncating: RSSI)  // change NSNumber to Ints
                 print("[Store RSSI]peripheral=\(peripheral.id), RSSI=\(rssiList[peripheral.id]), error=\(String(describing: error))")
                 guard error == nil else {
@@ -411,29 +373,8 @@ public class TokenController: NSObject {
             .addCommandCallback(
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
-//            .addCommandCallback(
-//                command: .cancel(callback: { [unowned self] peripheral in
-//                    self.centralManager?.disconnect(peripheral)
-//                }))
         
         let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
-        
-        
-//            .addCommandCallback(
-//                command: .read)
-//            .didUpdateValueCallback({ [unowned self] peripheral, ch, data, error in
-////                if let dat = data, let peerToken = UserToken(data: dat) {
-//                if let dat = data, let peerToken = TokenObject(eninterval: ENInterval.value(), payload: dat, rssi: NSNumber.init(value: 0)) {
-//                    print("Read Successful from \(peerToken)")
-//                    self.peerTokens.append(token:peerToken)
-//                    self.peerTokens.save(to: .peerTokens)
-//                }
-//            })
-//            // TODO: need to disconnect? Or add cancel callback function
-//            .addCommandCallback(
-//                command: .cancel(callback: { [unowned self] peripheral in
-//                    self.centralManager?.disconnect(peripheral)
-//                }))
             
         
     }

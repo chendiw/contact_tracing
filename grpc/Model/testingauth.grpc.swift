@@ -26,7 +26,7 @@ import SwiftProtobuf
 
 
 /// Usage: instantiate `Testingauth_AuthClient`, then call methods of this protocol to make API calls.
-internal protocol Testingauth_AuthClientProtocol: GRPCClient {
+public protocol Testingauth_AuthClientProtocol: GRPCClient {
   var serviceName: String { get }
   var interceptors: Testingauth_AuthClientInterceptorFactoryProtocol? { get }
 
@@ -42,7 +42,7 @@ internal protocol Testingauth_AuthClientProtocol: GRPCClient {
 }
 
 extension Testingauth_AuthClientProtocol {
-  internal var serviceName: String {
+  public var serviceName: String {
     return "testingauth.Auth"
   }
 
@@ -52,7 +52,7 @@ extension Testingauth_AuthClientProtocol {
   ///   - request: Request to send to startTest.
   ///   - callOptions: Call options.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  internal func startTest(
+  public func startTest(
     _ request: Testingauth_PretestTokens,
     callOptions: CallOptions? = nil
   ) -> UnaryCall<Testingauth_PretestTokens, Testingauth_Ack> {
@@ -70,7 +70,7 @@ extension Testingauth_AuthClientProtocol {
   ///   - request: Request to send to getResult.
   ///   - callOptions: Call options.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  internal func getResult(
+  public func getResult(
     _ request: Testingauth_Check,
     callOptions: CallOptions? = nil
   ) -> UnaryCall<Testingauth_Check, Testingauth_TestResult> {
@@ -83,7 +83,7 @@ extension Testingauth_AuthClientProtocol {
   }
 }
 
-internal protocol Testingauth_AuthClientInterceptorFactoryProtocol {
+public protocol Testingauth_AuthClientInterceptorFactoryProtocol {
 
   /// - Returns: Interceptors to use when invoking 'startTest'.
   func makestartTestInterceptors() -> [ClientInterceptor<Testingauth_PretestTokens, Testingauth_Ack>]
@@ -92,10 +92,10 @@ internal protocol Testingauth_AuthClientInterceptorFactoryProtocol {
   func makegetResultInterceptors() -> [ClientInterceptor<Testingauth_Check, Testingauth_TestResult>]
 }
 
-internal final class Testingauth_AuthClient: Testingauth_AuthClientProtocol {
-  internal let channel: GRPCChannel
-  internal var defaultCallOptions: CallOptions
-  internal var interceptors: Testingauth_AuthClientInterceptorFactoryProtocol?
+public final class Testingauth_AuthClient: Testingauth_AuthClientProtocol {
+  public let channel: GRPCChannel
+  public var defaultCallOptions: CallOptions
+  public var interceptors: Testingauth_AuthClientInterceptorFactoryProtocol?
 
   /// Creates a client for the testingauth.Auth service.
   ///
@@ -103,7 +103,7 @@ internal final class Testingauth_AuthClient: Testingauth_AuthClientProtocol {
   ///   - channel: `GRPCChannel` to the service host.
   ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
   ///   - interceptors: A factory providing interceptors for each RPC.
-  internal init(
+  public init(
     channel: GRPCChannel,
     defaultCallOptions: CallOptions = CallOptions(),
     interceptors: Testingauth_AuthClientInterceptorFactoryProtocol? = nil
@@ -115,7 +115,7 @@ internal final class Testingauth_AuthClient: Testingauth_AuthClientProtocol {
 }
 
 /// To build a server, implement a class that conforms to this protocol.
-internal protocol Testingauth_AuthProvider: CallHandlerProvider {
+public protocol Testingauth_AuthProvider: CallHandlerProvider {
   var interceptors: Testingauth_AuthServerInterceptorFactoryProtocol? { get }
 
   func startTest(request: Testingauth_PretestTokens, context: StatusOnlyCallContext) -> EventLoopFuture<Testingauth_Ack>
@@ -124,11 +124,11 @@ internal protocol Testingauth_AuthProvider: CallHandlerProvider {
 }
 
 extension Testingauth_AuthProvider {
-  internal var serviceName: Substring { return "testingauth.Auth" }
+  public var serviceName: Substring { return "testingauth.Auth" }
 
   /// Determines, calls and returns the appropriate request handler, depending on the request's method.
   /// Returns nil for methods not handled by this service.
-  internal func handle(
+  public func handle(
     method name: Substring,
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
@@ -157,7 +157,7 @@ extension Testingauth_AuthProvider {
   }
 }
 
-internal protocol Testingauth_AuthServerInterceptorFactoryProtocol {
+public protocol Testingauth_AuthServerInterceptorFactoryProtocol {
 
   /// - Returns: Interceptors to use when handling 'startTest'.
   ///   Defaults to calling `self.makeInterceptors()`.
