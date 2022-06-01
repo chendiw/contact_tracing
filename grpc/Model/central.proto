@@ -21,14 +21,14 @@ option objc_class_prefix = "HLW";
 
 package central;
 
-service Auth {
+service Central {
     rpc sendReportToken(ReportToken) returns (Ack) {}
     rpc pollPositive(Date) returns (Batch) {}
     rpc pollNegative(Date) returns (Batch) {}
 }
 
 message ReportToken {
-    string token = 1;
+    uint64 token = 1;
 }
 
 message Ack {
@@ -40,5 +40,5 @@ message Date {
 }
 
 message Batch {
-  repeated string token = 1;
+  repeated uint64 token = 1;
 }

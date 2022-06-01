@@ -15,20 +15,20 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "io.grpc.examples.helloworld";
-option java_outer_classname = "HelloWorldProto";
+option java_package = "io.grpc.examples.central";
+option java_outer_classname = "CentralProto";
 option objc_class_prefix = "HLW";
 
 package central;
 
-service Report {
+service Central {
     rpc sendReportToken(ReportToken) returns (Ack) {}
     rpc pollPositive(Date) returns (Batch) {}
     rpc pollNegative(Date) returns (Batch) {}
 }
 
 message ReportToken {
-    string token = 1;
+    uint64 token = 1;
 }
 
 message Ack {
@@ -40,5 +40,5 @@ message Date {
 }
 
 message Batch {
-  repeated string token = 1;
+  repeated uint64 token = 1;
 }
