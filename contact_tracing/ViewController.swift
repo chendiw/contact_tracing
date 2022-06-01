@@ -62,7 +62,7 @@ class ViewController: UIViewController {
         print("Start Bluetooth")
         
         // Get today's level here: Write the riskScore result to a file
-        
+        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
          
         let textField0 = UITextView(frame: CGRect(x: 90, y: 150, width: 250, height: 50))
         textField0.text = "Your COVID exposure level is: "
@@ -148,29 +148,51 @@ class ViewController: UIViewController {
      }
     
     @objc func getTestResult(sender: UIButton!) {
-        print("buttonAction")
+        print("getTestResult")
         self.myTAClient = TAClient()
         startTAClient()
     }
     
     @objc func reportPositive(sender: UIButton!) {
         print("reportPositive")
+        
     }
     
     @objc func startService(sender: UIButton!) {
         print("Start Contact Tracing")
         self.start = true
         
-        TokenController.didFinishLaunching()
-        TokenController.startFresh()  // delete previous file
-        TokenController.start()
-        
+//        TokenController.didFinishLaunching()
+//        TokenController.startFresh()  // delete previous file
+//        TokenController.start()
    }
 
     
     @objc func stopService(sender: UIButton!) {
         print("Stop service")
         self.start = false
+        print(self.start)
+    }
+    
+    @objc func todayTask() {
+        if self.start{
+            print("This is today's Task")
+            // 1. Generate an exposure key, Store to the file
+            
+            // 2. Poll for negtive and positve exposure keys, calculate risk score
+            
+            // 3. show today's risk level
+            let textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
+            textField.text = "TEST"
+            textField.textColor = .red
+            textField.isEditable = false
+            textField.font = UIFont(name: "Arial", size: 50)
+            self.view.addSubview(textField)
+            
+        }else{
+            print("Service not start. Do not do today's task")
+        }
+        
     }
     
 }
