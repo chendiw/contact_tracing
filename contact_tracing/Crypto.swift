@@ -35,7 +35,7 @@ func getRPIKey(tek: Data) -> SymmetricKey {
 }
 
 // AES_128(RPIK_i, PaddedData_j)
-// result: ciphertext||nonce||tag
+// result: ciphertext(RPI)||nonce||tag = bluetooth payload
 func getRPI(rpi_key: SymmetricKey, nonce: Data?, eninterval: Int) -> Data {
     var plaintext = "EN-RPI".data(using: .utf8)! // 6 bytes
 //    print("plaintext length: \(plaintext.count)")
