@@ -56,7 +56,15 @@ public class TAClient {
     public func prepStartTest() {
         // Construct list of pretest tokens (currently set to 3)
         let num_pretestTokens = 3
-        let allTokens = TokenList.load(from: .myTEKs)
+        var allTokens: [TokenObject] = []
+        let date = Date()  // get today
+        let calendar = Calendar.current
+        let day = calendar.component(.hour, from: date)
+        for i in 1...num_pretestTokens{
+            let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: date)!
+            allTokens.append(TokenList.dayLoad(from: .myExposureKey, day: prevDate)[0])
+        }
+
         let pretestTokenObjects: [TokenObject] = allTokens.suffix(num_pretestTokens)
         var pretestTokens: [UInt64] = []
         for t in pretestTokenObjects {

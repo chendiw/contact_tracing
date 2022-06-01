@@ -115,12 +115,14 @@ let KeepPeerIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
 enum File: String {
     case myTEKs
     case peerTokens
+    case myExposureKey
     
     var rawValue: String {
 
         switch self {
             case .myTEKs: return "myTEKs"
             case .peerTokens: return "peerTokens"
+            case .myExposureKey: return "myExposureKey"
         }
     }
     
@@ -129,14 +131,22 @@ enum File: String {
         guard !fm.fileExists(atPath: url.path) else {
             return
         }
-        let emptyData:[String:Int] = ["Start":ENInterval.value()]
-        let plistContent = NSDictionary(dictionary: emptyData)
-        let success:Bool = plistContent.write(toFile: url.path, atomically: false)
-        if success {
-            print("File: \(url) creation successful")
-        } else {
-            print("Error creating file \(url)")
+        let emptyData: [TokenObject] = []
+        do {
+            let data = try JSONEncoder().encode(emptyData)
+            try data.write(to: url)
+        } catch {
+            print("Save EmptyData Error: \(error)")
         }
+//        try data.write(to: to.url())
+//        let plistContent = NSDictionary(dictionary: emptyData)
+        
+//        let success:Bool = data.write(toFile: url.path, atomically: false)
+//        if success {
+//            print("File: \(url) creation successful")
+//        } else {
+//            print("Error creating file \(url)")
+//        }
     }
     
     static func deleteFile(url: URL) {
@@ -203,7 +213,20 @@ extension TokenList {
                 print("[load from file] the loaded data is: \(arr)")
                 return arr
             } catch {
-                print(error)
+                print("This is the error when load: ", error)
+            }
+        }
+        return TokenList()
+    }
+    
+    static func dayLoad(from: File, day: Date) -> TokenList {
+        if let data = try? Data(contentsOf: from.dayURL(date: day)) {
+            do {
+                let arr = try JSONDecoder().decode(self, from: data)
+                print("[load from file] the loaded data is: \(arr)")
+                return arr
+            } catch {
+                print("This is the error when dayLoad: ", error)
             }
         }
         return TokenList()
@@ -293,12 +316,14 @@ public class TokenController: NSObject {
         // load from different files
          self.myTokens = TokenList.load(from: .myTEKs)
 //        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
-//        print("My token list size is : \(self.myTokens.count)")
+        print("My token list size is : \(self.myTokens.count)")
+        
+        // TODO: change to crypto function.
         let curPayload = UserToken.next().data
 //        print("My latest token payload: \(curPayload.uint64)")
         // Jiani: Only the payload field in myTokenList is useful
         self.myTokens.append(curPayload: curPayload, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min
-        print("My token list last data is: \(self.myTokens.lastTokenObject?.payload.uint64)")
+        print("My token list last data is: \(self.myTokens)")
          self.myTokens.save(to: .myTEKs)
 
     }
