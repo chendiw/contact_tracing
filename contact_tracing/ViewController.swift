@@ -151,11 +151,15 @@ class ViewController: UIViewController {
     @objc func startService(sender: UIButton!) {
         print("Start Contact Tracing")
         self.start = true
+        TokenController.didFinishLaunching()
+        TokenController.startFresh()  // delete previous file
+        TokenController.start()
     }
     
     @objc func stopService(sender: UIButton!) {
         print("Stop service")
         self.start = false
+        
     }
     
 }
