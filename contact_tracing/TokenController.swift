@@ -158,8 +158,10 @@ enum File: String {
         let date = Date()
         let calendar = Calendar.current
         let day = calendar.component(.day, from: date)
-        print("[Today] Today's date is: \(day)")
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + String(day))!.appendingPathExtension("txt")
+        let month = calendar.component(.month, from: date)
+        let name = String(month) + "-" + String(day)
+        print("[Today] Today's date is: \(name)")
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + name )!.appendingPathExtension("txt")
         return fileUrl
     }
     
@@ -168,8 +170,10 @@ enum File: String {
         let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
         let calendar = Calendar.current
         let day = calendar.component(.day, from: date)
-        print("[dayURL] Today's date is: \(day)")
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + String(day))!.appendingPathExtension("txt")
+        let month = calendar.component(.month, from: date)
+        let name = String(month) + "-" + String(day)
+        print("[dayURL] Today's date is: \(name)")
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + name)!.appendingPathExtension("txt")
         return fileUrl
     }
 }

@@ -52,9 +52,9 @@ import CoreBluetooth
 //
 //}
 
-
 class ViewController: UIViewController {
     private var start: Bool = false
+    var myTAClient: TAClient!
     private var level: String = "low level"
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -63,8 +63,7 @@ class ViewController: UIViewController {
         
         // Get today's level here: Write the riskScore result to a file
         
-        
-        
+         
         let textField0 = UITextView(frame: CGRect(x: 90, y: 150, width: 250, height: 50))
         textField0.text = "Your COVID exposure level is: "
         textField0.textColor = .white
@@ -83,7 +82,7 @@ class ViewController: UIViewController {
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.black.cgColor
         button.setTitle("Get Test Result", for: .normal)
-        button.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
+        button.addTarget(self, action: #selector(getTestResult), for: .touchUpInside)
 
         let button2 = UIButton(frame: CGRect(x: 100, y: 600, width: 200, height: 50))
         button2.layer.cornerRadius = 5
@@ -140,38 +139,38 @@ class ViewController: UIViewController {
 //        TokenController.startFresh()  // delete previous file
 //        TokenController.start()
     }
-    @objc func buttonAction(sender: UIButton!) {
+    
+     func startTAClient() {
+         self.myTAClient.prepStartTest()
+         for i in 0..<2 {
+             self.myTAClient.prepGetResult()
+         }
+     }
+    
+    @objc func getTestResult(sender: UIButton!) {
         print("buttonAction")
+        self.myTAClient = TAClient()
+        startTAClient()
     }
     
     @objc func reportPositive(sender: UIButton!) {
-      print("reportPositive")
+        print("reportPositive")
     }
     
     @objc func startService(sender: UIButton!) {
         print("Start Contact Tracing")
         self.start = true
-   }
-   var myTAClient: TAClient!
-    
-    func startTAClient() {
-        self.myTAClient.prepStartTest()
-        for i in 0..<2 {
-            self.myTAClient.prepGetResult()
-        }
-    }
-    
         
-//        TokenController.didFinishLaunching()
-//        TokenController.startFresh()  // delete previous file
-//        TokenController.start()
-        self.myTAClient = TAClient()
-        startTAClient()
+        TokenController.didFinishLaunching()
+        TokenController.startFresh()  // delete previous file
+        TokenController.start()
+        
+   }
+
     
     @objc func stopService(sender: UIButton!) {
         print("Stop service")
         self.start = false
-        
     }
     
 }
