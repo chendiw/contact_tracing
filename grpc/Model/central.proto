@@ -21,14 +21,24 @@ option objc_class_prefix = "HLW";
 
 package central;
 
-service Auth {
-    rpc sendReportToken(ReportToken) returns (Ack) {}
+service Central {
+    rpc sendExposureKeys(ExposureKeys) returns (Ack) {}
     rpc pollPositive(Date) returns (Batch) {}
     rpc pollNegative(Date) returns (Batch) {}
 }
 
-message ReportToken {
-    string token = 1;
+message ExposureKeys {
+    uint64 token1 = 1;
+    uint64 token2 = 2;
+    uint64 token3 = 3;
+    uint64 token4 = 4;
+    uint64 token5 = 5;
+    Date date1 = 6;
+    Date date2 = 7;
+    Date date3 = 8;
+    Date date4 = 9;
+    Date date5 = 10;
+    int32 pos = 11;
 }
 
 message Ack {
@@ -40,5 +50,5 @@ message Date {
 }
 
 message Batch {
-  repeated string token = 1;
+    repeated uint64 token = 1;
 }

@@ -25,15 +25,15 @@ import NIO
 import SwiftProtobuf
 
 
-/// Usage: instantiate `Central_ReportClient`, then call methods of this protocol to make API calls.
-public protocol Central_ReportClientProtocol: GRPCClient {
+/// Usage: instantiate `Central_CentralClient`, then call methods of this protocol to make API calls.
+public protocol Central_CentralClientProtocol: GRPCClient {
   var serviceName: String { get }
-  var interceptors: Central_ReportClientInterceptorFactoryProtocol? { get }
+  var interceptors: Central_CentralClientInterceptorFactoryProtocol? { get }
 
-  func sendReportToken(
-    _ request: Central_ReportToken,
+  func sendExposureKeys(
+    _ request: Central_ExposureKeys,
     callOptions: CallOptions?
-  ) -> UnaryCall<Central_ReportToken, Central_Ack>
+  ) -> UnaryCall<Central_ExposureKeys, Central_Ack>
 
   func pollPositive(
     _ request: Central_Date,
@@ -46,26 +46,26 @@ public protocol Central_ReportClientProtocol: GRPCClient {
   ) -> UnaryCall<Central_Date, Central_Batch>
 }
 
-extension Central_ReportClientProtocol {
+extension Central_CentralClientProtocol {
   public var serviceName: String {
-    return "central.Report"
+    return "central.Central"
   }
 
-  /// Unary call to sendReportToken
+  /// Unary call to sendExposureKeys
   ///
   /// - Parameters:
-  ///   - request: Request to send to sendReportToken.
+  ///   - request: Request to send to sendExposureKeys.
   ///   - callOptions: Call options.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  public func sendReportToken(
-    _ request: Central_ReportToken,
+  public func sendExposureKeys(
+    _ request: Central_ExposureKeys,
     callOptions: CallOptions? = nil
-  ) -> UnaryCall<Central_ReportToken, Central_Ack> {
+  ) -> UnaryCall<Central_ExposureKeys, Central_Ack> {
     return self.makeUnaryCall(
-      path: "/central.Report/sendReportToken",
+      path: "/central.Central/sendExposureKeys",
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
-      interceptors: self.interceptors?.makesendReportTokenInterceptors() ?? []
+      interceptors: self.interceptors?.makesendExposureKeysInterceptors() ?? []
     )
   }
 
@@ -80,7 +80,7 @@ extension Central_ReportClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<Central_Date, Central_Batch> {
     return self.makeUnaryCall(
-      path: "/central.Report/pollPositive",
+      path: "/central.Central/pollPositive",
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makepollPositiveInterceptors() ?? []
@@ -98,7 +98,7 @@ extension Central_ReportClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<Central_Date, Central_Batch> {
     return self.makeUnaryCall(
-      path: "/central.Report/pollNegative",
+      path: "/central.Central/pollNegative",
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       interceptors: self.interceptors?.makepollNegativeInterceptors() ?? []
@@ -106,10 +106,10 @@ extension Central_ReportClientProtocol {
   }
 }
 
-public protocol Central_ReportClientInterceptorFactoryProtocol {
+public protocol Central_CentralClientInterceptorFactoryProtocol {
 
-  /// - Returns: Interceptors to use when invoking 'sendReportToken'.
-  func makesendReportTokenInterceptors() -> [ClientInterceptor<Central_ReportToken, Central_Ack>]
+  /// - Returns: Interceptors to use when invoking 'sendExposureKeys'.
+  func makesendExposureKeysInterceptors() -> [ClientInterceptor<Central_ExposureKeys, Central_Ack>]
 
   /// - Returns: Interceptors to use when invoking 'pollPositive'.
   func makepollPositiveInterceptors() -> [ClientInterceptor<Central_Date, Central_Batch>]
@@ -118,12 +118,12 @@ public protocol Central_ReportClientInterceptorFactoryProtocol {
   func makepollNegativeInterceptors() -> [ClientInterceptor<Central_Date, Central_Batch>]
 }
 
-public final class Central_ReportClient: Central_ReportClientProtocol {
+public final class Central_CentralClient: Central_CentralClientProtocol {
   public let channel: GRPCChannel
   public var defaultCallOptions: CallOptions
-  public var interceptors: Central_ReportClientInterceptorFactoryProtocol?
+  public var interceptors: Central_CentralClientInterceptorFactoryProtocol?
 
-  /// Creates a client for the central.Report service.
+  /// Creates a client for the central.Central service.
   ///
   /// - Parameters:
   ///   - channel: `GRPCChannel` to the service host.
@@ -132,7 +132,7 @@ public final class Central_ReportClient: Central_ReportClientProtocol {
   public init(
     channel: GRPCChannel,
     defaultCallOptions: CallOptions = CallOptions(),
-    interceptors: Central_ReportClientInterceptorFactoryProtocol? = nil
+    interceptors: Central_CentralClientInterceptorFactoryProtocol? = nil
   ) {
     self.channel = channel
     self.defaultCallOptions = defaultCallOptions
@@ -141,18 +141,18 @@ public final class Central_ReportClient: Central_ReportClientProtocol {
 }
 
 /// To build a server, implement a class that conforms to this protocol.
-public protocol Central_ReportProvider: CallHandlerProvider {
-  var interceptors: Central_ReportServerInterceptorFactoryProtocol? { get }
+public protocol Central_CentralProvider: CallHandlerProvider {
+  var interceptors: Central_CentralServerInterceptorFactoryProtocol? { get }
 
-  func sendReportToken(request: Central_ReportToken, context: StatusOnlyCallContext) -> EventLoopFuture<Central_Ack>
+  func sendExposureKeys(request: Central_ExposureKeys, context: StatusOnlyCallContext) -> EventLoopFuture<Central_Ack>
 
   func pollPositive(request: Central_Date, context: StatusOnlyCallContext) -> EventLoopFuture<Central_Batch>
 
   func pollNegative(request: Central_Date, context: StatusOnlyCallContext) -> EventLoopFuture<Central_Batch>
 }
 
-extension Central_ReportProvider {
-  public var serviceName: Substring { return "central.Report" }
+extension Central_CentralProvider {
+  public var serviceName: Substring { return "central.Central" }
 
   /// Determines, calls and returns the appropriate request handler, depending on the request's method.
   /// Returns nil for methods not handled by this service.
@@ -161,13 +161,13 @@ extension Central_ReportProvider {
     context: CallHandlerContext
   ) -> GRPCServerHandlerProtocol? {
     switch name {
-    case "sendReportToken":
+    case "sendExposureKeys":
       return UnaryServerHandler(
         context: context,
-        requestDeserializer: ProtobufDeserializer<Central_ReportToken>(),
+        requestDeserializer: ProtobufDeserializer<Central_ExposureKeys>(),
         responseSerializer: ProtobufSerializer<Central_Ack>(),
-        interceptors: self.interceptors?.makesendReportTokenInterceptors() ?? [],
-        userFunction: self.sendReportToken(request:context:)
+        interceptors: self.interceptors?.makesendExposureKeysInterceptors() ?? [],
+        userFunction: self.sendExposureKeys(request:context:)
       )
 
     case "pollPositive":
@@ -194,11 +194,11 @@ extension Central_ReportProvider {
   }
 }
 
-public protocol Central_ReportServerInterceptorFactoryProtocol {
+public protocol Central_CentralServerInterceptorFactoryProtocol {
 
-  /// - Returns: Interceptors to use when handling 'sendReportToken'.
+  /// - Returns: Interceptors to use when handling 'sendExposureKeys'.
   ///   Defaults to calling `self.makeInterceptors()`.
-  func makesendReportTokenInterceptors() -> [ServerInterceptor<Central_ReportToken, Central_Ack>]
+  func makesendExposureKeysInterceptors() -> [ServerInterceptor<Central_ExposureKeys, Central_Ack>]
 
   /// - Returns: Interceptors to use when handling 'pollPositive'.
   ///   Defaults to calling `self.makeInterceptors()`.
