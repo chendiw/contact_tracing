@@ -131,11 +131,11 @@ class CentralClient {
         let dateFormatter = DateFormatter()
         
         let request = Central_ExposureKeys.with { // this also works with
-            $0.token1 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
-            $0.token2 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
-            $0.token3 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
-            $0.token4 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
-            $0.token5 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
+            $0.token1 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
+            $0.token2 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .day, value: -1, to: date)!).0[0].payload.uint64;
+            $0.token3 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .day, value: -2, to: date)!).0[0].payload.uint64;
+            $0.token4 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .day, value: -3, to: date)!).0[0].payload.uint64;
+            $0.token5 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .day, value: -4, to: date)!).0[0].payload.uint64;
             $0.date1.date = dateFormatter.string(from: date);
             $0.date2.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -1, to: date)!);
             $0.date3.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -2, to: date)!);
