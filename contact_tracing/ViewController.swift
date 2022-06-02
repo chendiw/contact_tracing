@@ -9,55 +9,12 @@ import UIKit
 import CoreBluetooth
 import CoreLocation
 
-//class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
-//    var centralManager: CBCentralManager!  // ! means this is an unwrapped optional variable and if we refer to it later we can check for null-safety.
-//    var myPeripheral: CBPeripheral!
-//
-//    func centralManagerDidUpdateState(_ central: CBCentralManager) {  // need to rewrite this fuction.
-//        if central.state == CBManagerState.poweredOn {
-//            print("BLE powered on") // Turned on
-//            central.scanForPeripherals(withServices: nil, options: nil)
-//        }
-//        else {
-//            print("Something wrong with BLE")
-//            // Not on, but can have different issues
-//        }
-//    }
-//
-//    // rewrite some function: didDiscover delegate method
-//    // This function is to define the behavior that find a peripheral
-//    // Identify our peripheral by name, UUID, manufacturer ID, or basically anything that is part of the advertisement data
-//    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-//        if let pname = peripheral.name {
-//            if pname == "Jiani's" {
-//                self.centralManager.stopScan()
-//
-//                self.myPeripheral = peripheral
-//                self.myPeripheral.delegate = self
-//
-//                self.centralManager.connect(peripheral, options: nil)
-//            }
-//        }
-//    }
-//
-//    // Once the connection is establishd, call this method.
-//    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-//        self.myPeripheral.discoverServices(nil)  // ask peripheral to provide information about service
-//    }
-//
-//    override func viewDidLoad() {
-//        super.viewDidLoad()
-//        // Do any additional setup after loading the view.
-//        centralManager = CBCentralManager(delegate: self, queue: nil)
-//    }
-//
-//}
-
 class ViewController: UIViewController {
     private var start: Bool = false
     private var myTAClient: TAClient!
     private var myRiskScoreController: RiskScoreController = RiskScoreController()
     private var level: String = "low level"
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -106,7 +63,7 @@ class ViewController: UIViewController {
         button3.backgroundColor = .white
         button3.layer.borderWidth = 1
         button3.layer.borderColor = UIColor.black.cgColor
-        button3.setTitle("Report Positive", for: .normal)
+        button3.setTitle("Report", for: .normal)
         button3.setTitleColor(.red, for: .normal)
         button3.addTarget(self, action: #selector(reportPositive), for: .touchUpInside)
         
@@ -167,7 +124,6 @@ class ViewController: UIViewController {
     @objc func getTestResult(sender: UIButton!) {
         print("getTestResult")
         self.myTAClient.prepGetResult()
-
     }
     
     @objc func reportPositive(sender: UIButton!) {
@@ -179,12 +135,12 @@ class ViewController: UIViewController {
         print("Start Contact Tracing")
         self.start = true
         
+        todayTask()
         // Get today's level here: Write the riskScore result to a file
         let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
         
-//        TokenController.didFinishLaunching()
-//        TokenController.startFresh()  // delete previous file
-//        TokenController.start()
+        TokenController.didFinishLaunching()
+        TokenController.start()
    }
 
     
@@ -224,20 +180,20 @@ class ViewController: UIViewController {
             print("Today's exposure key is: \(exposureKey)")
 
             let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
-            var exposurekeyList: TokenList = [token]
+            let exposurekeyList: TokenList = [token]
             exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
             
             // 2. Poll for negtive and positve exposure keys, calculate risk score
-            self.myRiskScoreController.calculate()
-            self.level = self.myRiskScoreController.getLevel()
+//            self.myRiskScoreController.calculate()
+//            self.level = self.myRiskScoreController.getLevel()
             
             // 3. show today's risk level
-            let textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
-            textField.text = self.level
-            textField.textColor = .red
-            textField.isEditable = false
-            textField.font = UIFont(name: "Arial", size: 50)
-            self.view.addSubview(textField)
+//            let textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
+//            textField.text = self.level
+//            textField.textColor = .red
+//            textField.isEditable = false
+//            textField.font = UIFont(name: "Arial", size: 50)
+//            self.view.addSubview(textField)
             
         }else{
             print("Service not start. Do not do today's task")

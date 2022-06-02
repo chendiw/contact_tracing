@@ -62,7 +62,11 @@ public class TAClient {
 //        let day = calendar.component(.hour, from: date)
         for i in 1...self.pretest_days{
             let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: date)!
-            pretestExpKeys.append(TokenList.dayLoad(from: .myExposureKeys, day: prevDate)[0].payload.uint64)
+            if !TokenList.dayLoad(from: .myExposureKeys, day: prevDate).1 {
+                break
+            }
+            // File exists
+            pretestExpKeys.append(TokenList.dayLoad(from: .myExposureKeys, day: prevDate).0[0].payload.uint64)
         }
         
         // Form the request with the name, if one was provided.
@@ -85,7 +89,8 @@ public class TAClient {
     }
     
     public func prepGetResult() {
-        let curTokenObject: TokenObject = TokenList.dayLoad(from: .myExposureKeys, day: Date()).first!
+        assert(TokenList.dayLoad(from: .myExposureKeys, day: Date()).1)
+        let curTokenObject: TokenObject = TokenList.dayLoad(from: .myExposureKeys, day: Date()).0.first!
         let curToken: UInt64 = curTokenObject.payload.uint64
         
         // Form the request with the name, if one was provided.

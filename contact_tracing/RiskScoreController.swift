@@ -54,7 +54,11 @@ class RiskScoreController {
         for i in 1...riskDays {
             // Using the positive key, caculate all the positive tokens
             let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: date)!
-            let peerTEKs = TokenList.dayLoad(from: .peerTokens, day: prevDate)
+            if !TokenList.dayLoad(from: .peerTokens, day: prevDate).1 {
+                break
+            }
+            // File exists
+            let peerTEKs = TokenList.dayLoad(from: .peerTokens, day: prevDate).0
             allPeerTEKs.append(contentsOf: peerTEKs)
         }
         for i in 1...riskDays{
@@ -81,7 +85,11 @@ class RiskScoreController {
         for i in 1...riskDays {
             // Using the positive key, caculate all the positive tokens
             let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: date)!
-            let peerTEKs = TokenList.dayLoad(from: .peerTokens, day: prevDate)
+            if !TokenList.dayLoad(from: .peerTokens, day: prevDate).1 {
+                break
+            }
+            // File exists
+            let peerTEKs = TokenList.dayLoad(from: .peerTokens, day: prevDate).0
             var payloadsHaveSeen: [Data] = []
             for token in peerTEKs {
                 if payloadsHaveSeen.contains(token.payload) == false {

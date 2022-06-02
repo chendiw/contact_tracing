@@ -209,17 +209,20 @@ extension TokenList {
     // Assume max 1k contacts per day
     // Store tokens for 14 days
     // Max file size: 32 x 1k x 14 = 448k bytes
-    static func dayLoad(from: File, day: Date) -> TokenList {
-        if let data = try? Data(contentsOf: from.dayURL(date: day)) {
+    static func dayLoad(from: File, day: Date) -> (TokenList, Bool) {
+        do {
+            let data = try Data(contentsOf: from.dayURL(date: day))
             do {
                 let arr = try JSONDecoder().decode(self, from: data)
                 print("[load from file] the loaded data is: \(arr)")
-                return arr
+                return (arr, true)
             } catch {
                 print("This is the error when dayLoad: ", error)
             }
+        } catch {
+            print("File \(from.dayURL(date: day)) doesn't exit.")
         }
-        return TokenList()
+        return (TokenList(), false)
     }
     
     func daySave(to: File, day: Date) {
@@ -296,7 +299,7 @@ public class TokenController: NSObject {
     
     @objc public func generateMyToken() {
         // load current date's exposure key
-        let readTodayExpKey = TokenList.dayLoad(from: .myExposureKeys, day: Date())
+        let readTodayExpKey = TokenList.dayLoad(from: .myExposureKeys, day: Date()).0
         assert(readTodayExpKey.count == 1)
         self.myExposureKey = readTodayExpKey.first!
         
@@ -307,7 +310,7 @@ public class TokenController: NSObject {
         let rpi: Data = getRPI(rpi_key: rpi_key, nonce: crng(count: 16), eninterval: ENInterval.value())
         
         // Append and save my new RPI to file
-        self.myTokens = TokenList.dayLoad(from: .myTokens, day: Date())
+        self.myTokens = TokenList.dayLoad(from: .myTokens, day: Date()).0
         self.myTokens.append(curPayload: rpi, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min
         print("My token list last data is: \(self.myTokens)")
         self.myTokens.daySave(to: .myTokens, day: Date())
@@ -345,7 +348,7 @@ public class TokenController: NSObject {
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
                 print("[Onwrite]Received peer token: \(data.uint64)")
-                self.peerTokens = TokenList.dayLoad(from: .peerTokens, day: Date())  // load today's peerTokens
+                self.peerTokens = TokenList.dayLoad(from: .peerTokens, day: Date()).0 // load today's peerTokens
                 var rssiValue = 0;
                 if rssiList[peripheral.identifier] != nil {
                     rssiValue = rssiList[peripheral.identifier]!
