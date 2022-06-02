@@ -249,11 +249,16 @@ extension ENInterval {
     static func value() -> Int {
         return Int((Date().timeIntervalSince1970) / (10 * 60))
     }
+    
+    static func valueAtDate(date: Date) -> Int {
+        return Int((date.timeIntervalSince1970) / (10 * 60))
+    }
 }
 
 // Bluetooth token exchange controller
 public class TokenController: NSObject {
     static var instance: TokenController!
+    static var nonce: Data? = crng(count: 16)
 
     private let queue: DispatchQueue!
     private var peripheralManager: PeripheralManager!
@@ -306,7 +311,7 @@ public class TokenController: NSObject {
         let rpi_key: SymmetricKey = getRPIKey(tek: self.myExposureKey.payload)
         
         // Generate RPI with random nonce, result: RPI (16 bytes)||nonce||tag (16 bytes)
-        let rpi: Data = getRPI(rpi_key: rpi_key, nonce: crng(count: 16), eninterval: ENInterval.value())
+        let rpi: Data = getRPI(rpi_key: rpi_key, nonce: TokenController.nonce, eninterval: ENInterval.value())
         
         // Append and save my new RPI to file
         self.myTokens = TokenList.dayLoad(from: .myTokens, day: Date()).0

@@ -60,7 +60,7 @@ public class TAClient {
         let date = Date()  // get today
 //        let calendar = Calendar.current
 //        let day = calendar.component(.hour, from: date)
-        for i in 1...self.pretest_days{
+        for i in 0...self.pretest_days{
             let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: date)!
             if !TokenList.dayLoad(from: .myExposureKeys, day: prevDate).1 {
                 break

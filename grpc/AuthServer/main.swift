@@ -10,7 +10,7 @@ import NIOPosix
 
 class TestAuthProvider: Testingauth_AuthProvider {
   var interceptors: Testingauth_AuthServerInterceptorFactoryProtocol?
-  var receivedTokens: [UInt64: [UInt64]] = [0:[0]]
+  // var receivedTokens: [UInt64: [UInt64]] = [0:[0]]
   let daysUntilResult: Int = 2
   var daysUntilResultByUser: [UInt64: Int] = [0:0]
   let taID: UInt64 = UInt64.random(in: 0 ... UInt64.max)
@@ -51,18 +51,22 @@ class TestAuthProvider: Testingauth_AuthProvider {
   }
 
   func saveUserProfileStart(userId: UInt64, tokens: [UInt64]) {
-    self.receivedTokens = UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).0
+    var receivedTokens = UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).0
     for t in tokens {
-      self.receivedTokens.append(userId: userId, token: t)
+      if receivedTokens[userId] != nil {
+        receivedTokens[userId]!.append(t)
+      } else {
+        receivedTokens[userId] = [t]
+      }
     }
-    self.receivedTokens.daySave(to: .receivedTEKFile, day: Date())
+    receivedTokens.daySave(to: .receivedTEKFile, day: Date())
   }
 
   func updateUserProfile(userId: UInt64, token: UInt64) -> Testingauth_TestResult {
-    self.receivedTokens = UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).0
-    assert(self.receivedTokens[userId] != nil)
-    self.receivedTokens[userId]!.append(token)
-    self.receivedTokens.daySave(to: .receivedTEKFile, day: Date())
+    var receivedTokens = UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).0
+    assert(receivedTokens[userId] != nil)
+    receivedTokens[userId]!.append(token)
+    receivedTokens.daySave(to: .receivedTEKFile, day: Date())
 
     // user has waited another day
     assert(self.daysUntilResultByUser[userId] != nil)
@@ -72,8 +76,8 @@ class TestAuthProvider: Testingauth_AuthProvider {
       let ready: Bool = true
 
       // Generate sequence number based on received exposure keys
-      var teks: Data = self.receivedTokens[userId]!.first!.data
-      for t in self.receivedTokens[userId]! {
+      var teks: Data = receivedTokens[userId]!.first!.data
+      for t in receivedTokens[userId]! {
         if t.data != teks {
           teks.append(t.data)
         }
@@ -102,7 +106,8 @@ class TestAuthProvider: Testingauth_AuthProvider {
         $0.result = result
         $0.signature = signature
       }
-      self.receivedTokens.removeValue(forKey: userId)
+      receivedTokens.removeValue(forKey: userId)
+      receivedTokens.daySave(to: .receivedTEKFile, day: Date())
       return response
     } else {
       let response = Testingauth_TestResult.with {
