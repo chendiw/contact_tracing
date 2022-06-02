@@ -10,6 +10,7 @@ import CoreBluetooth
 import UserNotifications
 import UIKit
 import CoreLocation
+import CryptoKit
 
 // Global static values
 // uuid's generated from "https://www.uuidgenerator.net/version4"
@@ -232,20 +233,6 @@ extension TokenList {
     // Assume max 1k contacts per day
     // Store tokens for 14 days
     // Max file size: 32 x 1k x 14 = 448k bytes
-    
-//    static func load(from: File, date: Date) -> TokenList {
-//        if let data = try? Data(contentsOf: from.dayURL(date: date)) {
-//            do {
-//                let arr = try JSONDecoder().decode(self, from: data)
-//                print("[load from file] the loaded data is: \(arr)")
-//                return arr
-//            } catch {
-//                print("This is the error when load: ", error)
-//            }
-//        }
-//        return TokenList()
-//    }
-    
     static func dayLoad(from: File, day: Date) -> TokenList {
         if let data = try? Data(contentsOf: from.dayURL(date: day)) {
             do {
@@ -302,9 +289,9 @@ public class TokenController: NSObject {
     private var peripheralManager: PeripheralManager!
     private var centralManager: CentralManager!
     private var started: Bool = false
-    private var myExposureKeys: TokenList!
-    private var myTokens: TokenList!
-    private var peerTokens: TokenList!
+    private var myExposureKey: TokenObject! = nil
+    private var myTokens: TokenList! = []
+    private var peerTokens: TokenList! = []
     private var backgroundTaskId: UIBackgroundTaskIdentifier?
     private var locationManager: LocationManager!
     
@@ -323,9 +310,6 @@ public class TokenController: NSObject {
     public static func start() {
         instance.peripheralManager.startAdvertising()
         
-        // Generate a new myExposureKey per day
-        let timerExpKey = Timer.scheduledTimer(timeInterval: expKeyInterval, target: self, selector: #selector(generateMyExpKey), userInfo: nil, repeats: true)
-        
         // Every time we generate a new token, scan for peripherals and exchange tokens
         let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleStartScan), userInfo: nil, repeats: true)
         
@@ -342,20 +326,23 @@ public class TokenController: NSObject {
         instance.centralManager.stopScan()
     }
     
-    
     @objc public func generateMyToken() {
-        // load from different files
-         self.myTokens = TokenList.load(from: .myTokens)  // TokenList.dayLoad(from: .myExposureKey, Date).
-//        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
-        print("My token list size is : \(self.myTokens.count)")
+        // load current date's exposure key
+        let readTodayExpKey = TokenList.dayLoad(from: .myExposureKeys, day: Date())
+        assert(readTodayExpKey.count == 1)
+        self.myExposureKey = readTodayExpKey.first!
         
-        // TODO: change to crypto function.
-        let curPayload = ExpKey.next().data
-//        print("My latest token payload: \(curPayload.uint64)")
-        // Jiani: Only the payload field in myTokenList is useful
-        self.myTokens.append(curPayload: curPayload, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min
+        // Generate RPI key from exposure key
+        let rpi_key: SymmetricKey = getRPIKey(tek: self.myExposureKey.payload)
+        
+        // Generate RPI with random nonce, result: RPI (16 bytes)||nonce||tag (16 bytes)
+        let rpi: Data = getRPI(rpi_key: rpi_key, nonce: crng(count: 16), eninterval: ENInterval.value())
+        
+        // Append and save my new RPI to file
+        self.myTokens = TokenList.dayLoad(from: .myTokens, day: Date())
+        self.myTokens.append(curPayload: rpi, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min
         print("My token list last data is: \(self.myTokens)")
-         self.myTokens.save(to: .myTEKs)
+        self.myTokens.daySave(to: .myTokens, day: Date())
 
     }
     
@@ -364,32 +351,21 @@ public class TokenController: NSObject {
 //            .addCommandCallback(command: .clear)
             .addCommandCallback(command: .readRSSI)
             .addCommandCallback(
-                command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
+                command: .write(value: self.myTokens.last!.payload //lastTokenObject should not be nil
             ))
         
     }
 
     public override init() {
         self.queue = DispatchQueue(label: "TokenController")
-        self.myTokens = []
-        self.peerTokens = []
-        
         super.init()
         
-        // init token files
-        File.createFile(url: File.myTEKs.url())
-        File.createFile(url: File.peerTokens.url())
-        
+        // Generate my token for the first time
         generateMyToken()
-        
-        let timer1 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(generateMyToken), userInfo: nil, repeats: true)
+        // Schedule token generation per `tokenGenInterval`
+        let timerTokenGen = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(generateMyToken), userInfo: nil, repeats: true)
 
-
-//        if self.peerTokens.expire(keepInterval: KeepPeerIdsInterval) {
-//            self.peerTokens.save(to: .peerTokens)
-//        }
-
-        // object of characteristic nad service
+        // object of characteristic and service
         let tokenCharacteristic = MyCharacteristic(characteristicUUID)
         let ctService = MyService(serviceUUID)
         ctService.addCharacteristic(tokenCharacteristic)
@@ -401,9 +377,9 @@ public class TokenController: NSObject {
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
                 print("[Onwrite]Received peer token: \(data.uint64)")
-                self.peerTokens = TokenList.load(from: .peerTokens)  // load old peerTokens
+                self.peerTokens = TokenList.dayLoad(from: .peerTokens, day: Date())  // load today's peerTokens
                 var rssiValue = 0;
-                if rssiList[peripheral.identifier] != nil{
+                if rssiList[peripheral.identifier] != nil {
                     rssiValue = rssiList[peripheral.identifier]!
                 }
                 print("[Read RSSI]peripheral=\(peripheral.identifier), RSSI=\(rssiValue)")
@@ -411,7 +387,7 @@ public class TokenController: NSObject {
                 let longNow = locationManager.getLongitude()
                 print("[Read GPS]The current GPS is: \(latNow) \(longNow)")
                 self.peerTokens.append(curPayload: data, rssi: rssiValue, lat: latNow, long: longNow)
-                self.peerTokens.save(to: .peerTokens)
+                self.peerTokens.daySave(to: .peerTokens, day: Date())
                 return true
             }
 
@@ -429,7 +405,7 @@ public class TokenController: NSObject {
                 command: .write(value: self.myTokens.lastTokenObject?.payload //lastTokenObject should not be nil
             ))
 
-        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
+        let timerTokenExchange = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleCentralCommand), userInfo: nil, repeats: true)
             
         
     }
