@@ -11,6 +11,9 @@ import NIOCore
 import NIOPosix
 
 class CentralClient {
+    var port: Int = 1235
+    var host_ip: String = "54.80.128.235"
+    
     func getPositiveCases() throws  -> [UInt64] {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
@@ -24,7 +27,7 @@ class CentralClient {
         
         // Configure the channel, we're not using TLS so the connection is `insecure`.
         let channel = try GRPCChannelPool.with(
-            target: .host("localhost", port: 1234),
+            target: .host(self.host_ip, port: self.port),
             transportSecurity: .plaintext,
             eventLoopGroup: group
         )
