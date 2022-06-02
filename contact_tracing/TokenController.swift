@@ -314,7 +314,7 @@ public class TokenController: NSObject {
     
     @objc public func generateMyToken() {
         // load from different files
-         self.myTokens = TokenList.load(from: .myTEKs)
+         self.myTokens = TokenList.load(from: .myTEKs)  // TokenList.dayLoad(from: .myExposureKey, Date).
 //        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
         print("My token list size is : \(self.myTokens.count)")
         

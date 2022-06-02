@@ -60,9 +60,6 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         print("Start Bluetooth")
-        
-        // Get today's level here: Write the riskScore result to a file
-        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
          
         let textField0 = UITextView(frame: CGRect(x: 90, y: 150, width: 250, height: 50))
         textField0.text = "Your COVID exposure level is: "
@@ -162,6 +159,9 @@ class ViewController: UIViewController {
         print("Start Contact Tracing")
         self.start = true
         
+        // Get today's level here: Write the riskScore result to a file
+        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
+        
 //        TokenController.didFinishLaunching()
 //        TokenController.startFresh()  // delete previous file
 //        TokenController.start()
@@ -178,8 +178,11 @@ class ViewController: UIViewController {
         if self.start{
             print("This is today's Task")
             // 1. Generate an exposure key, Store to the file
+            let exposureKey = crng(count: 16)
+            print("Today's exposure key is: ")
             
             // 2. Poll for negtive and positve exposure keys, calculate risk score
+            
             
             // 3. show today's risk level
             let textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))

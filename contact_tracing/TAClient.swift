@@ -62,7 +62,7 @@ public class TAClient {
         let day = calendar.component(.hour, from: date)
         for i in 1...num_pretestTokens{
             let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: date)!
-//            allTokens.append(TokenList.dayLoad(from: .myExposureKey, day: prevDate)[0])
+            allTokens.append(TokenList.dayLoad(from: .myExposureKey, day: prevDate)[0])
         }
 
         let pretestTokenObjects: [TokenObject] = allTokens.suffix(num_pretestTokens)
