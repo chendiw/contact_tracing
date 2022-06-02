@@ -162,7 +162,7 @@ class ViewController: UIViewController {
         print("Start Contact Tracing")
         self.start = true
         
-//        TokenController.didFinishLaunching()
+        TokenController.didFinishLaunching()
 //        TokenController.startFresh()  // delete previous file
 //        TokenController.start()
    }
