@@ -53,32 +53,30 @@ func getRPI(rpi_key: SymmetricKey, nonce: Data?, eninterval: Int) -> Data {
     var result = sealedData.ciphertext // Data
     assert(result.count == 16)
     
-    result.append(sealedData.nonce.withUnsafeBytes {Data(Array($0))})
-    
-    result.append(sealedData.tag)
-    assert(sealedData.tag.count == 16)
+//    result.append(sealedData.nonce.withUnsafeBytes {Data(Array($0))})
+//
+//    result.append(sealedData.tag)
+//    assert(sealedData.tag.count == 16)
     
     return result
 }
 
 // Decrypt RPI to get ENINterval
-func getInterval(rpi_key: SymmetricKey, rpi: Data) -> Int {
-    let ciphertext = rpi.subdata(in: 0..<16)
-    let nonce_length = rpi.count - 16 * 2;
-    let nonce = rpi.subdata(in: 16..<(16+nonce_length))
-    let tag = rpi.subdata(in: (16+nonce_length)..<rpi.count)
-    let sealedBox = try! AES.GCM.SealedBox(nonce: AES.GCM.Nonce(data: nonce), ciphertext: ciphertext, tag: tag)
-    let decryptedData = try! AES.GCM.open(sealedBox, using: rpi_key)
-    return decryptedData.subdata(in: 8..<16).int
-}
+//func getInterval(rpi_key: SymmetricKey, rpi: Data) -> Int {
+//    let ciphertext = rpi.subdata(in: 0..<16)
+//    let nonce_length = rpi.count - 16 * 2;
+//    let nonce = rpi.subdata(in: 16..<(16+nonce_length))
+//    let tag = rpi.subdata(in: (16+nonce_length)..<rpi.count)
+//    let sealedBox = try! AES.GCM.SealedBox(nonce: AES.GCM.Nonce(data: nonce), ciphertext: ciphertext, tag: tag)
+//    let decryptedData = try! AES.GCM.open(sealedBox, using: rpi_key)
+//    return decryptedData.subdata(in: 8..<16).int
+//}
 
 // HKDF(tek_i, UTF8("EN-AEMK"), 16)
 func getAEMKey(tek: Data) -> SymmetricKey {
     let resultKey = HKDF<SHA256>.deriveKey(inputKeyMaterial: SymmetricKey.init(data: tek), info: "EN-AEMK".data(using: .utf8)!, outputByteCount: 16)
     return resultKey
 }
-
-// TODO: AES-128-CTR encrypt metadata
 
 // Generate (private key, public key) pair for digital signature
 func sigKeyGen() -> (Curve25519.Signing.PrivateKey, Curve25519.Signing.PublicKey) {
@@ -99,3 +97,25 @@ func sign(pri_key: Curve25519.Signing.PrivateKey, content: Data) -> Data {
 func verifySign(pub_key: Curve25519.Signing.PublicKey, signature: Data, digest: SHA256Digest) -> Bool {
     return pub_key.isValidSignature(signature, for: Data(digest))
 }
+
+// Generate start (inclusive) and end (inclusive) of ENInterval in the past 5 days
+func regenENInterval(date: Date) -> (Int, Int){
+    let start = ENInterval.valueAtDate(date: Calendar.current.date(byAdding: .day, value: -5, to: date)!)
+    let end = ENInterval.value()
+    return (start, end)
+}
+
+// Reproduce all rpis for a list of exposure keys in the past 5 days
+func regenRPIs(expKeys: [UInt64], nonce: Data?) -> Set<UInt64> {
+    var allRPIs = Set<UInt64>.init()
+    for expKey in expKeys {
+        let allENInterevals = regenENInterval(date: Date())
+        for i in allENInterevals.0..<(allENInterevals.1+1) {
+            if !allRPIs.insert(getRPI(rpi_key: getRPIKey(tek: expKey.data), nonce: nonce, eninterval: i).uint64).0 {
+                print("RPI repeated! Highly unlikely")
+            }
+        }
+    }
+    return allRPIs
+}
+
