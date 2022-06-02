@@ -49,7 +49,6 @@ class CentralClient {
 
         // wait() on the response to stop the program from exiting before the response is received.
         do {
-            //let response = try getPosCases.response.wait()
             let response = try getPosCases.response.wait()
             print("Get Positive Cases: succeeded: \(response.token)")
         } catch {
@@ -95,9 +94,8 @@ class CentralClient {
 
         // wait() on the response to stop the program from exiting before the response is received.
         do {
-            //let response = try getNegCases.response.wait()
-            let _ = try getNegCases.response.wait()
-            print("Get Negative Cases: succeeded")
+            let response = try getNegCases.response.wait()
+            print("Get Negative Cases: succeeded: \(response.token)")
         } catch {
             print("Get Negative Cases failed: \(error)")
         }
