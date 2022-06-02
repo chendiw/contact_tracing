@@ -49,14 +49,10 @@ extension Target {
     ],
     path: "Model",
     exclude: [
-<<<<<<< HEAD
-      "testingauth.proto"
-=======
       "testingauth.proto",
       "central.proto",
       "central.grpc.swift",
       "central.pb.swift",
->>>>>>> expkey-token
     ]
   )
 
