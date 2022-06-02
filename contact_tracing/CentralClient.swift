@@ -126,19 +126,22 @@ class CentralClient {
 
         // Provide the connection to the generated client.
         let central_client = Central_CentralClient(channel: channel)
-
-        let request = Central_ExposureKeys.with {
-            $0.token1 = 1234;
-            $0.token2 = 5678;
-            $0.token3 = 9488;
-            $0.token4 = 4950;
-            $0.token5 = 49350;
-            $0.date1.date = "date1";
-            $0.date2.date = "date2";
-            $0.date3.date = "date3";
-            $0.date4.date = "date4";
-            $0.date5.date = "date5";
-            $0.pos = 1;
+        
+        let date = Date()
+        let dateFormatter = DateFormatter()
+        
+        let request = Central_ExposureKeys.with { // this also works with
+            $0.token1 = TokenList.dayLoad(from: .myExposureKey, day: date)[0].payload.uint64;
+            $0.token2 = TokenList.dayLoad(from: .myExposureKey, day: date)[0].payload.uint64;
+            $0.token3 = TokenList.dayLoad(from: .myExposureKey, day: date)[0].payload.uint64;
+            $0.token4 = TokenList.dayLoad(from: .myExposureKey, day: date)[0].payload.uint64;
+            $0.token5 = TokenList.dayLoad(from: .myExposureKey, day: date)[0].payload.uint64;
+            $0.date1.date = dateFormatter.string(from: date);
+            $0.date2.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -1, to: date)!);
+            $0.date3.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -2, to: date)!);
+            $0.date4.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -3, to: date)!);
+            $0.date5.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -4, to: date)!);
+            $0.pos = 1; // TODO: this needs to be updatted to be the value from the test
         }
 
         // Make the RPC call to the server.
@@ -146,9 +149,8 @@ class CentralClient {
 
         // wait() on the response to stop the program from exiting before the response is received.
         do {
-            //let response = try getNegCases.response.wait()
-            let _ = try report.response.wait()
-            print("report token : succeeded")
+            let response = try report.response.wait()
+            print("report token : succeeded: \(response.ack)")
         } catch {
             print("report token : \(error)")
         }
