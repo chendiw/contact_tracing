@@ -11,7 +11,7 @@ import NIOCore
 import NIOPosix
 
 class CentralClient {
-    func getPositiveCases() throws {
+    func getPositiveCases() throws  -> [UInt64] {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
@@ -51,12 +51,14 @@ class CentralClient {
         do {
             let response = try getPosCases.response.wait()
             print("Get Positive Cases: succeeded: \(response.token)")
+            return response.token
         } catch {
             print("Get Positive Cases failed: \(error)")
+            return []
         }
     }
     
-    func getNegativeCases() throws {
+    func getNegativeCases() throws -> [UInt64]{
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
@@ -96,8 +98,10 @@ class CentralClient {
         do {
             let response = try getNegCases.response.wait()
             print("Get Negative Cases: succeeded: \(response.token)")
+            return response.token
         } catch {
             print("Get Negative Cases failed: \(error)")
+            return []
         }
     }
     
@@ -131,11 +135,11 @@ class CentralClient {
         let dateFormatter = DateFormatter()
         
         let request = Central_ExposureKeys.with { // this also works with
-            $0.token1 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
-            $0.token2 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
-            $0.token3 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
-            $0.token4 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
-            $0.token5 = TokenList.dayLoad(from: .myExposureKeys, day: date)[0].payload.uint64;
+            $0.token1 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
+            $0.token2 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
+            $0.token3 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
+            $0.token4 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
+            $0.token5 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
             $0.date1.date = dateFormatter.string(from: date);
             $0.date2.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -1, to: date)!);
             $0.date3.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -2, to: date)!);
