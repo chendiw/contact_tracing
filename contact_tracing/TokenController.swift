@@ -18,7 +18,7 @@ public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137
 public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
 public let peripheralName = "CT-Peripheral-test1"
 public let tokenGenInterval: TimeInterval = 60 //re-exchange tokens per 10 min, testing with per min
-public let expKeyInterval: TimeInterval = 10*60 // re-generate exposure key per day (1440*60s), testing with per 10 min
+public let expKeyInterval: TimeInterval = 5*60 // re-generate exposure key per day (1440*60s), testing with per 5 min
 
 class MyService {
     private var uuid: CBUUID
@@ -138,15 +138,6 @@ enum File: String {
         } catch {
             print("Save EmptyData Error: \(error)")
         }
-//        try data.write(to: to.url())
-//        let plistContent = NSDictionary(dictionary: emptyData)
-        
-//        let success:Bool = data.write(toFile: url.path, atomically: false)
-//        if success {
-//            print("File: \(url) creation successful")
-//        } else {
-//            print("Error creating file \(url)")
-//        }
     }
     
     func deleteFile(url: URL) {
@@ -165,7 +156,10 @@ enum File: String {
     func dayURL(date: Date) -> URL {
         let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
         let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(dayFilename(date: date))!.appendingPathExtension("txt")
+//        let fileUrl = documentDirectoryUrl.appendingPathComponent(dayFilename(date: date))!.appendingPathExtension("txt")
+        
+        // For experiments
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(minuteFilename(date: date))!.appendingPathExtension("txt")
         return fileUrl
     }
     
@@ -175,6 +169,16 @@ enum File: String {
         let month = calendar.component(.month, from: date)
         let name = String(month) + "-" + String(day)
         print("[dayURL] Today's date is: \(name)")
+        return self.rawValue + name
+    }
+    
+    // Creating filenames for experiments
+    func minuteFilename(date: Date) -> String {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        let minute = calendar.component(.minute, from: date)
+        let name = String(hour) + "-" + String(minute)
+        print("[minuteURL] Time now is: \(name)")
         return self.rawValue + name
     }
     

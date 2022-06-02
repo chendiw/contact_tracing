@@ -1,6 +1,5 @@
 // swift-tools-version: 5.5
 // The swift-tools-version declares the minimum version of Swift required to build this package.
-
 import PackageDescription
 
 import class Foundation.ProcessInfo
@@ -49,14 +48,10 @@ extension Target {
     ],
     path: "Model",
     exclude: [
-<<<<<<< HEAD
-      "testingauth.proto"
-=======
       "testingauth.proto",
       "central.proto",
       "central.grpc.swift",
       "central.pb.swift",
->>>>>>> expkey-token
     ]
   )
 
@@ -142,4 +137,3 @@ let package = Package(
         .centralServer,
     ]
 )
-
