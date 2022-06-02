@@ -12,78 +12,115 @@ class CentralProvider: Central_CentralProvider {
   ) -> EventLoopFuture<Central_Ack> {
     // write tokens to file, with delimiters
     if (request.pos == 1) {
-        do {
-          try FileManager.default.createDirectory(atPath: "pos-" + request.date1.date, withIntermediateDirectories: true, attributes: nil)
-        } catch {
-          print(error)
-        }
+        var fileName = "pos-" + request.date1.date
+        var currentDirectoryUrl = URL(fileURLWithPath: ".")
+        var fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
         let token1 = request.token1
         let token1Str = String(token1) + "$"
-        var path = FileManager.default.urls(for: .documentDirectory,
-                                    in: .userDomainMask)[0].appendingPathComponent("pos-" + request.date1.date)
-        if let stringData = token1Str.data(using: .utf8) {
-                try? stringData.write(to: path)
+        do {
+          try token1Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
         }
 
-        do {
-          try FileManager.default.createDirectory(atPath: "pos-" + request.date2.date, withIntermediateDirectories: true, attributes: nil)
-        } catch {
-          print(error)
-        }
+        fileName = "pos-" + request.date2.date
+        currentDirectoryUrl = URL(fileURLWithPath: ".")
+        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
         let token2 = request.token2
         let token2Str = String(token2) + "$"
-        path = FileManager.default.urls(for: .documentDirectory,
-                                    in: .userDomainMask)[0].appendingPathComponent("pos-" + request.date2.date)
-        if let stringData = token2Str.data(using: .utf8) {
-                try? stringData.write(to: path)
+        do {
+          try token2Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
         }
 
-        do {
-          try FileManager.default.createDirectory(atPath: "pos-" + request.date3.date, withIntermediateDirectories: true, attributes: nil)
-        } catch {
-          print(error)
-        }
+        fileName = "pos-" + request.date3.date
+        currentDirectoryUrl = URL(fileURLWithPath: ".")
+        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
         let token3 = request.token3
         let token3Str = String(token3) + "$"
-        path = FileManager.default.urls(for: .documentDirectory,
-                                    in: .userDomainMask)[0].appendingPathComponent("pos-" + request.date3.date)
-        if let stringData = token3Str.data(using: .utf8) {
-                try? stringData.write(to: path)
+        do {
+          try token3Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
         }
 
-        do {
-          try FileManager.default.createDirectory(atPath: "pos-" + request.date4.date, withIntermediateDirectories: true, attributes: nil)
-        } catch {
-          print(error)
-        }
+        fileName = "pos-" + request.date4.date
+        currentDirectoryUrl = URL(fileURLWithPath: ".")
+        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
         let token4 = request.token4
         let token4Str = String(token4) + "$"
-        path = FileManager.default.urls(for: .documentDirectory,
-                                    in: .userDomainMask)[0].appendingPathComponent("pos-" + request.date4.date)
-        if let stringData = token4Str.data(using: .utf8) {
-                try? stringData.write(to: path)
+        do {
+          try token4Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
         }
 
-        do {
-          try FileManager.default.createDirectory(atPath: "pos-" + request.date5.date, withIntermediateDirectories: true, attributes: nil)
-        } catch {
-          print(error)
-        }
+        fileName = "pos-" + request.date5.date
+        currentDirectoryUrl = URL(fileURLWithPath: ".")
+        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
         let token5 = request.token5
         let token5Str = String(token5) + "$"
-        path = FileManager.default.urls(for: .documentDirectory,
-                                    in: .userDomainMask)[0].appendingPathComponent("pos-" + request.date5.date)
-        if let stringData = token5Str.data(using: .utf8) {
-                try? stringData.write(to: path)
+        do {
+          try token5Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
         }
     } else {
-        /*
-        FileManager.default.createDirectory(atPath: "neg-" + request.date1.date, withIntermediateDirectories: true, attributes: nil)
-        FileManager.default.createDirectory(atPath: "neg-" + request.date2.date, withIntermediateDirectories: true, attributes: nil)
-        FileManager.default.createDirectory(atPath: "neg-" + request.date3.date, withIntermediateDirectories: true, attributes: nil)
-        FileManager.default.createDirectory(atPath: "neg-" + request.date4.date, withIntermediateDirectories: true, attributes: nil)
-        FileManager.default.createDirectory(atPath: "neg-" + request.date5.date, withIntermediateDirectories: true, attributes: nil)
-        */
+        var fileName = "neg-" + request.date1.date
+        var currentDirectoryUrl = URL(fileURLWithPath: ".")
+        var fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+        let token1 = request.token1
+        let token1Str = String(token1) + "$"
+        do {
+          try token1Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
+        }
+
+        fileName = "neg-" + request.date2.date
+        currentDirectoryUrl = URL(fileURLWithPath: ".")
+        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+        let token2 = request.token2
+        let token2Str = String(token2) + "$"
+        do {
+          try token2Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
+        }
+
+        fileName = "neg-" + request.date3.date
+        currentDirectoryUrl = URL(fileURLWithPath: ".")
+        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+        let token3 = request.token3
+        let token3Str = String(token3) + "$"
+        do {
+          try token3Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
+        }
+
+        fileName = "neg-" + request.date4.date
+        currentDirectoryUrl = URL(fileURLWithPath: ".")
+        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+        let token4 = request.token4
+        let token4Str = String(token4) + "$"
+        do {
+          try token4Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
+        }
+
+        fileName = "neg-" + request.date5.date
+        currentDirectoryUrl = URL(fileURLWithPath: ".")
+        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+        let token5 = request.token5
+        let token5Str = String(token5) + "$"
+        do {
+          try token5Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+        } catch let error as NSError {
+          print (error)
+        }
     }
     let response = Central_Ack.with {
       $0.ack = 1
