@@ -101,7 +101,7 @@ class CentralClient {
         }
     }
     
-    static func sendReportToken() throws {
+    static func sendExposureKeys() throws {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
