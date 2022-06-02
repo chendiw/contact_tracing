@@ -37,11 +37,11 @@ class CentralClient {
         // Provide the connection to the generated client.
         let central_client = Central_CentralClient(channel: channel)
 
-        let formatter = DateFormatter()
+        /*let formatter = DateFormatter()
         let now = Date()
-        let dateString = formatter.string(from:now)
+        let dateString = formatter.string(from:now)*/
         let request = Central_Date.with {
-            $0.date = dateString
+            $0.date = "date1"
         }
 
         // Make the RPC call to the server.
@@ -50,8 +50,8 @@ class CentralClient {
         // wait() on the response to stop the program from exiting before the response is received.
         do {
             //let response = try getPosCases.response.wait()
-            let _ = try getPosCases.response.wait()
-            print("Get Positive Cases: succeeded")
+            let response = try getPosCases.response.wait()
+            print("Get Positive Cases: succeeded: \(response.token)")
         } catch {
             print("Get Positive Cases failed: \(error)")
         }

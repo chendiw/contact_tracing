@@ -132,23 +132,87 @@ class CentralProvider: Central_CentralProvider {
     request: Central_Date,
     context: StatusOnlyCallContext
   ) -> EventLoopFuture<Central_Batch> {
-    // need to pull tokens from appropriate file
-    let response = Central_Batch.with {
-      let x = UInt64(123)
-      $0.token = [x];
+    let fileName = "pos-" + request.date
+    let currentDirectoryUrl = URL(fileURLWithPath: ".")
+    let fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+    let fileExists = (try? fileUrl.checkResourceIsReachable()) ?? false
+
+    if (fileExists) {
+      do {
+        let contents = try String(contentsOf: fileUrl, encoding: .utf8)
+        let lines = contents.split(separator:"$")
+        let count = lines.count
+        var resp: [UInt64] = []
+        for i in 1...count {
+          let keyStr = lines[i - 1]
+          if let key = UInt64(keyStr) {
+            resp.append(key)
+          } else {
+            // do nothing
+          }
+        }
+        let response = Central_Batch.with {
+          $0.token = resp;
+        }
+        return context.eventLoop.makeSucceededFuture(response)
+      } catch {
+        let response = Central_Batch.with {
+          let x = UInt64(0)
+          $0.token = [x];
+        }
+        return context.eventLoop.makeSucceededFuture(response)
+      }
+    } else {
+      print("i didn't find a file with that date for pollPositive")
+      let response = Central_Batch.with {
+        let x = UInt64(0)
+        $0.token = [x];
+      }
+      return context.eventLoop.makeSucceededFuture(response)
     }
-    return context.eventLoop.makeSucceededFuture(response)
   }
 
   func pollNegative(
     request: Central_Date,
     context: StatusOnlyCallContext
   ) -> EventLoopFuture<Central_Batch> {
-    // need to pull tokens from appropriate file
-    let response = Central_Batch.with {
-      let x = UInt64(123)
-      $0.token = [x];
+    let fileName = "neg-" + request.date
+    let currentDirectoryUrl = URL(fileURLWithPath: ".")
+    let fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+    let fileExists = (try? fileUrl.checkResourceIsReachable()) ?? false
+
+    if (fileExists) {
+      do {
+        let contents = try String(contentsOf: fileUrl, encoding: .utf8)
+        let lines = contents.split(separator:"$")
+        let count = lines.count
+        var resp: [UInt64] = []
+        for i in 1...count {
+          let keyStr = lines[i - 1]
+          if let key = UInt64(keyStr) {
+            resp.append(key)
+          } else {
+            // do nothing
+          }
+        }
+        let response = Central_Batch.with {
+          $0.token = resp;
+        }
+        return context.eventLoop.makeSucceededFuture(response)
+      } catch {
+        let response = Central_Batch.with {
+          let x = UInt64(0)
+          $0.token = [x];
+        }
+        return context.eventLoop.makeSucceededFuture(response)
+      }
+    } else {
+      print("i didn't find a file with that date for pollNegative")
+      let response = Central_Batch.with {
+        let x = UInt64(0)
+        $0.token = [x];
+      }
+      return context.eventLoop.makeSucceededFuture(response)
     }
-    return context.eventLoop.makeSucceededFuture(response)
   }
 }
