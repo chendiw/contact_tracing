@@ -91,6 +91,7 @@ enum Command {
     }
 }
 
+
 typealias ExpKey = UInt64
 extension ExpKey {
     init?(data: Data) {
@@ -117,6 +118,7 @@ enum File: String {
     case myExposureKeys
 
     var rawValue: String {
+
         switch self {
             case .myTokens: return "myTokens"
             case .peerTokens: return "peerTokens"
@@ -136,6 +138,15 @@ enum File: String {
         } catch {
             print("Save EmptyData Error: \(error)")
         }
+//        try data.write(to: to.url())
+//        let plistContent = NSDictionary(dictionary: emptyData)
+        
+//        let success:Bool = data.write(toFile: url.path, atomically: false)
+//        if success {
+//            print("File: \(url) creation successful")
+//        } else {
+//            print("Error creating file \(url)")
+//        }
     }
     
     func deleteFile(url: URL) {
