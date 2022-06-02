@@ -12,6 +12,7 @@ class TestAuthProvider: Testingauth_AuthProvider {
   var interceptors: Testingauth_AuthServerInterceptorFactoryProtocol?
   var receivedTokens: [UInt64: [UInt64]] = [0:[0]]
   let daysUntilResult: Int = 2
+  var daysUntilResultByUser: [UInt64: Int] = [0:0]
   let taID: UInt64 = UInt64.random(in: 0 ... UInt64.max)
   let keys = sigKeyGen()
 
@@ -19,13 +20,22 @@ class TestAuthProvider: Testingauth_AuthProvider {
   -> EventLoopFuture<Testingauth_Ack> {
     // generate userId when start test
     print("server received start test")
+    if !UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).1 {
+      TAFile.receivedTEKFile.createFile(url: TAFile.receivedTEKFile.dayURL(date: Date()))
+    }
     let userId = assignUserId()
     saveUserProfileStart(userId: userId, tokens: request.pretest)
-    testSavedSuccess(userId: userId)
+    
+    // test file saved correct
+    testSavedSuccess(userId: userId, targets: request.pretest)
+
+    self.daysUntilResultByUser[userId] = self.daysUntilResult
+
     let response = Testingauth_Ack.with {
       $0.userID = userId
       $0.ack = true
     }
+
     return context.eventLoop.makeSucceededFuture(response)
   }
 
@@ -41,26 +51,27 @@ class TestAuthProvider: Testingauth_AuthProvider {
   }
 
   func saveUserProfileStart(userId: UInt64, tokens: [UInt64]) {
-    self.receivedTokens = UserIdToTEKs.load(from: .receivedTEKFile)
+    self.receivedTokens = UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).0
     for t in tokens {
       self.receivedTokens.append(userId: userId, token: t)
     }
-    self.receivedTokens.save(to: .receivedTEKFile)
-  }
-
-  func testSavedSuccess(userId: UInt64) {
-    let curTokens = UserIdToTEKs.load(from: .receivedTEKFile)
-    assert(curTokens[userId]!.count == 3)
+    self.receivedTokens.daySave(to: .receivedTEKFile, day: Date())
   }
 
   func updateUserProfile(userId: UInt64, token: UInt64) -> Testingauth_TestResult {
-    self.receivedTokens = UserIdToTEKs.load(from: .receivedTEKFile)
+    self.receivedTokens = UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).0
     assert(self.receivedTokens[userId] != nil)
     self.receivedTokens[userId]!.append(token)
-    self.receivedTokens.save(to: .receivedTEKFile)
-    if self.receivedTokens[userId]!.count == 3 + self.daysUntilResult {
+    self.receivedTokens.daySave(to: .receivedTEKFile, day: Date())
+
+    // user has waited another day
+    assert(self.daysUntilResultByUser[userId] != nil)
+    self.daysUntilResultByUser[userId]! -= 1
+
+    if self.daysUntilResultByUser[userId] == 0 {
       let ready: Bool = true
 
+      // Generate sequence number based on received exposure keys
       var teks: Data = self.receivedTokens[userId]!.first!.data
       for t in self.receivedTokens[userId]! {
         if t.data != teks {
@@ -68,6 +79,9 @@ class TestAuthProvider: Testingauth_AuthProvider {
         }
       }
       let seq: UInt64 = sign(pri_key: keys.0, content: teks).uint64
+
+      // Test: seq/expKey relationship is verifiable
+      testSigVerifiable(content: teks, seq: seq, pub_key: keys.1)
 
       // for testing purposes, result is generated randomly
       let result: UInt64 = [1, 0].randomElement()!
@@ -78,6 +92,9 @@ class TestAuthProvider: Testingauth_AuthProvider {
 
       let signature: UInt64 = sign(pri_key: keys.0, content: vrfyMsg).uint64
 
+      // Test: main msg body verifiable
+      testSigVerifiable(content: vrfyMsg, seq: signature, pub_key: keys.1)
+
       let response = Testingauth_TestResult.with {
         $0.ready = ready
         $0.taID = self.taID
@@ -85,7 +102,7 @@ class TestAuthProvider: Testingauth_AuthProvider {
         $0.result = result
         $0.signature = signature
       }
-      print("Tokens before response: \(self.receivedTokens[userId])")
+      self.receivedTokens.removeValue(forKey: userId)
       return response
     } else {
       let response = Testingauth_TestResult.with {
@@ -104,6 +121,7 @@ struct TestAuth: ParsableCommand {
   @Option(help: "The port to listen on for new connections")
   var port = 1234
   var host = "172.31.43.1"
+  // var host = "localhost"
 
   func run() throws {
     let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)

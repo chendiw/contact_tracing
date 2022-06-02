@@ -220,7 +220,6 @@ extension TokenList {
                 print("This is the error when dayLoad: ", error)
             }
         } catch {
-            print("File \(from.dayURL(date: day)) doesn't exit.")
         }
         return (TokenList(), false)
     }
