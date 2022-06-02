@@ -19,7 +19,9 @@ struct TestResultMsg: Codable {
 
 public class TAClient {
     var port: Int = 1234
-    var host_ip: String = "localhost"
+    var host_ip: String = "54.80.128.235"
+    let pretest_days: Int = 3
+    
     var client: Testingauth_AuthClient
     var tested: Bool = false
     var getResult: Bool = false
@@ -54,27 +56,18 @@ public class TAClient {
     }
     
     public func prepStartTest() {
-        // Construct list of pretest tokens (currently set to 3)
-        let num_pretestTokens = 3
-        var allTokens: [TokenObject] = []
+        var pretestExpKeys: [UInt64] = []
         let date = Date()  // get today
-        let calendar = Calendar.current
-        let day = calendar.component(.hour, from: date)
-        for i in 1...num_pretestTokens{
+//        let calendar = Calendar.current
+//        let day = calendar.component(.hour, from: date)
+        for i in 1...self.pretest_days{
             let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: date)!
-//            allTokens.append(TokenList.dayLoad(from: .myExposureKey, day: prevDate)[0])
-        }
-
-        let pretestTokenObjects: [TokenObject] = allTokens.suffix(num_pretestTokens)
-        var pretestTokens: [UInt64] = []
-        for t in pretestTokenObjects {
-            pretestTokens.append(t.payload.uint64)
-            print("cur pretestToken: \(pretestTokens.last)")
+            pretestExpKeys.append(TokenList.dayLoad(from: .myExposureKeys, day: prevDate)[0].payload.uint64)
         }
         
         // Form the request with the name, if one was provided.
         let request = Testingauth_PretestTokens.with {
-            $0.pretest = pretestTokens
+            $0.pretest = pretestExpKeys
         }
 
         // Make the RPC call to the server.
@@ -92,7 +85,7 @@ public class TAClient {
     }
     
     public func prepGetResult() {
-        let curTokenObject: TokenObject = TokenList.load(from: .myTEKs).last!
+        let curTokenObject: TokenObject = TokenList.dayLoad(from: .myExposureKeys, day: Date()).first!
         let curToken: UInt64 = curTokenObject.payload.uint64
         
         // Form the request with the name, if one was provided.
