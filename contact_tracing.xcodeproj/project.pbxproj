@@ -9,11 +9,7 @@
 /* Begin PBXBuildFile section */
 		3A7132E62840537B00309F1F /* CGRPCZlib in Frameworks */ = {isa = PBXBuildFile; productRef = 3A7132E52840537B00309F1F /* CGRPCZlib */; };
 		3A7132E82840537B00309F1F /* GRPC in Frameworks */ = {isa = PBXBuildFile; productRef = 3A7132E72840537B00309F1F /* GRPC */; };
-		3A7667432840683800C9785A /* HelloWorldClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7667422840683800C9785A /* HelloWorldClient.swift */; };
 		3A766746284068C300C9785A /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 3A766745284068C300C9785A /* ArgumentParser */; };
-		3A76674A28406B4500C9785A /* helloworld.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A76674728406B4400C9785A /* helloworld.pb.swift */; };
-		3A76674B28406B4500C9785A /* helloworld.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A76674828406B4400C9785A /* helloworld.grpc.swift */; };
-		3A76674C28406B4500C9785A /* helloworld.proto in Sources */ = {isa = PBXBuildFile; fileRef = 3A76674928406B4500C9785A /* helloworld.proto */; };
 		3A7667542841B76F00C9785A /* central.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7667512841B76F00C9785A /* central.grpc.swift */; };
 		3A7667552841B76F00C9785A /* central.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7667522841B76F00C9785A /* central.pb.swift */; };
 		3A7667562841B76F00C9785A /* central.proto in Sources */ = {isa = PBXBuildFile; fileRef = 3A7667532841B76F00C9785A /* central.proto */; };
@@ -39,6 +35,7 @@
 		C16BE3F1281E35E20010DBAE /* CentralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3EC281E35E20010DBAE /* CentralManager.swift */; };
 		C16BE3F2281E35E20010DBAE /* Peripheral.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3ED281E35E20010DBAE /* Peripheral.swift */; };
 		C16BE3F3281E35E20010DBAE /* TokenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16BE3EE281E35E20010DBAE /* TokenController.swift */; };
+		C1ED7C442849696B00E6480D /* CentralClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1ED7C422849696A00E6480D /* CentralClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,10 +56,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		3A7667422840683800C9785A /* HelloWorldClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloWorldClient.swift; sourceTree = "<group>"; };
-		3A76674728406B4400C9785A /* helloworld.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = helloworld.pb.swift; sourceTree = "<group>"; };
-		3A76674828406B4400C9785A /* helloworld.grpc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = helloworld.grpc.swift; sourceTree = "<group>"; };
-		3A76674928406B4500C9785A /* helloworld.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = helloworld.proto; sourceTree = "<group>"; };
 		3A7667512841B76F00C9785A /* central.grpc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = central.grpc.swift; sourceTree = "<group>"; };
 		3A7667522841B76F00C9785A /* central.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = central.pb.swift; sourceTree = "<group>"; };
 		3A7667532841B76F00C9785A /* central.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = central.proto; sourceTree = "<group>"; };
@@ -92,6 +85,7 @@
 		C16BE3EC281E35E20010DBAE /* CentralManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CentralManager.swift; sourceTree = "<group>"; };
 		C16BE3ED281E35E20010DBAE /* Peripheral.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Peripheral.swift; sourceTree = "<group>"; };
 		C16BE3EE281E35E20010DBAE /* TokenController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenController.swift; sourceTree = "<group>"; };
+		C1ED7C422849696A00E6480D /* CentralClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CentralClient.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,16 +164,13 @@
 				C16BE3C6281E33B70010DBAE /* LaunchScreen.storyboard */,
 				C16BE3C9281E33B70010DBAE /* Info.plist */,
 				C16BE3C1281E33B60010DBAE /* contact_tracing.xcdatamodeld */,
-				3A7667422840683800C9785A /* HelloWorldClient.swift */,
 				7179C80C2842C8B800C29FC2 /* TAClient.swift */,
 				7179C90328444B5500C29FC2 /* testingauth.grpc.swift */,
 				7179C90428444B5500C29FC2 /* testingauth.pb.swift */,
-				3A76674828406B4400C9785A /* helloworld.grpc.swift */,
-				3A76674728406B4400C9785A /* helloworld.pb.swift */,
+				C1ED7C422849696A00E6480D /* CentralClient.swift */,
 				3A7667512841B76F00C9785A /* central.grpc.swift */,
 				3A7667522841B76F00C9785A /* central.pb.swift */,
 				3A7667532841B76F00C9785A /* central.proto */,
-				3A76674928406B4500C9785A /* helloworld.proto */,
 			);
 			path = contact_tracing;
 			sourceTree = "<group>";
@@ -350,7 +341,6 @@
 				7179C90528444B5500C29FC2 /* testingauth.grpc.swift in Sources */,
 				C16BE3B9281E33B60010DBAE /* AppDelegate.swift in Sources */,
 				3A7667552841B76F00C9785A /* central.pb.swift in Sources */,
-				3A76674A28406B4500C9785A /* helloworld.pb.swift in Sources */,
 				3A7667542841B76F00C9785A /* central.grpc.swift in Sources */,
 				3A7667562841B76F00C9785A /* central.proto in Sources */,
 				C16BE3BB281E33B60010DBAE /* SceneDelegate.swift in Sources */,
@@ -358,12 +348,10 @@
 				C16BE3C3281E33B60010DBAE /* contact_tracing.xcdatamodeld in Sources */,
 				7179C8072842A5C400C29FC2 /* Crypto.swift in Sources */,
 				7179C8172843093500C29FC2 /* DataConversions.swift in Sources */,
-				3A7667432840683800C9785A /* HelloWorldClient.swift in Sources */,
 				C12C14A7283F434400C61995 /* LocationManager.swift in Sources */,
 				C16BE3F1281E35E20010DBAE /* CentralManager.swift in Sources */,
 				7179C80D2842C8B800C29FC2 /* TAClient.swift in Sources */,
-				3A76674C28406B4500C9785A /* helloworld.proto in Sources */,
-				3A76674B28406B4500C9785A /* helloworld.grpc.swift in Sources */,
+				C1ED7C442849696B00E6480D /* CentralClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
