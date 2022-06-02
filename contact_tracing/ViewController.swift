@@ -76,41 +76,49 @@ class ViewController: UIViewController {
         textField.isEditable = false
         textField.font = UIFont(name: "Arial", size: 50)
         
-        let button = UIButton(frame: CGRect(x: 100, y: 500, width: 200, height: 50))
-        button.layer.cornerRadius = 5
-        button.backgroundColor = .orange
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.black.cgColor
-        button.setTitle("Get Test Result", for: .normal)
-        button.addTarget(self, action: #selector(getTestResult), for: .touchUpInside)
-
-        let button2 = UIButton(frame: CGRect(x: 100, y: 600, width: 200, height: 50))
+        let button0 = UIButton(frame: CGRect(x: 100, y: 300, width: 200, height: 50))
+        button0.layer.cornerRadius = 5
+        button0.backgroundColor = .green
+        button0.setTitle("Start service", for: .normal)
+//        button4.setTitleColor(.red, for: .normal)
+        button0.addTarget(self, action: #selector(startService), for: .touchUpInside)
+        
+        let button1 = UIButton(frame: CGRect(x: 100, y: 400, width: 200, height: 50))
+        button1.layer.cornerRadius = 5
+        button1.backgroundColor = .orange
+        button1.layer.borderWidth = 1
+        button1.layer.borderColor = UIColor.black.cgColor
+        button1.setTitle("Start Test", for: .normal)
+        button1.addTarget(self, action: #selector(startTest), for: .touchUpInside)
+        
+        let button2 = UIButton(frame: CGRect(x: 100, y: 500, width: 200, height: 50))
         button2.layer.cornerRadius = 5
-        button2.backgroundColor = .white
+        button2.backgroundColor = .orange
         button2.layer.borderWidth = 1
         button2.layer.borderColor = UIColor.black.cgColor
-        button2.setTitle("Report Positive", for: .normal)
-        button2.setTitleColor(.red, for: .normal)
-        button2.addTarget(self, action: #selector(reportPositive), for: .touchUpInside)
-        
-        let button3 = UIButton(frame: CGRect(x: 100, y: 700, width: 200, height: 50))
+        button2.setTitle("Get Test Result", for: .normal)
+        button2.addTarget(self, action: #selector(getTestResult), for: .touchUpInside)
+
+        let button3 = UIButton(frame: CGRect(x: 100, y: 600, width: 200, height: 50))
         button3.layer.cornerRadius = 5
-        button3.backgroundColor = .gray
-        button3.setTitle("Stop Service", for: .normal)
-//        button3.setTitleColor(.red, for: .normal)
-        button3.addTarget(self, action: #selector(stopService), for: .touchUpInside)
+        button3.backgroundColor = .white
+        button3.layer.borderWidth = 1
+        button3.layer.borderColor = UIColor.black.cgColor
+        button3.setTitle("Report Positive", for: .normal)
+        button3.setTitleColor(.red, for: .normal)
+        button3.addTarget(self, action: #selector(reportPositive), for: .touchUpInside)
         
-        
-        let button4 = UIButton(frame: CGRect(x: 100, y: 400, width: 200, height: 50))
+        let button4 = UIButton(frame: CGRect(x: 100, y: 700, width: 200, height: 50))
         button4.layer.cornerRadius = 5
-        button4.backgroundColor = .green
-        button4.setTitle("Start service", for: .normal)
-//        button4.setTitleColor(.red, for: .normal)
-        button4.addTarget(self, action: #selector(startService), for: .touchUpInside)
+        button4.backgroundColor = .gray
+        button4.setTitle("Stop Service", for: .normal)
+//        button3.setTitleColor(.red, for: .normal)
+        button4.addTarget(self, action: #selector(stopService), for: .touchUpInside)
         
         self.view.addSubview(textField0)
         self.view.addSubview(textField)
-        self.view.addSubview(button)
+        self.view.addSubview(button0)
+        self.view.addSubview(button1)
         self.view.addSubview(button2)
         self.view.addSubview(button3)
         self.view.addSubview(button4)
@@ -140,17 +148,22 @@ class ViewController: UIViewController {
 //        TokenController.start()
     }
     
-     func startTAClient() {
-         self.myTAClient.prepStartTest()
-         for i in 0..<2 {
-             self.myTAClient.prepGetResult()
-         }
-     }
+//     func startTAClient() {
+//         self.myTAClient.prepStartTest()
+//         for i in 0..<2 {
+//             self.myTAClient.prepGetResult()
+//         }
+//     }
+    
+    @objc func startTest(sender: UIButton!) {
+        print("Start test")
+        self.myTAClient = TAClient()
+        self.myTAClient.prepStartTest()
+    }
     
     @objc func getTestResult(sender: UIButton!) {
         print("getTestResult")
-        self.myTAClient = TAClient()
-        startTAClient()
+        self.myTAClient.prepGetResult()
     }
     
     @objc func reportPositive(sender: UIButton!) {
