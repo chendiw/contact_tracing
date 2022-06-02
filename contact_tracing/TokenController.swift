@@ -118,9 +118,9 @@ enum File: String {
     var rawValue: String {
 
         switch self {
-            case .myTEKs: return "myTEKs"
+            case .myTokens: return "myTokens"
             case .peerTokens: return "peerTokens"
-            case .myExposureKey: return "myExposureKey"
+            case .myExposureKeys: return "myExposureKeys"
         }
     }
     
@@ -263,6 +263,7 @@ extension TokenList {
         do {
             let data = try JSONEncoder().encode(self)
             try data.write(to: to.dayURL(date: day))
+            print("[DaySave], save to file name \(to.dayURL(date: day))")
         } catch {
             print("Save to file error: \(error)")
         }
@@ -341,20 +342,15 @@ public class TokenController: NSObject {
         instance.centralManager.stopScan()
     }
     
-    @objc public func generateMyExpKey() {
-        let url = File.myExposureKeys.dayURL(date: Date())
-        File.myExposureKeys.createFile(url: url)
-        print("\(url) creation success")
-    }
     
     @objc public func generateMyToken() {
         // load from different files
-         self.myTokens = TokenList.load(from: .myTEKs)  // TokenList.dayLoad(from: .myExposureKey, Date).
+         self.myTokens = TokenList.load(from: .myTokens)  // TokenList.dayLoad(from: .myExposureKey, Date).
 //        _ = self.myTokens.expire(keepInterval: KeepMyIdsInterval)
         print("My token list size is : \(self.myTokens.count)")
         
         // TODO: change to crypto function.
-        let curPayload = UserToken.next().data
+        let curPayload = ExpKey.next().data
 //        print("My latest token payload: \(curPayload.uint64)")
         // Jiani: Only the payload field in myTokenList is useful
         self.myTokens.append(curPayload: curPayload, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min

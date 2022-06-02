@@ -50,7 +50,7 @@ func getRPI(rpi_key: SymmetricKey, nonce: Data?, eninterval: Int) -> Data {
 //    print("Nonce: \(sealedData.nonce.withUnsafeBytes {Data(Array($0)).hex})")
 //    print("Tag: \(sealedData.tag.hex)")
 //    print("Ciphertext: \(sealedData.ciphertext.base64EncodedString())")
-    var result = sealedData.ciphertext
+    var result = sealedData.ciphertext // Data
     assert(result.count == 16)
     
     result.append(sealedData.nonce.withUnsafeBytes {Data(Array($0))})
