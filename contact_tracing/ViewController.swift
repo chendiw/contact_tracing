@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreBluetooth
+import CoreLocation
 
 //class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
 //    var centralManager: CBCentralManager!  // ! means this is an unwrapped optional variable and if we refer to it later we can check for null-safety.
@@ -54,7 +55,8 @@ import CoreBluetooth
 
 class ViewController: UIViewController {
     private var start: Bool = false
-    var myTAClient: TAClient!
+    private var myTAClient: TAClient!
+    private var myRiskScoreController: RiskScoreController = RiskScoreController()
     private var level: String = "low level"
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -159,11 +161,13 @@ class ViewController: UIViewController {
         print("Start test")
         self.myTAClient = TAClient()
         self.myTAClient.prepStartTest()
+
     }
     
     @objc func getTestResult(sender: UIButton!) {
         print("getTestResult")
         self.myTAClient.prepGetResult()
+
     }
     
     @objc func reportPositive(sender: UIButton!) {
@@ -175,7 +179,10 @@ class ViewController: UIViewController {
         print("Start Contact Tracing")
         self.start = true
         
-        TokenController.didFinishLaunching()
+        // Get today's level here: Write the riskScore result to a file
+        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
+        
+//        TokenController.didFinishLaunching()
 //        TokenController.startFresh()  // delete previous file
 //        TokenController.start()
    }
@@ -187,16 +194,46 @@ class ViewController: UIViewController {
         print(self.start)
     }
     
+    public func createMyExpKey() {
+        let url = File.myExposureKeys.dayURL(date: Date())
+        File.myExposureKeys.createFile(url: url)
+        print("\(url) creation success")
+    }
+    
+    public func createMyTokens() {
+        let url = File.myTokens.dayURL(date: Date())
+        File.myTokens.createFile(url: url)
+        print("\(url) creation success")
+    }
+    
+    public func createPeerTokens() {
+        let url = File.peerTokens.dayURL(date: Date())
+        File.peerTokens.createFile(url: url)
+        print("\(url) creation success")
+    }
+    
     @objc func todayTask() {
         if self.start{
             print("This is today's Task")
-            // 1. Generate an exposure key, Store to the file
+            // 0. Create all the files locally
+            createMyExpKey()
+            createMyTokens()
+            createPeerTokens()
+            // 1. Generate an exposure key, Store to the file.
+            let exposureKey = ExpKey.next().data
+            print("Today's exposure key is: \(exposureKey)")
+
+            let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
+            var exposurekeyList: TokenList = [token]
+            exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
             
             // 2. Poll for negtive and positve exposure keys, calculate risk score
+            self.myRiskScoreController.calculate()
+            self.level = self.myRiskScoreController.getLevel()
             
             // 3. show today's risk level
             let textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
-            textField.text = "TEST"
+            textField.text = self.level
             textField.textColor = .red
             textField.isEditable = false
             textField.font = UIFont(name: "Arial", size: 50)

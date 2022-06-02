@@ -115,7 +115,7 @@ enum File: String {
     case myTokens
     case peerTokens
     case myExposureKeys
-    
+
     var rawValue: String {
         switch self {
             case .myTokens: return "myTokens"
@@ -150,19 +150,6 @@ enum File: String {
             print("Error: \(error.domain)")
         }
     }
-    
-//    func url() -> URL {
-//        let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
-//        let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
-//        let date = Date()
-//        let calendar = Calendar.current
-//        let day = calendar.component(.day, from: date)
-//        let month = calendar.component(.month, from: date)
-//        let name = String(month) + "-" + String(day)
-//        print("[Today] Today's date is: \(name)")
-//        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + name )!.appendingPathExtension("txt")
-//        return fileUrl
-//    }
     
     func dayURL(date: Date) -> URL {
         let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
@@ -206,7 +193,6 @@ enum File: String {
     }
 }
 
-
 struct TokenObject: Codable {
     var eninterval: Int
     var payload: Data
@@ -240,6 +226,7 @@ extension TokenList {
         do {
             let data = try JSONEncoder().encode(self)
             try data.write(to: to.dayURL(date: day))
+            print("[DaySave], save to file name \(to.dayURL(date: day))")
         } catch {
             print("Save to file error: \(error)")
         }
@@ -249,15 +236,7 @@ extension TokenList {
         let token = TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: rssi, lat: lat, long: long)
         self.append(token)
     }
-    
-//    var lastENInterval: Int {
-//        guard let lastToken = self.lastTokenObject else {
-//            print("Last token object doesn't exist")
-//            return -1
-//        }
-//        return lastToken.eninterval
-//    }
-    
+
     var lastTokenObject: TokenObject? {
         return self.last!
     }
@@ -300,7 +279,7 @@ public class TokenController: NSObject {
         instance.peripheralManager.startAdvertising()
         
         // Every time we generate a new token, scan for peripherals and exchange tokens
-        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleStartScan), userInfo: nil, repeats: true)
+        let timerStartScan = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleStartScan), userInfo: nil, repeats: true)
         
         // request user permission
         let center = UNUserNotificationCenter.current()

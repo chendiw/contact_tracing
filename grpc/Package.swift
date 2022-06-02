@@ -28,7 +28,6 @@ let packageDependencies: [Package.Dependency] = [
 extension Target.Dependency {
     static let testAuthModel: Self = .target(name: "testAuthModel")
     static let centralModel: Self = .target(name: "centralModel")
-
     static let argumentParser: Self = .product(
         name: "ArgumentParser",
         package: "swift-argument-parser"
@@ -50,10 +49,14 @@ extension Target {
     ],
     path: "Model",
     exclude: [
+<<<<<<< HEAD
+      "testingauth.proto"
+=======
       "testingauth.proto",
       "central.proto",
       "central.grpc.swift",
       "central.pb.swift",
+>>>>>>> expkey-token
     ]
   )
 
