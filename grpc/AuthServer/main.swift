@@ -18,6 +18,7 @@ class TestAuthProvider: Testingauth_AuthProvider {
   func startTest(request: Testingauth_PretestTokens, context: StatusOnlyCallContext) 
   -> EventLoopFuture<Testingauth_Ack> {
     // generate userId when start test
+    print("server received start test")
     let userId = assignUserId()
     saveUserProfileStart(userId: userId, tokens: request.pretest)
     testSavedSuccess(userId: userId)
@@ -102,6 +103,7 @@ class TestAuthProvider: Testingauth_AuthProvider {
 struct TestAuth: ParsableCommand {
   @Option(help: "The port to listen on for new connections")
   var port = 1234
+  var host = "172.31.43.1"
 
   func run() throws {
     let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -112,7 +114,7 @@ struct TestAuth: ParsableCommand {
     // Start the server and print its address once it has started.
     let server = Server.insecure(group: group)
       .withServiceProviders([TestAuthProvider()])
-      .bind(host: "localhost", port: self.port)
+      .bind(host: self.host, port: self.port)
 
     server.map {
       $0.channel.localAddress
