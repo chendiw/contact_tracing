@@ -11,7 +11,7 @@ import NIOCore
 import NIOPosix
 
 class CentralClient {
-    static func getPositiveCases() throws {
+    func getPositiveCases() throws {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
@@ -56,7 +56,7 @@ class CentralClient {
         }
     }
     
-    static func getNegativeCases() throws {
+    func getNegativeCases() throws {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
@@ -101,7 +101,7 @@ class CentralClient {
         }
     }
     
-    static func sendExposureKeys() throws {
+    func sendExposureKeys() throws {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups

@@ -56,6 +56,7 @@ import CoreLocation
 class ViewController: UIViewController {
     private var start: Bool = false
     private var myTAClient: TAClient!
+    private var centralClient: CentralClient!
     private var myRiskScoreController: RiskScoreController = RiskScoreController()
     private var level: String = "low level"
     override func viewDidLoad() {
@@ -172,12 +173,17 @@ class ViewController: UIViewController {
     
     @objc func reportPositive(sender: UIButton!) {
         print("reportPositive")
-        
+        do {
+            try self.centralClient.sendExposureKeys()
+        } catch {
+            print("couldn't send exposure keys")
+        }
     }
     
     @objc func startService(sender: UIButton!) {
         print("Start Contact Tracing")
         self.start = true
+        self.centralClient = CentralClient()
         
         // Get today's level here: Write the riskScore result to a file
         let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
