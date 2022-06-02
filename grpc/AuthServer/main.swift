@@ -111,11 +111,7 @@ struct TestAuth: ParsableCommand {
 
     // Start the server and print its address once it has started.
     let server = Server.insecure(group: group)
-<<<<<<< HEAD
       .withServiceProviders([TestAuthProvider()])
-=======
-      .withServiceProviders([CentralProvider()])
->>>>>>> origin/main
       .bind(host: "localhost", port: self.port)
 
     server.map {
@@ -131,8 +127,4 @@ struct TestAuth: ParsableCommand {
   }
 }
 
-<<<<<<< HEAD
 TestAuth.main()
-=======
-Central.main()
->>>>>>> origin/main
