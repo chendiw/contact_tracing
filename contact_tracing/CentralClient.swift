@@ -37,8 +37,11 @@ class CentralClient {
         // Provide the connection to the generated client.
         let central_client = Central_CentralClient(channel: channel)
 
+        let formatter = DateFormatter()
+        let now = Date()
+        let dateString = formatter.string(from:now)
         let request = Central_Date.with {
-            $0.date = "1/1/2022"
+            $0.date = dateString
         }
 
         // Make the RPC call to the server.
@@ -80,8 +83,11 @@ class CentralClient {
         // Provide the connection to the generated client.
         let central_client = Central_CentralClient(channel: channel)
 
+        let formatter = DateFormatter()
+        let now = Date()
+        let dateString = formatter.string(from:now)
         let request = Central_Date.with {
-            $0.date = "1/1/2022"
+            $0.date = dateString
         }
 
         // Make the RPC call to the server.
@@ -124,7 +130,17 @@ class CentralClient {
         let central_client = Central_CentralClient(channel: channel)
 
         let request = Central_ExposureKeys.with {
-            $0.token1 = 1209024
+            $0.token1 = 1234;
+            $0.token2 = 5678;
+            $0.token3 = 9488;
+            $0.token4 = 4950;
+            $0.token5 = 49350;
+            $0.date1.date = "date1";
+            $0.date2.date = "date2";
+            $0.date3.date = "date3";
+            $0.date4.date = "date4";
+            $0.date5.date = "date5";
+            $0.pos = 1;
         }
 
         // Make the RPC call to the server.

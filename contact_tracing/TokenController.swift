@@ -16,7 +16,8 @@ import CoreLocation
 public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
 public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
 public let peripheralName = "CT-Peripheral-test1"
-public let tokenGenInterval: TimeInterval = 20 //re-exchange tokens per 10 min
+public let tokenGenInterval: TimeInterval = 60 //re-exchange tokens per 10 min, testing with per min
+public let expKeyInterval: TimeInterval = 10*60 // re-generate exposure key per day (1440*60s), testing with per 10 min
 
 class MyService {
     private var uuid: CBUUID
@@ -71,7 +72,6 @@ class MyCharacteristic {
 }
 
 enum Command {
-//    case read
     case write(value: Data?)
     case readRSSI
     case cancel(callback: (Peripheral) -> Void)
@@ -90,20 +90,19 @@ enum Command {
     }
 }
 
-typealias UserToken = UInt64
-extension UserToken {
+
+typealias ExpKey = UInt64
+extension ExpKey {
     init?(data: Data) {
-        var value: UserToken = 0
+        var value: ExpKey = 0
         guard data.count >= MemoryLayout.size(ofValue: value) else { return nil }
         _ = Swift.withUnsafeMutableBytes(of: &value, { data.copyBytes(to: $0)} )
         self = value
     }
     
-    static func next() -> UserToken {
-        // https://github.com/apple/swift-evolution/blob/master/proposals/0202-random-unification.md#random-number-generator
-        // This is cryptographically random
+    static func next() -> ExpKey {
         let curRandom = UInt64.random(in: 0 ... UInt64.max)
-        return UserToken(curRandom)
+        return ExpKey(curRandom)
     }
 }
 
@@ -113,10 +112,9 @@ let KeepPeerIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
 // myTEKs: i (computed from ENIntervalNumber) -> TEK_i (14 pairs)
 // peerTokens: ENIntervalNumber -> [Tokenobject{Bluetooth payload, RSSI, GPS location}] (144*14=2016 pairs)
 enum File: String {
-    case myTEKs
+    case myTokens
     case peerTokens
-    case myExposureKey
-    
+    case myExposureKeys
     var rawValue: String {
 
         switch self {
@@ -126,7 +124,7 @@ enum File: String {
         }
     }
     
-    static func createFile(url: URL) {
+    func createFile(url: URL) {
         let fm = FileManager.default
         guard !fm.fileExists(atPath: url.path) else {
             return
@@ -149,7 +147,7 @@ enum File: String {
 //        }
     }
     
-    static func deleteFile(url: URL) {
+    func deleteFile(url: URL) {
         let fm = FileManager.default
         guard fm.fileExists(atPath: url.path) else {
             print("Cannot delete non-existent files: \(url)!")
@@ -162,29 +160,58 @@ enum File: String {
         }
     }
     
-    func url() -> URL {
-        let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
-        let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
-        let date = Date()
-        let calendar = Calendar.current
-        let day = calendar.component(.day, from: date)
-        let month = calendar.component(.month, from: date)
-        let name = String(month) + "-" + String(day)
-        print("[Today] Today's date is: \(name)")
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + name )!.appendingPathExtension("txt")
-        return fileUrl
-    }
+//    func url() -> URL {
+//        let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
+//        let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
+//        let date = Date()
+//        let calendar = Calendar.current
+//        let day = calendar.component(.day, from: date)
+//        let month = calendar.component(.month, from: date)
+//        let name = String(month) + "-" + String(day)
+//        print("[Today] Today's date is: \(name)")
+//        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + name )!.appendingPathExtension("txt")
+//        return fileUrl
+//    }
     
     func dayURL(date: Date) -> URL {
         let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
         let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(dayFilename(date: date))!.appendingPathExtension("txt")
+        return fileUrl
+    }
+    
+    func dayFilename(date: Date) -> String {
         let calendar = Calendar.current
         let day = calendar.component(.day, from: date)
         let month = calendar.component(.month, from: date)
         let name = String(month) + "-" + String(day)
         print("[dayURL] Today's date is: \(name)")
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue + name)!.appendingPathExtension("txt")
-        return fileUrl
+        return self.rawValue + name
+    }
+    
+    static func deleteAll() {
+        do {
+            // Get the document directory url
+            let documentDirectory = try FileManager.default.url(
+                for: .documentDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            )
+            print("documentDirectory", documentDirectory.path)
+            // Get the directory contents urls (including subfolders urls)
+            let directoryContents = try FileManager.default.contentsOfDirectory(
+                at: documentDirectory,
+                includingPropertiesForKeys: nil,
+                options: .skipsHiddenFiles
+            )
+            for url in directoryContents where url.pathExtension == "txt" {
+                try FileManager.default.removeItem(at: url)
+            }
+            print("Cleaned all files!")
+        } catch {
+            print(error)
+        }
     }
 }
 
@@ -206,18 +233,18 @@ extension TokenList {
     // Store tokens for 14 days
     // Max file size: 32 x 1k x 14 = 448k bytes
     
-    static func load(from: File) -> TokenList {
-        if let data = try? Data(contentsOf: from.url()) {
-            do {
-                let arr = try JSONDecoder().decode(self, from: data)
-                print("[load from file] the loaded data is: \(arr)")
-                return arr
-            } catch {
-                print("This is the error when load: ", error)
-            }
-        }
-        return TokenList()
-    }
+//    static func load(from: File, date: Date) -> TokenList {
+//        if let data = try? Data(contentsOf: from.dayURL(date: date)) {
+//            do {
+//                let arr = try JSONDecoder().decode(self, from: data)
+//                print("[load from file] the loaded data is: \(arr)")
+//                return arr
+//            } catch {
+//                print("This is the error when load: ", error)
+//            }
+//        }
+//        return TokenList()
+//    }
     
     static func dayLoad(from: File, day: Date) -> TokenList {
         if let data = try? Data(contentsOf: from.dayURL(date: day)) {
@@ -232,32 +259,29 @@ extension TokenList {
         return TokenList()
     }
     
-    func save(to :File) {
+    func daySave(to: File, day: Date) {
         do {
             let data = try JSONEncoder().encode(self)
-            try data.write(to: to.url())
+            try data.write(to: to.dayURL(date: day))
         } catch {
             print("Save to file error: \(error)")
         }
     }
-
-    
 
     mutating func append(curPayload: Data, rssi: Int, lat: CLLocationDegrees, long: CLLocationDegrees) {
         let token = TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: rssi, lat: lat, long: long)
         self.append(token)
     }
     
-    var lastENInterval: Int {
-        guard let lastToken = self.lastTokenObject else {
-            print("Last token object doesn't exist")
-            return -1
-        }
-        return lastToken.eninterval
-    }
+//    var lastENInterval: Int {
+//        guard let lastToken = self.lastTokenObject else {
+//            print("Last token object doesn't exist")
+//            return -1
+//        }
+//        return lastToken.eninterval
+//    }
     
     var lastTokenObject: TokenObject? {
-        // let item = self.last! // at least one item should exist in the array
         return self.last!
     }
 }
@@ -277,14 +301,14 @@ public class TokenController: NSObject {
     private var peripheralManager: PeripheralManager!
     private var centralManager: CentralManager!
     private var started: Bool = false
+    private var myExposureKeys: TokenList!
     private var myTokens: TokenList!
     private var peerTokens: TokenList!
     private var backgroundTaskId: UIBackgroundTaskIdentifier?
     private var locationManager: LocationManager!
     
     public static func startFresh() {
-        File.deleteFile(url: File.myTEKs.url())
-        File.deleteFile(url: File.peerTokens.url())
+        File.deleteAll()
     }
 
     public static func didFinishLaunching() {
@@ -297,6 +321,11 @@ public class TokenController: NSObject {
 
     public static func start() {
         instance.peripheralManager.startAdvertising()
+        
+        // Generate a new myExposureKey per day
+        let timerExpKey = Timer.scheduledTimer(timeInterval: expKeyInterval, target: self, selector: #selector(generateMyExpKey), userInfo: nil, repeats: true)
+        
+        // Every time we generate a new token, scan for peripherals and exchange tokens
         let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(scheduleStartScan), userInfo: nil, repeats: true)
         
         // request user permission
@@ -310,6 +339,12 @@ public class TokenController: NSObject {
     public static func stop() {
         instance.peripheralManager.stopAdvertising()
         instance.centralManager.stopScan()
+    }
+    
+    @objc public func generateMyExpKey() {
+        let url = File.myExposureKeys.dayURL(date: Date())
+        File.myExposureKeys.createFile(url: url)
+        print("\(url) creation success")
     }
     
     @objc public func generateMyToken() {

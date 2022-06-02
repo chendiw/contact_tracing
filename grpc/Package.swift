@@ -27,6 +27,7 @@ let packageDependencies: [Package.Dependency] = [
 
 extension Target.Dependency {
     static let testAuthModel: Self = .target(name: "testAuthModel")
+    static let centralModel: Self = .target(name: "centralModel")
     static let argumentParser: Self = .product(
         name: "ArgumentParser",
         package: "swift-argument-parser"
@@ -48,7 +49,14 @@ extension Target {
     ],
     path: "Model",
     exclude: [
+<<<<<<< HEAD
       "testingauth.proto"
+=======
+      "testingauth.proto",
+      "central.proto",
+      "central.grpc.swift",
+      "central.pb.swift",
+>>>>>>> expkey-token
     ]
   )
 
@@ -61,11 +69,11 @@ extension Target {
       .nioPosix,
       .argumentParser,
     ],
-    path: "Server"
+    path: "AuthServer"
   )
 
   static let centralModel: Target = .target(
-    name: "CentralModel",
+    name: "centralModel",
     dependencies: [
       .grpc,
       .nio,
@@ -74,19 +82,22 @@ extension Target {
     path: "Model",
     exclude: [
       "central.proto",
+      "testingauth.proto",
+      "testingauth.grpc.swift",
+      "testingauth.pb.swift",
     ]
   )
 
   static let centralServer: Target = .executableTarget(
-    name: "CentralServer",
+    name: "centralServer",
     dependencies: [
       .grpc,
-      .helloWorldModel,
+      .centralModel,
       .nioCore,
       .nioPosix,
       .argumentParser,
     ],
-    path: "Server"
+    path: "CentralServer"
   )
 }
 
@@ -102,13 +113,13 @@ extension Product {
   )
 
   static let centralServer: Product = .executable(
-    name: "CentralServer",
-    targets: ["CentralServer"]
+    name: "centralServer",
+    targets: ["centralServer"]
   )
 
   static let centralModel: Product = .library(
-    name: "CentralModel",
-    targets: ["CentralModel"]
+    name: "centralModel",
+    targets: ["centralModel"]
   )
 }
 
@@ -118,6 +129,8 @@ let package = Package(
         .macOS(.v11)
     ],
     products: [
+        .centralServer,
+        .centralModel,
         .testAuthServer,
         .testAuthModel,
     ],
@@ -125,6 +138,8 @@ let package = Package(
     targets: [
         .testAuthModel,
         .testAuthServer,
-    ],
+        .centralModel,
+        .centralServer,
+    ]
 )
 
