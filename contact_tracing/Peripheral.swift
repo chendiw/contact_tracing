@@ -173,8 +173,6 @@ extension Peripheral: CBPeripheralDelegate {
             return
         }
         
-        print("in didUpdateValueFor: \(characteristicValue)")
-        
         // use callback characteristicCallback to make characteristicValue accessible to centralManager
         characteristicCallback?(self, characteristic as! CBMutableCharacteristic, characteristicValue, error)
         if let c = nextCommand() {

@@ -11,6 +11,9 @@ import NIOCore
 import NIOPosix
 
 class CentralClient {
+    var port: Int = 1235
+    var host_ip: String = "54.80.128.235"
+    
     func getPositiveCases() throws  -> [UInt64] {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
@@ -24,7 +27,7 @@ class CentralClient {
         
         // Configure the channel, we're not using TLS so the connection is `insecure`.
         let channel = try GRPCChannelPool.with(
-            target: .host("localhost", port: 1234),
+            target: .host(self.host_ip, port: self.port),
             transportSecurity: .plaintext,
             eventLoopGroup: group
         )
@@ -71,7 +74,7 @@ class CentralClient {
         
         // Configure the channel, we're not using TLS so the connection is `insecure`.
         let channel = try GRPCChannelPool.with(
-            target: .host("localhost", port: 1234),
+            target: .host(self.host_ip, port: self.port),
             transportSecurity: .plaintext,
             eventLoopGroup: group
         )
@@ -118,7 +121,7 @@ class CentralClient {
         
         // Configure the channel, we're not using TLS so the connection is `insecure`.
         let channel = try GRPCChannelPool.with(
-            target: .host("localhost", port: 1234),
+            target: .host(self.host_ip, port: self.port),
             transportSecurity: .plaintext,
             eventLoopGroup: group
         )
@@ -131,20 +134,25 @@ class CentralClient {
         // Provide the connection to the generated client.
         let central_client = Central_CentralClient(channel: channel)
         
-        let date = Date()
+        var date = Date()
+        date = Calendar.current.date(byAdding: .minute, value: -1, to: date)!  // for test
         let dateFormatter = DateFormatter()
+        
+        print("Client side date1 raw: \(date)")
+        print("Client side date1: \(date.minuteString)")
+        print("Client side date2: \(Calendar.current.date(byAdding: .minute, value: -1, to: date)!.minuteString)")
         
         let request = Central_ExposureKeys.with { // this also works with
             $0.token1 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
-            $0.token2 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
-            $0.token3 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
-            $0.token4 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
-            $0.token5 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
-            $0.date1.date = dateFormatter.string(from: date);
-            $0.date2.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -1, to: date)!);
-            $0.date3.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -2, to: date)!);
-            $0.date4.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -3, to: date)!);
-            $0.date5.date = dateFormatter.string(from: Calendar.current.date(byAdding: .day, value: -4, to: date)!);
+            $0.token2 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -1, to: date)!).0[0].payload.uint64;
+            $0.token3 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -2, to: date)!).0[0].payload.uint64;
+            $0.token4 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -3, to: date)!).0[0].payload.uint64;
+            $0.token5 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -4, to: date)!).0[0].payload.uint64;
+            $0.date1.date = date.minuteString;
+            $0.date2.date = Calendar.current.date(byAdding: .minute, value: -1, to: date)!.minuteString;
+            $0.date3.date = Calendar.current.date(byAdding: .minute, value: -2, to: date)!.minuteString;
+            $0.date4.date = Calendar.current.date(byAdding: .minute, value: -3, to: date)!.minuteString;
+            $0.date5.date = Calendar.current.date(byAdding: .minute, value: -4, to: date)!.minuteString;
             $0.pos = 1; // TODO: this needs to be updatted to be the value from the test
         }
 
@@ -154,9 +162,9 @@ class CentralClient {
         // wait() on the response to stop the program from exiting before the response is received.
         do {
             let response = try report.response.wait()
-            print("report token : succeeded: \(response.ack)")
+            print("send exposure key : succeeded: \(response.ack)")
         } catch {
-            print("report token : \(error)")
+            print("send exposure key : \(error)")
         }
     }
 }
