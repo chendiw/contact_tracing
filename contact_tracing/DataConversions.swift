@@ -42,3 +42,21 @@ public extension UInt64 {
         return Swift.withUnsafeBytes(of: self) { Data($0) }
     }
 }
+
+public extension Date {
+    var dateString: String {
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: self)
+        let month = calendar.component(.month, from: self)
+        let name = String(month) + "-" + String(day)
+        return name
+    }
+    
+    var minuteString: String {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: self)
+        let minute = calendar.component(.minute, from: self)
+        let name = String(hour) + "-" + String(minute)
+        return name
+    }
+}

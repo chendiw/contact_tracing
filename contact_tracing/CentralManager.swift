@@ -106,7 +106,7 @@ extension CentralManager: CBCentralManagerDelegate {
             didReadRSSI(p, RSSI, nil)
         }
         if peripherals[peripheral.identifier] != nil {
-            print("iOS Peripheral \(peripheral.identifier) has been discovered already")
+//            print("iOS Peripheral \(peripheral.identifier) has been discovered already")
 //            return
         }
 

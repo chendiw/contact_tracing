@@ -143,7 +143,7 @@ class ViewController: UIViewController {
         
         todayTask()
         // Get today's level here: Write the riskScore result to a file
-        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
+        let timer2 = Timer.scheduledTimer(timeInterval: expKeyInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
         
         TokenController.didFinishLaunching()
         TokenController.start()
@@ -159,31 +159,31 @@ class ViewController: UIViewController {
     public func createMyExpKey() {
         let url = File.myExposureKeys.dayURL(date: Date())
         File.myExposureKeys.createFile(url: url)
-        print("\(url) creation success")
+//        print("\(url) creation success")
     }
     
     public func createMyTokens() {
         let url = File.myTokens.dayURL(date: Date())
         File.myTokens.createFile(url: url)
-        print("\(url) creation success")
+//        print("\(url) creation success")
     }
     
     public func createPeerTokens() {
         let url = File.peerTokens.dayURL(date: Date())
         File.peerTokens.createFile(url: url)
-        print("\(url) creation success")
+//        print("\(url) creation success")
     }
     
     @objc func todayTask() {
         if self.start{
-            print("This is today's Task")
+//            print("This is today's Task")
             // 0. Create all the files locally
             createMyExpKey()
             createMyTokens()
             createPeerTokens()
             // 1. Generate an exposure key, Store to the file.
             let exposureKey = ExpKey.next().data
-            print("Today's exposure key is: \(exposureKey)")
+            print("url for exp key: \(Date()); Today's exposure key is: \(exposureKey.uint64)")
 
             let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
             let exposurekeyList: TokenList = [token]
@@ -201,7 +201,7 @@ class ViewController: UIViewController {
 //            textField.font = UIFont(name: "Arial", size: 50)
 //            self.view.addSubview(textField)
             
-        }else{
+        } else {
             print("Service not start. Do not do today's task")
         }
         
