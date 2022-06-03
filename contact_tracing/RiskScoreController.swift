@@ -122,7 +122,8 @@ class RiskScoreController {
 //                        var isSameLocation: Bool = false;
                         for locs in positiveGPS {
                             let positiveLoc = CLLocation(latitude: locs[0], longitude: locs[1])
-                            let curLoc = CLLocation(latitude: token.lat, longitude: token.long)
+                            let
+                            = CLLocation(latitude: token.lat, longitude: token.long)
                             if positiveLoc.distance(from: curLoc) < 5 {  // less than 5m -> In the same room
                                 self.riskScore = max(0, self.riskScore - 10)
                             }
