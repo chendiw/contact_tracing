@@ -16,6 +16,21 @@ class ViewController: UIViewController {
     private var myRiskScoreController: RiskScoreController = RiskScoreController()
     private var level: String = "low level"
     
+    var textField0: UITextView = UITextView(frame: CGRect(x: 90, y: 150, width: 250, height: 50))
+    
+    var textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
+
+    var button0 = UIButton(frame: CGRect(x: 100, y: 300, width: 200, height: 50))
+    
+    var button1 = UIButton(frame: CGRect(x: 100, y: 400, width: 200, height: 50))
+
+    let button2 = UIButton(frame: CGRect(x: 100, y: 500, width: 200, height: 50))
+
+    let button3 = UIButton(frame: CGRect(x: 100, y: 600, width: 200, height: 50))
+
+    let button4 = UIButton(frame: CGRect(x: 100, y: 700, width: 200, height: 50))
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -23,27 +38,23 @@ class ViewController: UIViewController {
         
         // Get today's level here: Write the riskScore result to a file
         let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
-         
-        let textField0 = UITextView(frame: CGRect(x: 90, y: 150, width: 250, height: 50))
-        textField0.text = "Your COVID exposure level is: "
-        textField0.textColor = .white
-        textField0.isEditable = false
-        textField0.font = UIFont(name: "Arial", size: 20)
         
-        let textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
-        textField.text = self.level
-        textField.textColor = .green
-        textField.isEditable = false
-        textField.font = UIFont(name: "Arial", size: 50)
+        self.textField0.text = "Your COVID exposure level is: "
+        self.textField0.textColor = .white
+        self.textField0.isEditable = false
+        self.textField0.font = UIFont(name: "Arial", size: 20)
         
-        let button0 = UIButton(frame: CGRect(x: 100, y: 300, width: 200, height: 50))
+        self.textField.text = self.level
+        self.textField.textColor = .green
+        self.textField.isEditable = false
+        self.textField.font = UIFont(name: "Arial", size: 50)
+        
         button0.layer.cornerRadius = 5
         button0.backgroundColor = .green
         button0.setTitle("Start service", for: .normal)
-//        button4.setTitleColor(.red, for: .normal)
+    //        button4.setTitleColor(.red, for: .normal)
         button0.addTarget(self, action: #selector(startService), for: .touchUpInside)
         
-        let button1 = UIButton(frame: CGRect(x: 100, y: 400, width: 200, height: 50))
         button1.layer.cornerRadius = 5
         button1.backgroundColor = .orange
         button1.layer.borderWidth = 1
@@ -51,15 +62,13 @@ class ViewController: UIViewController {
         button1.setTitle("Start Test", for: .normal)
         button1.addTarget(self, action: #selector(startTest), for: .touchUpInside)
         
-        let button2 = UIButton(frame: CGRect(x: 100, y: 500, width: 200, height: 50))
         button2.layer.cornerRadius = 5
         button2.backgroundColor = .orange
         button2.layer.borderWidth = 1
         button2.layer.borderColor = UIColor.black.cgColor
         button2.setTitle("Get Test Result", for: .normal)
         button2.addTarget(self, action: #selector(getTestResult), for: .touchUpInside)
-
-        let button3 = UIButton(frame: CGRect(x: 100, y: 600, width: 200, height: 50))
+        
         button3.layer.cornerRadius = 5
         button3.backgroundColor = .white
         button3.layer.borderWidth = 1
@@ -68,13 +77,13 @@ class ViewController: UIViewController {
         button3.setTitleColor(.red, for: .normal)
         button3.addTarget(self, action: #selector(reportPositive), for: .touchUpInside)
         
-        let button4 = UIButton(frame: CGRect(x: 100, y: 700, width: 200, height: 50))
         button4.layer.cornerRadius = 5
         button4.backgroundColor = .gray
         button4.setTitle("Stop Service", for: .normal)
-//        button3.setTitleColor(.red, for: .normal)
+    //        button3.setTitleColor(.red, for: .normal)
         button4.addTarget(self, action: #selector(stopService), for: .touchUpInside)
-        
+
+ 
         self.view.addSubview(textField0)
         self.view.addSubview(textField)
         self.view.addSubview(button0)
@@ -194,12 +203,13 @@ class ViewController: UIViewController {
 //            self.level = self.myRiskScoreController.getLevel()
             
             // 3. show today's risk level
-//            let textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
-//            textField.text = self.level
-//            textField.textColor = .red
-//            textField.isEditable = false
-//            textField.font = UIFont(name: "Arial", size: 50)
-//            self.view.addSubview(textField)
+            self.textField.removeFromSuperview()
+            self.textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
+            self.textField.text = self.level
+            self.textField.textColor = .green
+            self.textField.isEditable = false
+            self.textField.font = UIFont(name: "Arial", size: 50)
+            self.view.addSubview(self.textField)
             
         } else {
             print("Service not start. Do not do today's task")
