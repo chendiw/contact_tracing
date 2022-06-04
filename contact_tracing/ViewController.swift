@@ -206,7 +206,7 @@ class ViewController: UIViewController {
             self.textField.removeFromSuperview()
             self.textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
             self.textField.text = self.level
-            self.textField.textColor = .red
+            self.textField.textColor = .green
             self.textField.isEditable = false
             self.textField.font = UIFont(name: "Arial", size: 50)
             self.view.addSubview(self.textField)
