@@ -11,7 +11,7 @@ class CentralProvider: Central_CentralProvider {
     context: StatusOnlyCallContext
   ) -> EventLoopFuture<Central_Ack> {
     // write tokens to file, with delimiters
-    if (request.pos == 1) {
+    if (request.result.result == 1) {
         var fileName = "pos-" + request.date1.date
         var currentDirectoryUrl = URL(fileURLWithPath: ".")
         var fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")

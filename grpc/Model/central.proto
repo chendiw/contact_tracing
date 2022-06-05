@@ -38,7 +38,15 @@ message ExposureKeys {
     Date date3 = 8;
     Date date4 = 9;
     Date date5 = 10;
-    int32 pos = 11;
+    TestResult result = 11;
+}
+
+message TestResult {
+    bool ready = 1;
+    uint64 taId = 2;
+    uint64 seq = 3;
+    uint64 result = 4;
+    uint64 signature = 5;
 }
 
 message Ack {
