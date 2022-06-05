@@ -9,12 +9,25 @@ import UIKit
 import CoreBluetooth
 import CoreLocation
 
+extension Testingauth_TestResult: Identifiable {
+    public var id: String {
+        "Test Result ready: \(ready)"
+    }
+}
+
 class ViewController: UIViewController {
     private var start: Bool = false
     private var myTAClient: TAClient!
     private var centralClient: CentralClient!
     private var myRiskScoreController: RiskScoreController = RiskScoreController()
     private var level: String = "low level"
+    private var testResult: Testingauth_TestResult = Testingauth_TestResult.with {
+        $0.ready = false
+        $0.taID = 0
+        $0.seq = 0
+        $0.result = 0
+        $0.signature = 0
+    }
     
     var textField0: UITextView = UITextView(frame: CGRect(x: 90, y: 150, width: 250, height: 50))
     
@@ -105,6 +118,24 @@ class ViewController: UIViewController {
         TokenController.didFinishLaunching()
         TokenController.start()
     }
+
+    public func createMyExpKey() {
+        let url = File.myExposureKeys.dayURL(date: Date())
+        File.myExposureKeys.createFile(url: url)
+//        print("\(url) creation success")
+    }
+    
+    public func createMyTokens() {
+        let url = File.myTokens.dayURL(date: Date())
+        File.myTokens.createFile(url: url)
+//        print("\(url) creation success")
+    }
+    
+    public func createPeerTokens() {
+        let url = File.peerTokens.dayURL(date: Date())
+        File.peerTokens.createFile(url: url)
+//        print("\(url) creation success")
+    }
     
     @objc func todayTask() {
         if self.start{
@@ -149,13 +180,13 @@ class ViewController: UIViewController {
     
     @objc func getTestResult(sender: UIButton!) {
         print("getTestResult")
-        self.myTAClient.prepGetResult()
+        self.testResult = self.myTAClient.prepGetResult()
     }
     
     @objc func reportPositive(sender: UIButton!) {
         print("reportPositive")
         do {
-            try self.centralClient.sendExposureKeys()
+            try self.centralClient.sendExposureKeys(result: self.testResult)
         } catch {
             print("couldn't send exposure keys")
         }
@@ -165,24 +196,6 @@ class ViewController: UIViewController {
         print("Stop service")
         self.start = false
         print(self.start)
-    }
-    
-    public func createMyExpKey() {
-        let url = File.myExposureKeys.dayURL(date: Date())
-        File.myExposureKeys.createFile(url: url)
-//        print("\(url) creation success")
-    }
-    
-    public func createMyTokens() {
-        let url = File.myTokens.dayURL(date: Date())
-        File.myTokens.createFile(url: url)
-//        print("\(url) creation success")
-    }
-    
-    public func createPeerTokens() {
-        let url = File.peerTokens.dayURL(date: Date())
-        File.peerTokens.createFile(url: url)
-//        print("\(url) creation success")
     }
     
 }

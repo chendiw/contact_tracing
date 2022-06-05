@@ -165,22 +165,12 @@ enum File: String {
     }
     
     func dayFilename(date: Date) -> String {
-        let calendar = Calendar.current
-        let day = calendar.component(.day, from: date)
-        let month = calendar.component(.month, from: date)
-        let name = String(month) + "-" + String(day)
-//        print("[dayURL] Today's date is: \(name)")
-        return self.rawValue + name
+        return self.rawValue + date.dateString
     }
     
     // Creating filenames for experiments
     func minuteFilename(date: Date) -> String {
-        let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: date)
-        let minute = calendar.component(.minute, from: date)
-        let name = String(hour) + "-" + String(minute)
-//        print("[minuteURL] Time now is: \(name)")
-        return self.rawValue + name
+        return self.rawValue + date.minuteString
     }
     
     static func deleteAll() {
@@ -258,6 +248,14 @@ extension TokenList {
 
     var lastTokenObject: TokenObject? {
         return self.last!
+    }
+    
+    var payloadList: [UInt64] {
+        var payloads: [UInt64] = []
+        for i in self {
+            payloads.append(i.payload.uint64)
+        }
+        return payloads
     }
 }
 
@@ -367,16 +365,16 @@ public class TokenController: NSObject {
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
-//                print("[Onwrite]Received peer token: \(data.uint64)")
+                print("[Onwrite]Received peer token: \(data.uint64)")
                 self.peerTokens = TokenList.dayLoad(from: .peerTokens, day: Date()).0 // load today's peerTokens
                 var rssiValue = 0;
                 if rssiList[peripheral.identifier] != nil {
                     rssiValue = rssiList[peripheral.identifier]!
                 }
-//                print("[Read RSSI]peripheral=\(peripheral.identifier), RSSI=\(rssiValue)")
+                print("[Read RSSI]peripheral=\(peripheral.identifier), RSSI=\(rssiValue)")
                 let latNow = locationManager.getLatitude()
                 let longNow = locationManager.getLongitude()
-//                print("[Read GPS]The current GPS is: \(latNow) \(longNow)")
+                print("[Read GPS]The current GPS is: \(latNow) \(longNow)")
                 self.peerTokens.append(curPayload: data, rssi: rssiValue, lat: latNow, long: longNow)
                 self.peerTokens.daySave(to: .peerTokens, day: Date())
                 return true
