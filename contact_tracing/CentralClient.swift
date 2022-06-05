@@ -108,7 +108,7 @@ class CentralClient {
         }
     }
     
-    func sendExposureKeys() throws {
+    func sendExposureKeys(Testingauth_TestResult result) throws -> Int32 {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
@@ -163,8 +163,10 @@ class CentralClient {
         do {
             let response = try report.response.wait()
             print("send exposure key : succeeded: \(response.ack)")
+            return response.ack
         } catch {
             print("send exposure key : \(error)")
+            return 0
         }
     }
 }
