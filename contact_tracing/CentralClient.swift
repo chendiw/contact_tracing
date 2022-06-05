@@ -14,7 +14,7 @@ class CentralClient {
     var port: Int = 1235
     var host_ip: String = "54.80.128.235"
     
-    func getPositiveCases() throws  -> [UInt64] {
+    func getPositiveCases(date: Date) throws  -> [UInt64] {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
@@ -40,11 +40,8 @@ class CentralClient {
         // Provide the connection to the generated client.
         let central_client = Central_CentralClient(channel: channel)
 
-        /*let formatter = DateFormatter()
-        let now = Date()
-        let dateString = formatter.string(from:now)*/
         let request = Central_Date.with {
-            $0.date = "date1"
+            $0.date = date.dateString
         }
 
         // Make the RPC call to the server.
@@ -61,7 +58,7 @@ class CentralClient {
         }
     }
     
-    func getNegativeCases() throws -> [UInt64]{
+    func getNegativeCases(date: Date) throws -> [UInt64]{
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
@@ -87,11 +84,8 @@ class CentralClient {
         // Provide the connection to the generated client.
         let central_client = Central_CentralClient(channel: channel)
 
-        let formatter = DateFormatter()
-        let now = Date()
-        let dateString = formatter.string(from:now)
         let request = Central_Date.with {
-            $0.date = dateString
+            $0.date = date.dateString
         }
 
         // Make the RPC call to the server.
@@ -108,7 +102,7 @@ class CentralClient {
         }
     }
     
-    func sendExposureKeys(Testingauth_TestResult result) throws -> Int32 {
+    func sendExposureKeys(result: Testingauth_TestResult) throws -> Int32 {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
@@ -153,7 +147,13 @@ class CentralClient {
             $0.date3.date = Calendar.current.date(byAdding: .minute, value: -2, to: date)!.minuteString;
             $0.date4.date = Calendar.current.date(byAdding: .minute, value: -3, to: date)!.minuteString;
             $0.date5.date = Calendar.current.date(byAdding: .minute, value: -4, to: date)!.minuteString;
-            $0.pos = 1; // TODO: this needs to be updatted to be the value from the test
+            $0.result = Central_TestResult.with{
+                $0.ready = result.ready
+                $0.taID = result.taID
+                $0.seq = result.seq
+                $0.result = result.result
+                $0.signature = result.signature
+            };
         }
 
         // Make the RPC call to the server.

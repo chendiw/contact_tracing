@@ -91,44 +91,60 @@ class ViewController: UIViewController {
         self.view.addSubview(button2)
         self.view.addSubview(button3)
         self.view.addSubview(button4)
-        
-//        if self.start {
-//            button.isHidden = false
-//            button2.isHidden = false
-//            button3.isHidden = false
-//            button4.isHidden = true
-//
-//        }
-//        else {
-//            button.isHidden = true
-//            button2.isHidden = true
-//            button3.isHidden = true
-//            button4.isHidden = false
-//        }
-        
-        
-//        do {
-//            try HelloWorld.run()
-//        } catch {
-//          print("Greeter failed: \(error)")
-//        }
-//        TokenController.didFinishLaunching()
-//        TokenController.startFresh()  // delete previous file
-//        TokenController.start()
     }
     
-//     func startTAClient() {
-//         self.myTAClient.prepStartTest()
-//         for i in 0..<2 {
-//             self.myTAClient.prepGetResult()
-//         }
-//     }
+    @objc func startService(sender: UIButton!) {
+        print("Start Contact Tracing")
+        self.start = true
+        self.centralClient = CentralClient()
+        
+        todayTask()
+        // Get today's level here: Write the riskScore result to a file
+        let timer2 = Timer.scheduledTimer(timeInterval: expKeyInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
+        
+        TokenController.didFinishLaunching()
+        TokenController.start()
+    }
+    
+    @objc func todayTask() {
+        if self.start{
+//            print("This is today's Task")
+            // 0. Create all the files locally
+            createMyExpKey()
+            createMyTokens()
+            createPeerTokens()
+            
+            // 1. Generate an exposure key, Store to the file.
+            let exposureKey = ExpKey.next().data
+            print("Today's exposure key is: \(exposureKey.uint64) Stored on date: \(Date())")
+
+            let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
+            let exposurekeyList: TokenList = [token]
+            exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
+            
+            // 2. Poll for negtive and positve exposure keys, calculate risk score
+            self.myRiskScoreController.calculate()
+            self.level = self.myRiskScoreController.getLevel()
+            
+            // 3. show today's risk level
+            self.textField.removeFromSuperview()
+            self.textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
+            self.textField.text = self.level
+            self.textField.textColor = .green
+            self.textField.isEditable = false
+            self.textField.font = UIFont(name: "Arial", size: 50)
+            self.view.addSubview(self.textField)
+            
+        } else {
+            print("Service not start. Do not do today's task")
+        }
+        
+    }
     
     @objc func startTest(sender: UIButton!) {
         print("Start test")
         self.myTAClient = TAClient()
         self.myTAClient.prepStartTest()
-
     }
     
     @objc func getTestResult(sender: UIButton!) {
@@ -144,20 +160,6 @@ class ViewController: UIViewController {
             print("couldn't send exposure keys")
         }
     }
-    
-    @objc func startService(sender: UIButton!) {
-        print("Start Contact Tracing")
-        self.start = true
-        self.centralClient = CentralClient()
-        
-        todayTask()
-        // Get today's level here: Write the riskScore result to a file
-        let timer2 = Timer.scheduledTimer(timeInterval: expKeyInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
-        
-        TokenController.didFinishLaunching()
-        TokenController.start()
-   }
-
     
     @objc func stopService(sender: UIButton!) {
         print("Stop service")
@@ -181,40 +183,6 @@ class ViewController: UIViewController {
         let url = File.peerTokens.dayURL(date: Date())
         File.peerTokens.createFile(url: url)
 //        print("\(url) creation success")
-    }
-    
-    @objc func todayTask() {
-        if self.start{
-//            print("This is today's Task")
-            // 0. Create all the files locally
-            createMyExpKey()
-            createMyTokens()
-            createPeerTokens()
-            // 1. Generate an exposure key, Store to the file.
-            let exposureKey = ExpKey.next().data
-            print("url for exp key: \(Date()); Today's exposure key is: \(exposureKey.uint64)")
-
-            let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
-            let exposurekeyList: TokenList = [token]
-            exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
-            
-            // 2. Poll for negtive and positve exposure keys, calculate risk score
-//            self.myRiskScoreController.calculate()
-//            self.level = self.myRiskScoreController.getLevel()
-            
-            // 3. show today's risk level
-            self.textField.removeFromSuperview()
-            self.textField = UITextView(frame: CGRect(x: 100, y: 200, width: 250, height: 100))
-            self.textField.text = self.level
-            self.textField.textColor = .green
-            self.textField.isEditable = false
-            self.textField.font = UIFont(name: "Arial", size: 50)
-            self.view.addSubview(self.textField)
-            
-        } else {
-            print("Service not start. Do not do today's task")
-        }
-        
     }
     
 }
