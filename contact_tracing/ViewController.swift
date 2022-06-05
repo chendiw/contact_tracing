@@ -9,12 +9,25 @@ import UIKit
 import CoreBluetooth
 import CoreLocation
 
+extension Testingauth_TestResult: Identifiable {
+    public var id: String {
+        "Test Result ready: \(ready)"
+    }
+}
+
 class ViewController: UIViewController {
     private var start: Bool = false
     private var myTAClient: TAClient!
     private var centralClient: CentralClient!
     private var myRiskScoreController: RiskScoreController = RiskScoreController()
     private var level: String = "low level"
+    private var testResult: Testingauth_TestResult = Testingauth_TestResult.with {
+        $0.ready = false
+        $0.taID = 0
+        $0.seq = 0
+        $0.result = 0
+        $0.signature = 0
+    }
     
     var textField0: UITextView = UITextView(frame: CGRect(x: 90, y: 150, width: 250, height: 50))
     
@@ -91,58 +104,6 @@ class ViewController: UIViewController {
         self.view.addSubview(button2)
         self.view.addSubview(button3)
         self.view.addSubview(button4)
-        
-//        if self.start {
-//            button.isHidden = false
-//            button2.isHidden = false
-//            button3.isHidden = false
-//            button4.isHidden = true
-//
-//        }
-//        else {
-//            button.isHidden = true
-//            button2.isHidden = true
-//            button3.isHidden = true
-//            button4.isHidden = false
-//        }
-        
-        
-//        do {
-//            try HelloWorld.run()
-//        } catch {
-//          print("Greeter failed: \(error)")
-//        }
-//        TokenController.didFinishLaunching()
-//        TokenController.startFresh()  // delete previous file
-//        TokenController.start()
-    }
-    
-//     func startTAClient() {
-//         self.myTAClient.prepStartTest()
-//         for i in 0..<2 {
-//             self.myTAClient.prepGetResult()
-//         }
-//     }
-    
-    @objc func startTest(sender: UIButton!) {
-        print("Start test")
-        self.myTAClient = TAClient()
-        self.myTAClient.prepStartTest()
-
-    }
-    
-    @objc func getTestResult(sender: UIButton!) {
-        print("getTestResult")
-        self.myTAClient.prepGetResult()
-    }
-    
-    @objc func reportPositive(sender: UIButton!) {
-        print("reportPositive")
-        do {
-            try self.centralClient.sendExposureKeys()
-        } catch {
-            print("couldn't send exposure keys")
-        }
     }
     
     @objc func startService(sender: UIButton!) {
@@ -156,15 +117,8 @@ class ViewController: UIViewController {
         
         TokenController.didFinishLaunching()
         TokenController.start()
-   }
-
-    
-    @objc func stopService(sender: UIButton!) {
-        print("Stop service")
-        self.start = false
-        print(self.start)
     }
-    
+
     public func createMyExpKey() {
         let url = File.myExposureKeys.dayURL(date: Date())
         File.myExposureKeys.createFile(url: url)
@@ -190,17 +144,18 @@ class ViewController: UIViewController {
             createMyExpKey()
             createMyTokens()
             createPeerTokens()
+            
             // 1. Generate an exposure key, Store to the file.
             let exposureKey = ExpKey.next().data
-            print("url for exp key: \(Date()); Today's exposure key is: \(exposureKey.uint64)")
+            print("Today's exposure key is: \(exposureKey.uint64) Stored on date: \(Date())")
 
             let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
             let exposurekeyList: TokenList = [token]
             exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
             
             // 2. Poll for negtive and positve exposure keys, calculate risk score
-//            self.myRiskScoreController.calculate()
-//            self.level = self.myRiskScoreController.getLevel()
+            self.myRiskScoreController.calculate()
+            self.level = self.myRiskScoreController.getLevel()
             
             // 3. show today's risk level
             self.textField.removeFromSuperview()
@@ -215,6 +170,32 @@ class ViewController: UIViewController {
             print("Service not start. Do not do today's task")
         }
         
+    }
+    
+    @objc func startTest(sender: UIButton!) {
+        print("Start test")
+        self.myTAClient = TAClient()
+        self.myTAClient.prepStartTest()
+    }
+    
+    @objc func getTestResult(sender: UIButton!) {
+        print("getTestResult")
+        self.testResult = self.myTAClient.prepGetResult()
+    }
+    
+    @objc func reportPositive(sender: UIButton!) {
+        print("reportPositive")
+        do {
+            try self.centralClient.sendExposureKeys(result: self.testResult)
+        } catch {
+            print("couldn't send exposure keys")
+        }
+    }
+    
+    @objc func stopService(sender: UIButton!) {
+        print("Stop service")
+        self.start = false
+        print(self.start)
     }
     
 }

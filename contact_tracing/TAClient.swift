@@ -10,34 +10,67 @@ import GRPC
 import NIOCore
 import NIOPosix
 
-struct TestResultMsg: Codable {
-    var taID: UInt64
-    var seq: UInt64
-    var result: UInt64
-    var signature: UInt64
-}
+//struct TestResultMsg: Codable {
+//    var taID: UInt64
+//    var seq: UInt64
+//    var result: UInt64
+//    var signature: UInt64
+//}
 
 public class TAClient {
     var port: Int = 1234
     var host_ip: String = "54.80.128.235"
     let pretest_days: Int = 3
     
-    var client: Testingauth_AuthClient
+//    var client: Testingauth_AuthClient
     var tested: Bool = false
     var getResult: Bool = false
-    var result: TestResultMsg = TestResultMsg(taID: 0, seq: 0, result: 0, signature: 0)
+    var result: Testingauth_TestResult = Testingauth_TestResult.with {
+        $0.ready = false
+        $0.taID = 0
+        $0.seq = 0
+        $0.result = 0
+        $0.signature = 0
+    }
     var userId: UInt64 = 0
     
-    init() {
+//    init() {
+//        // Setup an `EventLoopGroup` for the connection to run on.
+//        //
+//        // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
+//        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+//
+//        // Make sure the group is shutdown when we're done with it.
+//        defer {
+//          try! group.syncShutdownGracefully()
+//        }
+//
+//        // Configure the channel, we're not using TLS so the connection is `insecure`.
+//        let channel = try! GRPCChannelPool.with(
+//          target: .host(host_ip, port: port),
+//          transportSecurity: .plaintext,
+//          eventLoopGroup: group
+//        )
+//
+//        // Close the connection when we're done with it.
+//        defer {
+//          try! channel.close().wait()
+//        }
+//
+//        // Provide the connection to the generated client.
+//        self.client = Testingauth_AuthClient(channel: channel)
+//    }
+    
+    public func prepStartTest() {
         // Setup an `EventLoopGroup` for the connection to run on.
         //
         // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
         // Make sure the group is shutdown when we're done with it.
-//        defer {
-//          try! group.syncShutdownGracefully()
-//        }
+        defer {
+          try! group.syncShutdownGracefully()
+        }
 
         // Configure the channel, we're not using TLS so the connection is `insecure`.
         let channel = try! GRPCChannelPool.with(
@@ -47,21 +80,16 @@ public class TAClient {
         )
 
         // Close the connection when we're done with it.
-//        defer {
-//          try! channel.close().wait()
-//        }
+        defer {
+          try! channel.close().wait()
+        }
         
         // Provide the connection to the generated client.
-        self.client = Testingauth_AuthClient(channel: channel)
-    }
-    
-    public func prepStartTest() {
+        let client = Testingauth_AuthClient(channel: channel)
+        
         var pretestExpKeys: [UInt64] = []
-        let date = Date()  // get today
-//        let calendar = Calendar.current
-//        let day = calendar.component(.hour, from: date)
         for i in 0...self.pretest_days{
-            let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: date)!
+            let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
             if !TokenList.dayLoad(from: .myExposureKeys, day: prevDate).1 {
                 break
             }
@@ -75,7 +103,7 @@ public class TAClient {
         }
 
         // Make the RPC call to the server.
-        let requestStartTest = self.client.startTest(request)
+        let requestStartTest = client.startTest(request)
 
         // wait() on the response to stop the program from exiting before the response is received.
         do {
@@ -88,7 +116,32 @@ public class TAClient {
         }
     }
     
-    public func prepGetResult() {
+    public func prepGetResult() -> Testingauth_TestResult {
+        // Setup an `EventLoopGroup` for the connection to run on.
+        //
+        // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+
+        // Make sure the group is shutdown when we're done with it.
+        defer {
+          try! group.syncShutdownGracefully()
+        }
+
+        // Configure the channel, we're not using TLS so the connection is `insecure`.
+        let channel = try! GRPCChannelPool.with(
+          target: .host(host_ip, port: port),
+          transportSecurity: .plaintext,
+          eventLoopGroup: group
+        )
+
+        // Close the connection when we're done with it.
+        defer {
+          try! channel.close().wait()
+        }
+        
+        // Provide the connection to the generated client.
+        let client = Testingauth_AuthClient(channel: channel)
+        
         assert(TokenList.dayLoad(from: .myExposureKeys, day: Date()).1)
         let curTokenObject: TokenObject = TokenList.dayLoad(from: .myExposureKeys, day: Date()).0.first!
         let curToken: UInt64 = curTokenObject.payload.uint64
@@ -96,12 +149,12 @@ public class TAClient {
         // Form the request with the name, if one was provided.
         let request = Testingauth_Check.with {
             $0.userID = self.userId
-            $0.date = Date.now.formatted()
+            $0.date = Date().dateString
             $0.token = curToken
         }
 
         // Make the RPC call to the server.
-        let requestGetResult = self.client.getResult(request)
+        let requestGetResult = client.getResult(request)
 
         // wait() on the response to stop the program from exiting before the response is received.
         do {
@@ -110,11 +163,21 @@ public class TAClient {
             // if result is not empty string
             if response.ready == true {
                 self.getResult = true
-                self.result = TestResultMsg(taID: response.taID, seq: response.seq, result: response.result, signature: response.signature)
+                self.result = Testingauth_TestResult.with {
+                    $0.ready = true
+                    $0.taID = response.taID
+                    $0.seq = response.seq
+                    $0.result = response.result
+                    $0.signature = response.signature
+                }
+                print("Test result ready!")
+            } else {
+                print("Test result not ready!")
             }
         } catch {
             print("Get Result failed: \(error)")
         }
+        return self.result
     }
     
 }

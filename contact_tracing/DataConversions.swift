@@ -44,6 +44,18 @@ public extension UInt64 {
 }
 
 public extension Date {
+    var localDay: Int {
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: self)
+        return day
+    }
+    
+    var localMinute: Int {
+        let calendar = Calendar.current
+        let minute = calendar.component(.minute, from: self)
+        return minute
+    }
+    
     var dateString: String {
         let calendar = Calendar.current
         let day = calendar.component(.day, from: self)
