@@ -202,6 +202,7 @@ struct TokenObject: Codable {
     var rssi: Int
     var lat: CLLocationDegrees  // latitute
     var long: CLLocationDegrees // logitude
+    var nonce: Data
 }
 
 typealias TokenList = [TokenObject]
@@ -241,8 +242,8 @@ extension TokenList {
         }
     }
 
-    mutating func append(curPayload: Data, rssi: Int, lat: CLLocationDegrees, long: CLLocationDegrees) {
-        let token = TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: rssi, lat: lat, long: long)
+    mutating func append(curPayload: Data, rssi: Int, lat: CLLocationDegrees, long: CLLocationDegrees, nonce: Data) {
+        let token = TokenObject(eninterval: ENInterval.value(), payload: curPayload, rssi: rssi, lat: lat, long: long, nonce: nonce)
         self.append(token)
     }
 
@@ -275,8 +276,8 @@ extension ENInterval {
 // Bluetooth token exchange controller
 public class TokenController: NSObject {
     static var instance: TokenController!
-    static var nonce: Data? = crng(count: 16)
-
+    
+    private var nonce: Data
     private let queue: DispatchQueue!
     private var peripheralManager: PeripheralManager!
     private var centralManager: CentralManager!
@@ -323,12 +324,13 @@ public class TokenController: NSObject {
         let readTodayExpKey = TokenList.dayLoad(from: .myExposureKeys, day: Date()).0
         if readTodayExpKey.count == 0 {
             let exposureKey = ExpKey.next().data
-            print("Today's exposure key is: \(exposureKey.uint64) Stored on date: \(Date())")
+            print("Today's exposure key is: \(exposureKey.uint64) Stored on date: \(Date().minuteString)")
 
-            let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
+            let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees(), nonce: self.nonce)  //
             let exposurekeyList: TokenList = [token]
                 exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
             self.myExposureKey = token
+            self.nonce = crng(count: 16)
         } else {
             self.myExposureKey = readTodayExpKey.first!
         }
@@ -338,12 +340,12 @@ public class TokenController: NSObject {
         
         // Generate RPI with random nonce, result: RPI (16 bytes)||nonce||tag (16 bytes)
         let curENInterval = ENInterval.value()
-        let rpi: Data = getRPI(rpi_key: rpi_key, nonce: TokenController.nonce, eninterval: curENInterval)
-        print("My new token: \(rpi.uint64) at interval: \(curENInterval)")
+        let rpi: Data = getRPI(rpi_key: rpi_key, nonce: self.nonce, eninterval: curENInterval)
+        print("My new token: \(rpi.uint64) with nonce \(self.nonce.uint64) at interval: \(curENInterval)")
         
         // Append and save my new RPI to file
         self.myTokens = TokenList.dayLoad(from: .myTokens, day: Date()).0
-        self.myTokens.append(curPayload: rpi, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees()) // TODO: Run this line per 10 min
+        self.myTokens.append(curPayload: rpi, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees(), nonce: self.nonce) // TODO: Run this line per 10 min
         self.myTokens.daySave(to: .myTokens, day: Date())
 
     }
@@ -360,6 +362,7 @@ public class TokenController: NSObject {
 
     public override init() {
         self.queue = DispatchQueue(label: "TokenController")
+        self.nonce = crng(count: 16)
         super.init()
         
         // Generate my token for the first time
@@ -388,7 +391,11 @@ public class TokenController: NSObject {
                 let latNow = locationManager.getLatitude()
                 let longNow = locationManager.getLongitude()
 //                print("[Read GPS]The current GPS is: \(latNow) \(longNow)")
-                self.peerTokens.append(curPayload: data, rssi: rssiValue, lat: latNow, long: longNow)
+                let payload = data.prefix(16)
+//                print("received peer token: \(payload.uint64)")
+                let nonce = data.suffix(16)
+//                print("received peer nonce: \(nonce.uint64)")
+                self.peerTokens.append(curPayload: data, rssi: rssiValue, lat: latNow, long: longNow, nonce: nonce)
                 self.peerTokens.daySave(to: .peerTokens, day: Date())
                 return true
             }

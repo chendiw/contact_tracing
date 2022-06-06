@@ -10,7 +10,7 @@ import CoreLocation
 
 class RiskScoreController {
 
-    var nonce = TokenController.nonce
+//    var nonce = TokenController.nonce
     private var riskScore: Double;
     private var riskDays: Int = 5; // How long time do we care about
     
@@ -44,27 +44,37 @@ class RiskScoreController {
     func calculate() {
         // for i in 1.. 5 pull positive exposure key list and negtive exposure key list
         var positiveExpKey: [Date: [UInt64]] = [:] // call poll positive
-        var negtiveExpKey: [Date: [UInt64]] = [:] // call poll negtive
+        var negativeExpKey: [Date: [UInt64]] = [:] // call poll negtive
+        var posExpKeySet: [UInt64] = []
+        var negExpKeySet: [UInt64] = []
         
-        var positiveTokens: Set<UInt64> = []  // date -> token payload
-        var negativeTokens: Set<UInt64> = []
+        var positiveTokens: [Data: Set<UInt64>] = [:] // nonce --> set: Currently update riskscore by the number of positive contact cases instead of taking duration into account
+        var negativeTokens: [Data: Set<UInt64>] = [:]
         
-        var allPeerTEKs: [Date: Set<UInt64>] = [:] // all peer tokens received over the past riskDays
-        for i in 1...riskDays {
+        var allPeerTEKs: [Data: Set<UInt64>] = [:] // nonce --> peer tokens corresponding to a nonce received over the past riskDays
+        var prevDates: [Date] = []
+        for i in 0..<riskDays {
+            prevDates.append(Calendar.current.date(byAdding: .minute, value: -i, to: Date())!)
+        }
+        
+        for prevDate in prevDates {
             // Using the positive key, caculate all the positive tokens
 //            let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
-            
-            // Experiment
-            let prevDate = Calendar.current.date(byAdding: .minute, value: -i, to: Date())!
             
             if !TokenList.dayLoad(from: .peerTokens, day: prevDate).1 {
                 continue
             }
             // File exists
             let peerTEKs = TokenList.dayLoad(from: .peerTokens, day: prevDate).0
-            allPeerTEKs[prevDate] = Set<UInt64>(peerTEKs.map{$0.payload.uint64})
-            print("Peer tokens stored: \(allPeerTEKs)")
+            for tokenobj in peerTEKs {
+                if allPeerTEKs[tokenobj.nonce] == nil {
+                    allPeerTEKs[tokenobj.nonce] = Set([tokenobj.payload.uint64])
+                } else {
+                    allPeerTEKs[tokenobj.nonce] = allPeerTEKs[tokenobj.nonce]!.union(Set([tokenobj.payload.uint64]))
+                }
+            }
         }
+//        print("All peer tokens over risk period: \(allPeerTEKs)")
         
         // Only poll for risk days
 //        let lower_bound : Date = Calendar.current.date(byAdding: .day, value: -riskDays, to: Date())!
@@ -74,101 +84,89 @@ class RiskScoreController {
         
         // regenerate peer tokens from the exposure keys on prevDate
         // construct an aggregate set of positiveTokns/negativeTokens for all riskDay
-        for prevDate in allPeerTEKs.keys {
+//        for prevDate in allPeerTEKs.keys {
+        for prevDate in prevDates {
             // Experiment
-            if prevDate.localMinute - lower_bound.localMinute < 0 {
-                continue
-            }
             do {
                 positiveExpKey[prevDate] = try self.centralClient.getPositiveCases(date: prevDate)
+//                print("Polled positive expKeys: \(positiveExpKey[prevDate]) on date \(prevDate.minuteString)")
+                posExpKeySet.append(positiveExpKey[prevDate]![0])
             } catch {
                 print("Error when poll positive Exposure Keys")
                 positiveExpKey[prevDate] = []
             }
-            print("Polled positive expKeys: \(positiveExpKey[prevDate])")
             
             do {
-                negtiveExpKey[prevDate] = try self.centralClient.getNegativeCases(date: prevDate)
+                negativeExpKey[prevDate] = try self.centralClient.getNegativeCases(date: prevDate)
+//                print("Polled negative expKeys: \(negativeExpKey[prevDate]) on date \(prevDate.minuteString)")
+                negExpKeySet.append(negativeExpKey[prevDate]![0])
             } catch {
                 print("Error when poll negative Exposure Keys")
-                negtiveExpKey[prevDate] = []
+                negativeExpKey[prevDate] = []
             }
-            print("Polled negative expKeys: \(negtiveExpKey[prevDate])")
-
-            // reproduce tokens for prevDate given exposure keys
-            var posTokens: Set<UInt64> = Set()
-            var negTokens: Set<UInt64> = Set()
-            if positiveExpKey[prevDate]!.count != 0 {
-                posTokens = regenRPIs(expKeys: positiveExpKey[prevDate]!, nonce: nonce)
-            }
-            if negtiveExpKey[prevDate]!.count != 0 {
-                negTokens = regenRPIs(expKeys: negtiveExpKey[prevDate]!, nonce: nonce)
-            }
-//            print("regenerated positive tokens: \(posTokens)")
-//            print("regenerated negative tokens: \(negTokens)")
-            
-            // Intersection between
-            if (allPeerTEKs[prevDate] != nil) {
-                print("Start computing intersection...")
-                let segAll:Set<UInt64> = Set(allPeerTEKs[prevDate]!)
-                print("segAll:\(segAll)")
-                positiveTokens.formUnion(segAll.intersection(posTokens))
-                negativeTokens.formUnion(segAll.intersection(negTokens))
-                print("segall intersect pos: \(segAll.intersection(posTokens))")
-                print("segall intersect neg: \(segAll.intersection(posTokens))")
-            }
+        }
+        
+        for nonce in allPeerTEKs.keys {
+            var posTokens = regenRPIs(expKeys: posExpKeySet, nonce: nonce)
+            var negTokens = regenRPIs(expKeys: negExpKeySet, nonce: nonce)
+            positiveTokens[nonce] = posTokens.intersection(allPeerTEKs[nonce]!)
+            negativeTokens[nonce] = negTokens.intersection(allPeerTEKs[nonce]!)
             print("Aggregate positive tokens: \(positiveTokens)")
             print("Aggregate negative tokens: \(negativeTokens)")
         }
         
         var positivePeers: [TokenObject] = []
-//        var negtivePeers:  [TokenObject] = []
         var positiveGPS: [[CLLocationDegrees]] = [] // (lat, long)
         
-        for prevDate in allPeerTEKs.keys {
-            // File exists
-            let peerTEKs = TokenList.dayLoad(from: .peerTokens, day: prevDate).0
-            var payloadsHaveSeen: Set<UInt64> = []
-            for token in peerTEKs {
-                if payloadsHaveSeen.contains(token.payload.uint64) == false {
-                    if positiveTokens.contains(token.payload.uint64) { // have positive report
-                        positivePeers.append(token)
-                        positiveGPS.append([token.lat, token.long])
-                        let rssi = token.rssi
-                        let dist = self.RSSI_alpha * pow(10, Double(rssi * (-1) / 4))
-                        if dist < 1 {
-                            self.riskScore += 20 * (1 + 0.128)
-                        } else {
-                            self.riskScore += 20 * (1 + 0.026)
+        for nonce in allPeerTEKs.keys {
+            for prevDate in prevDates {
+                // File exists
+                let peerTEKs = TokenList.dayLoad(from: .peerTokens, day: prevDate).0
+                var nonceHaveSeen: Set<UInt64> = Set()
+                for token in peerTEKs {
+                    if nonceHaveSeen.contains(token.nonce.uint64) == false {
+                        if positiveTokens[nonce]!.contains(token.payload.uint64) { // have positive report
+                            positivePeers.append(token)
+                            positiveGPS.append([token.lat, token.long])
+                            let rssi = token.rssi
+                            let dist = self.RSSI_alpha * pow(10, Double(rssi * (-1) / 4))
+                            if dist < 1 {
+                                self.riskScore += 10 * (1 + 0.128)
+                            } else {
+                                self.riskScore += 10 * (1 + 0.026)
+                            }
+//                            break
                         }
                     }
+                    nonceHaveSeen.insert(token.nonce.uint64)
                 }
-                payloadsHaveSeen.insert(token.payload.uint64)
-            }
-            print("Risk score after computing positives: \(self.riskScore)")
-            
-            payloadsHaveSeen = []
-            for token in peerTEKs {
-                if payloadsHaveSeen.contains(token.payload.uint64) == false {
-                    if negativeTokens.contains(token.payload.uint64) {  // have negtive report
-                        for locs in positiveGPS {
-                            let positiveLoc = CLLocation(latitude: locs[0], longitude: locs[1])
-                            let curloc = CLLocation(latitude: token.lat, longitude: token.long)
-                            if positiveLoc.distance(from: curloc) < self.GPSRange {  // less than 3m -> Close enough to be indicator that virus is no longer contagious
-                                let rssi = token.rssi
-                                let dist = self.RSSI_alpha * pow(10, Double(rssi * (-1) / 4))
-                                if dist < 1 {
-                                    self.riskScore -= 4 * (1 + 0.128)
-                                } else {
-                                    self.riskScore -= 4 * (1 + 0.026)
+//                print("Risk score after computing positives: \(self.riskScore)")
+                
+                nonceHaveSeen = []
+                for token in peerTEKs {
+                    if nonceHaveSeen.contains(token.nonce.uint64) == false {
+                        if negativeTokens[nonce]!.contains(token.payload.uint64) {  // have negtive report
+                            for locs in positiveGPS {
+                                let positiveLoc = CLLocation(latitude: locs[0], longitude: locs[1])
+                                let curloc = CLLocation(latitude: token.lat, longitude: token.long)
+                                if positiveLoc.distance(from: curloc) < self.GPSRange {  // less than 3m -> Close enough to be indicator that virus is no longer contagious
+                                    let rssi = token.rssi
+                                    let dist = self.RSSI_alpha * pow(10, Double(rssi * (-1) / 4))
+                                    if dist < 1 {
+                                        self.riskScore -= 4 * (1 + 0.128)
+                                    } else {
+                                        self.riskScore -= 4 * (1 + 0.026)
+                                    }
                                 }
+//                                break
                             }
                         }
                     }
+                    nonceHaveSeen.insert(token.nonce.uint64)
                 }
-                payloadsHaveSeen.insert(token.payload.uint64)
+//                print("Risk score after computing negatives: \(self.riskScore)")
             }
-            print("Risk score after computing negatives: \(self.riskScore)")
         }
+        print("Updated risk score: \(self.riskScore)")
     }
 }

@@ -30,7 +30,7 @@ class PeripheralManager: NSObject {
     
     func startAdvertising() {
         guard self.peripheralManager.state == .poweredOn else {
-            print("Peripheral Manager not powered on")
+//            print("Peripheral Manager not powered on")
             return
         }
         
@@ -81,30 +81,6 @@ extension PeripheralManager: CBPeripheralManagerDelegate {
             print("Peripheral Manager started advertising!")
         }
     }
-    
-//    func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveRead request: CBATTRequest) {
-//        print("request offset: \(request.offset)")
-//        print("request characteristic: \(request.characteristic)")
-//        guard let requestedMyChar = MyCharacteristic.fromCBCharacteristic(request.characteristic) else {
-//            print("Failed conversion to MyCharacteristic in read request")
-//            return
-//        }
-//        let requestedCharValue = requestedMyChar.getCharacteristicValue()
-//
-//        // check if request offset is longer than characteristic value
-//        if request.offset > requestedCharValue?.count ?? -1 {
-//            peripheral.respond(to: request, withResult: .invalidOffset)
-//            return
-//        }
-//
-//        if let data = onReadClosure!(request.central, requestedMyChar) {
-//            request.value = data
-//            peripheral.respond(to: request, withResult: .success)
-//            return
-//        }
-//
-//        peripheral.respond(to: request, withResult: .unlikelyError)
-//    }
     
     func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
         if requests.count == 0 {

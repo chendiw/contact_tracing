@@ -30,6 +30,7 @@ class ViewController: UIViewController {
     }
     private var startedTest: Bool = false
     private var queryResult: [String: Bool] = [:]
+    private var receivedResult: Bool = false
     
     var textField0: UITextView = UITextView(frame: CGRect(x: 90, y: 150, width: 250, height: 50))
     
@@ -149,7 +150,7 @@ class ViewController: UIViewController {
                 let exposureKey = ExpKey.next().data
                 print("Today's exposure key is: \(exposureKey.uint64) Stored on date: \(Date())")
 
-                let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
+                let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees(), nonce: crng(count: 16))  //
                 let exposurekeyList: TokenList = [token]
                 exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
             }
@@ -176,6 +177,7 @@ class ViewController: UIViewController {
     @objc func startTest(sender: UIButton!) {
         print("Start test")
         self.startedTest = true
+        self.receivedResult = false // reset to wait for new result
         self.myTAClient = TAClient()
         self.myTAClient.prepStartTest()
         
@@ -183,9 +185,15 @@ class ViewController: UIViewController {
     }
     
     @objc func automaticQueryResult() {
+        if self.receivedResult == true {
+            return
+        }
         if queryResult[Date().minuteString] == nil {
             self.testResult = self.myTAClient.prepGetResult()
             queryResult[Date().minuteString] = true
+            if self.testResult.ready == true {
+                self.receivedResult = true
+            }
         }
     }
     
@@ -194,6 +202,9 @@ class ViewController: UIViewController {
         self.testResult = self.myTAClient.prepGetResult()
         // Experiment
         queryResult[Date().minuteString] = true
+        if self.testResult.ready == true {
+            self.receivedResult = true
+        }
     }
     
     @objc func reportPositive(sender: UIButton!) {
