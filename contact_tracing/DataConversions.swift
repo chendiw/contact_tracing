@@ -29,11 +29,16 @@ public extension Data {
     var string: String {
         return String(decoding: self, as: UTF8.self)
     }
+    
+    var base64: String {
+        return self.base64EncodedString()
+    }
 }
 
 public extension String {
     var data: Data {
-        return Data(self.utf8)
+        let result = try! Data.init(base64Encoded: self, options:.ignoreUnknownCharacters)
+        return result!
     }
 }
 

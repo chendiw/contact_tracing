@@ -45,7 +45,7 @@ class CentralManager: NSObject {  // object-c subclass?
     func startScan() {
         while centralManager.state != .poweredOn {
         }
-        print("Central Manager powered on!")
+//        print("Central Manager powered on!")
         let options = [CBCentralManagerScanOptionAllowDuplicatesKey: false as NSNumber]
         let cbuuids: [CBUUID] = services.map { $0.getServiceUUID() }
         centralManager.scanForPeripherals(withServices: cbuuids, options: options)

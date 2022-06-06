@@ -36,16 +36,16 @@ func getRPIKey(tek: Data) -> SymmetricKey {
 
 // AES_128(RPIK_i, PaddedData_j)
 // result: ciphertext(RPI)||nonce||tag = bluetooth payload
-func getRPI(rpi_key: SymmetricKey, nonce: Data?, eninterval: Int) -> Data {
+func getRPI(rpi_key: SymmetricKey, nonce: Data?, eninterval: UInt64) -> Data {
     var plaintext = "EN-RPI".data(using: .utf8)! // 6 bytes
 //    print("plaintext length: \(plaintext.count)")
-    let padding = Data.init(count: 2) // 2 bytes
-//    print("padding length: \(padding.count)")
-    plaintext.append(padding)
     var interval_value = eninterval
     let interval = Data(bytes: &interval_value, count: MemoryLayout.size(ofValue: eninterval))
 //    print("eninterval length: \(interval.count)")
     plaintext.append(interval) // 8 bytes -> Plaintext total: 16 bytes
+    let padding = Data.init(count: 2) // 2 bytes
+//    print("padding length: \(padding.count)")
+    plaintext.append(padding)
     let sealedData = try! AES.GCM.seal(plaintext, using: rpi_key, nonce: AES.GCM.Nonce(data: nonce!))
 //    print("Nonce: \(sealedData.nonce.withUnsafeBytes {Data(Array($0)).hex})")
 //    print("Tag: \(sealedData.tag.hex)")
@@ -79,27 +79,31 @@ func getAEMKey(tek: Data) -> SymmetricKey {
 }
 
 // Generate (private key, public key) pair for digital signature
-func sigKeyGen() -> (Curve25519.Signing.PrivateKey, Curve25519.Signing.PublicKey) {
-    let privateKey = Curve25519.Signing.PrivateKey();
+func sigKeyGen() -> (P256.Signing.PrivateKey, P256.Signing.PublicKey) {
+    let privateKey = P256.Signing.PrivateKey();
     let publicKey = privateKey.publicKey
-    let signingPublicKey = try! Curve25519.Signing.PublicKey(rawRepresentation: publicKey.rawRepresentation)
-    return (privateKey, signingPublicKey)
+//    let signingPublicKey = try! Curve25519.Signing.PublicKey(rawRepresentation: publicKey.rawRepresentation)
+//    return (privateKey, signingPublicKey)
+    return (privateKey, publicKey)
 }
 
 // sign(TA_sk, concat_teks) TODO: add timestamp info to avoid replay attack
-func sign(pri_key: Curve25519.Signing.PrivateKey, content: Data) -> Data {
+func sign(pri_key: P256.Signing.PrivateKey, content: Data) -> Data {
     let hash = SHA256.hash(data: content)
     let digestSignature = try! pri_key.signature(for: Data(hash))
-    return digestSignature
+//    print(digestSignature.rawRepresentation)
+//    let digestSignature = try! pri_key.signature(for: content)
+    return digestSignature.derRepresentation
 }
 
 // verify(TA_pk, signature, concat_teks)
-func verifySign(pub_key: Curve25519.Signing.PublicKey, signature: Data, digest: SHA256Digest) -> Bool {
-    return pub_key.isValidSignature(signature, for: Data(digest))
+func verifySign(pub_key: P256.Signing.PublicKey, signature: Data, digest: SHA256Digest) -> Bool {
+    let sig = try! P256.Signing.ECDSASignature(derRepresentation: signature)
+    return pub_key.isValidSignature(sig, for: Data(digest))
 }
 
 // Generate start (inclusive) and end (inclusive) of ENInterval in the past 5 days
-func regenENInterval(date: Date) -> (Int, Int){
+func regenENInterval(date: Date) -> (UInt64, UInt64){
     let start = ENInterval.valueAtDate(date: Calendar.current.date(byAdding: .day, value: -5, to: date)!)
     let end = ENInterval.value()
     return (start, end)
@@ -112,7 +116,7 @@ func regenRPIs(expKeys: [UInt64], nonce: Data?) -> Set<UInt64> {
         let allENInterevals = regenENInterval(date: Date())
         for i in allENInterevals.0..<(allENInterevals.1+1) {
             if !allRPIs.insert(getRPI(rpi_key: getRPIKey(tek: expKey.data), nonce: nonce, eninterval: i).uint64).0 {
-                print("RPI repeated! Highly unlikely")
+                print("RPI repeated! Highly unlikely: \(expKey.data.uint64)")
             }
         }
     }

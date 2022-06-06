@@ -10,13 +10,6 @@ import GRPC
 import NIOCore
 import NIOPosix
 
-//struct TestResultMsg: Codable {
-//    var taID: UInt64
-//    var seq: UInt64
-//    var result: UInt64
-//    var signature: UInt64
-//}
-
 public class TAClient {
     var port: Int = 1234
     var host_ip: String = "54.80.128.235"
@@ -28,38 +21,11 @@ public class TAClient {
     var result: Testingauth_TestResult = Testingauth_TestResult.with {
         $0.ready = false
         $0.taID = 0
-        $0.seq = 0
+        $0.seq = String()
         $0.result = 0
-        $0.signature = 0
+        $0.signature = String()
     }
     var userId: UInt64 = 0
-    
-//    init() {
-//        // Setup an `EventLoopGroup` for the connection to run on.
-//        //
-//        // See: https://github.com/apple/swift-nio#eventloops-and-eventloopgroups
-//        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-//
-//        // Make sure the group is shutdown when we're done with it.
-//        defer {
-//          try! group.syncShutdownGracefully()
-//        }
-//
-//        // Configure the channel, we're not using TLS so the connection is `insecure`.
-//        let channel = try! GRPCChannelPool.with(
-//          target: .host(host_ip, port: port),
-//          transportSecurity: .plaintext,
-//          eventLoopGroup: group
-//        )
-//
-//        // Close the connection when we're done with it.
-//        defer {
-//          try! channel.close().wait()
-//        }
-//
-//        // Provide the connection to the generated client.
-//        self.client = Testingauth_AuthClient(channel: channel)
-//    }
     
     public func prepStartTest() {
         // Setup an `EventLoopGroup` for the connection to run on.
@@ -89,13 +55,16 @@ public class TAClient {
         
         var pretestExpKeys: [UInt64] = []
         for i in 0...self.pretest_days{
-            let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
+//            let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
+            //Experiment
+            let prevDate = Calendar.current.date(byAdding: .minute, value: -i, to: Date())!
             if !TokenList.dayLoad(from: .myExposureKeys, day: prevDate).1 {
                 break
             }
             // File exists
             pretestExpKeys.append(TokenList.dayLoad(from: .myExposureKeys, day: prevDate).0[0].payload.uint64)
         }
+        print("Sent pretestExpKeys: \(pretestExpKeys) at: \(Date().minuteString)")
         
         // Form the request with the name, if one was provided.
         let request = Testingauth_PretestTokens.with {
@@ -110,7 +79,7 @@ public class TAClient {
             let response = try requestStartTest.response.wait()
             self.tested = response.ack
             self.userId = response.userID
-            print("Ack received: \(response.ack)")
+            print("Ack received: \(response.ack) with userId: \(self.userId)")
         } catch {
             print("Start test failed: \(error)")
         }
@@ -146,6 +115,7 @@ public class TAClient {
         let curTokenObject: TokenObject = TokenList.dayLoad(from: .myExposureKeys, day: Date()).0.first!
         let curToken: UInt64 = curTokenObject.payload.uint64
         
+        print("Request update at date: \(Date().dateString) for token: \(curToken)")
         // Form the request with the name, if one was provided.
         let request = Testingauth_Check.with {
             $0.userID = self.userId
@@ -170,7 +140,7 @@ public class TAClient {
                     $0.result = response.result
                     $0.signature = response.signature
                 }
-                print("Test result ready!")
+                print("Test result ready! Result is: \(response.result)")
             } else {
                 print("Test result not ready!")
             }
