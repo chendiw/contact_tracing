@@ -41,7 +41,9 @@ class CentralClient {
         let central_client = Central_CentralClient(channel: channel)
 
         let request = Central_Date.with {
-            $0.date = date.dateString
+//            $0.date = date.dateString
+            // Experiment
+            $0.date = date.minuteString
         }
 
         // Make the RPC call to the server.
@@ -85,7 +87,9 @@ class CentralClient {
         let central_client = Central_CentralClient(channel: channel)
 
         let request = Central_Date.with {
-            $0.date = date.dateString
+//            $0.date = date.dateString
+            // Experiment
+            $0.date = date.minuteString
         }
 
         // Make the RPC call to the server.
@@ -128,25 +132,52 @@ class CentralClient {
         // Provide the connection to the generated client.
         let central_client = Central_CentralClient(channel: channel)
         
-        var date = Date()
-        date = Calendar.current.date(byAdding: .minute, value: -1, to: date)!  // for test
-        let dateFormatter = DateFormatter()
-        
-        print("Client side date1 raw: \(date)")
-        print("Client side date1: \(date.minuteString)")
-        print("Client side date2: \(Calendar.current.date(byAdding: .minute, value: -1, to: date)!.minuteString)")
-        
+        let date = Date()
         let request = Central_ExposureKeys.with { // this also works with
-            $0.token1 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
-            $0.token2 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -1, to: date)!).0[0].payload.uint64;
-            $0.token3 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -2, to: date)!).0[0].payload.uint64;
-            $0.token4 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -3, to: date)!).0[0].payload.uint64;
-            $0.token5 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -4, to: date)!).0[0].payload.uint64;
-            $0.date1.date = date.minuteString;
-            $0.date2.date = Calendar.current.date(byAdding: .minute, value: -1, to: date)!.minuteString;
-            $0.date3.date = Calendar.current.date(byAdding: .minute, value: -2, to: date)!.minuteString;
-            $0.date4.date = Calendar.current.date(byAdding: .minute, value: -3, to: date)!.minuteString;
-            $0.date5.date = Calendar.current.date(byAdding: .minute, value: -4, to: date)!.minuteString;
+            if TokenList.dayLoad(from: .myExposureKeys, day: date).1 {
+                $0.token1 = TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64;
+//                $0.date1.date = date.dayString;
+                // Experiment
+                $0.date1.date = date.minuteString;
+                print("Send exposure keys:\(TokenList.dayLoad(from: .myExposureKeys, day: date).0[0].payload.uint64) for day: \(date.minuteString)")
+            }
+//            if TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .day, value: -1, to: date)!).1 {
+            // Experiment
+            if TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -1, to: date)!).1 {
+                $0.token2 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -1, to: date)!).0[0].payload.uint64;
+//                $0.date2.date = Calendar.current.date(byAdding: .day, value: -1, to: date)!.dayString;
+                // Experiment
+                $0.date2.date = Calendar.current.date(byAdding: .minute, value: -1, to: date)!.minuteString;
+                print("Send exposure keys:\(TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -1, to: date)!).0[0].payload.uint64) for day: \(Calendar.current.date(byAdding: .minute, value: -1, to: date)!.minuteString)")
+            }
+//            if TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .day, value: -2, to: date)!).1 {
+            // Experiment
+            if TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -2, to: date)!).1 {
+                $0.token3 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -2, to: date)!).0[0].payload.uint64;
+//                $0.date3.date = Calendar.current.date(byAdding: .day, value: -2, to: date)!.dayString;
+                // Experiment
+                $0.date3.date = Calendar.current.date(byAdding: .minute, value: -2, to: date)!.minuteString;
+                print("Send exposure keys:\(TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -2, to: date)!).0[0].payload.uint64) for day: \(Calendar.current.date(byAdding: .minute, value: -2, to: date)!.minuteString)")
+            }
+//            if TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .day, value: -3, to: date)!).1 {
+            // Experiment
+            if TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -3, to: date)!).1 {
+                $0.token4 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -3, to: date)!).0[0].payload.uint64;
+//                $0.date4.date = Calendar.current.date(byAdding: .day, value: -3, to: date)!.dayString;
+                // Experiment
+                $0.date4.date = Calendar.current.date(byAdding: .minute, value: -3, to: date)!.minuteString;
+                print("Send exposure keys:\(TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -3, to: date)!).0[0].payload.uint64) for day: \(Calendar.current.date(byAdding: .minute, value: -3, to: date)!.minuteString)")
+            }
+//            if TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .day, value: -4, to: date)!).1 {
+            // Experiment
+            if TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -4, to: date)!).1 {
+                $0.token5 = TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -4, to: date)!).0[0].payload.uint64;
+//                $0.date5.date = Calendar.current.date(byAdding: .day, value: -4, to: date)!.dayString;
+                // Experiment
+                $0.date5.date = Calendar.current.date(byAdding: .minute, value: -4, to: date)!.minuteString;
+                print("Send exposure keys: \(TokenList.dayLoad(from: .myExposureKeys, day: Calendar.current.date(byAdding: .minute, value: -4, to: date)!).0[0].payload.uint64) for day: \(Calendar.current.date(byAdding: .minute, value: -4, to: date)!.minuteString)")
+            }
+
             $0.result = Central_TestResult.with{
                 $0.ready = result.ready
                 $0.taID = result.taID

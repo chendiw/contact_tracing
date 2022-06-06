@@ -10,116 +10,139 @@ class CentralProvider: Central_CentralProvider {
     request: Central_ExposureKeys,
     context: StatusOnlyCallContext
   ) -> EventLoopFuture<Central_Ack> {
+    var fileName = String()
+    var currentDirectoryUrl = URL(fileURLWithPath: ".")
+    var fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
     // write tokens to file, with delimiters
     if (request.result.result == 1) {
-        var fileName = "pos-" + request.date1.date
-        var currentDirectoryUrl = URL(fileURLWithPath: ".")
-        var fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token1 = request.token1
-        let token1Str = String(token1) + "$"
-        do {
-          try token1Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate1 {
+          fileName = "pos-" + request.date1.date
+          currentDirectoryUrl = URL(fileURLWithPath: ".")
+          fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token1 = request.token1
+          let token1Str = String(token1) + "$"
+          do {
+            try token1Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
 
-        fileName = "pos-" + request.date2.date
-        currentDirectoryUrl = URL(fileURLWithPath: ".")
-        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token2 = request.token2
-        let token2Str = String(token2) + "$"
-        do {
-          try token2Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate2 {
+          fileName = "pos-" + request.date2.date
+          currentDirectoryUrl = URL(fileURLWithPath: ".")
+          fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token2 = request.token2
+          let token2Str = String(token2) + "$"
+          do {
+            try token2Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
 
-        fileName = "pos-" + request.date3.date
-        currentDirectoryUrl = URL(fileURLWithPath: ".")
-        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token3 = request.token3
-        let token3Str = String(token3) + "$"
-        do {
-          try token3Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate3 {
+          fileName = "pos-" + request.date3.date
+          currentDirectoryUrl = URL(fileURLWithPath: ".")
+          fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token3 = request.token3
+          let token3Str = String(token3) + "$"
+          do {
+            try token3Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
 
-        fileName = "pos-" + request.date4.date
-        currentDirectoryUrl = URL(fileURLWithPath: ".")
-        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token4 = request.token4
-        let token4Str = String(token4) + "$"
-        do {
-          try token4Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate4 {
+          fileName = "pos-" + request.date4.date
+          currentDirectoryUrl = URL(fileURLWithPath: ".")
+          fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token4 = request.token4
+          let token4Str = String(token4) + "$"
+          do {
+            try token4Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
 
-        fileName = "pos-" + request.date5.date
-        currentDirectoryUrl = URL(fileURLWithPath: ".")
-        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token5 = request.token5
-        let token5Str = String(token5) + "$"
-        do {
-          try token5Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate5 {
+          fileName = "pos-" + request.date5.date
+          currentDirectoryUrl = URL(fileURLWithPath: ".")
+          fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token5 = request.token5
+          let token5Str = String(token5) + "$"
+          do {
+            try token5Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
     } else {
-        var fileName = "neg-" + request.date1.date
-        var currentDirectoryUrl = URL(fileURLWithPath: ".")
-        var fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token1 = request.token1
-        let token1Str = String(token1) + "$"
-        do {
-          try token1Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate2 {
+          var fileName = "neg-" + request.date1.date
+          var currentDirectoryUrl = URL(fileURLWithPath: ".")
+          var fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token1 = request.token1
+          let token1Str = String(token1) + "$"
+          do {
+            try token1Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
 
-        fileName = "neg-" + request.date2.date
-        currentDirectoryUrl = URL(fileURLWithPath: ".")
-        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token2 = request.token2
-        let token2Str = String(token2) + "$"
-        do {
-          try token2Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate2 {
+          fileName = "neg-" + request.date2.date
+          currentDirectoryUrl = URL(fileURLWithPath: ".")
+          fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token2 = request.token2
+          let token2Str = String(token2) + "$"
+          do {
+            try token2Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
 
-        fileName = "neg-" + request.date3.date
-        currentDirectoryUrl = URL(fileURLWithPath: ".")
-        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token3 = request.token3
-        let token3Str = String(token3) + "$"
-        do {
-          try token3Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate3 {
+          fileName = "neg-" + request.date3.date
+          currentDirectoryUrl = URL(fileURLWithPath: ".")
+          fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token3 = request.token3
+          let token3Str = String(token3) + "$"
+          do {
+            try token3Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
 
-        fileName = "neg-" + request.date4.date
-        currentDirectoryUrl = URL(fileURLWithPath: ".")
-        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token4 = request.token4
-        let token4Str = String(token4) + "$"
-        do {
-          try token4Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate4 {
+          fileName = "neg-" + request.date4.date
+          currentDirectoryUrl = URL(fileURLWithPath: ".")
+          fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token4 = request.token4
+          let token4Str = String(token4) + "$"
+          do {
+            try token4Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
 
-        fileName = "neg-" + request.date5.date
-        currentDirectoryUrl = URL(fileURLWithPath: ".")
-        fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
-        let token5 = request.token5
-        let token5Str = String(token5) + "$"
-        do {
-          try token5Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
-        } catch let error as NSError {
-          print (error)
+        if request.hasDate5 {
+          fileName = "neg-" + request.date5.date
+          currentDirectoryUrl = URL(fileURLWithPath: ".")
+          fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
+          let token5 = request.token5
+          let token5Str = String(token5) + "$"
+          do {
+            try token5Str.write(to: fileUrl, atomically: true, encoding: String.Encoding.utf8)
+          } catch let error as NSError {
+            print (error)
+          }
         }
     }
     let response = Central_Ack.with {

@@ -42,10 +42,6 @@ class RiskScoreController {
     }
     
     func calculate() {
-//        let date = Date()
-//        let calendar = Calendar.current
-//        let day = calendar.component(.day, from: date)
-        
         // for i in 1.. 5 pull positive exposure key list and negtive exposure key list
         var positiveExpKey: [Date: [UInt64]] = [:] // call poll positive
         var negtiveExpKey: [Date: [UInt64]] = [:] // call poll negtive
@@ -53,28 +49,43 @@ class RiskScoreController {
         var positiveTokens: Set<UInt64> = []  // date -> token payload
         var negativeTokens: Set<UInt64> = []
         
-        var allPeerTEKs: [Date: [UInt64]] = [:] // all peer tokens received over the past riskDays
+        var allPeerTEKs: [Date: Set<UInt64>] = [:] // all peer tokens received over the past riskDays
         for i in 1...riskDays {
             // Using the positive key, caculate all the positive tokens
-            let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
+//            let prevDate = Calendar.current.date(byAdding: .day, value: -i, to: Date())!
+            
+            // Experiment
+            let prevDate = Calendar.current.date(byAdding: .minute, value: -i, to: Date())!
+            
             if !TokenList.dayLoad(from: .peerTokens, day: prevDate).1 {
-                break
+                continue
             }
             // File exists
             let peerTEKs = TokenList.dayLoad(from: .peerTokens, day: prevDate).0
-            allPeerTEKs[prevDate] = peerTEKs.payloadList
+            allPeerTEKs[prevDate] = Set<UInt64>(peerTEKs.map{$0.payload.uint64})
             print("Peer tokens stored: \(allPeerTEKs)")
         }
         
+        // Only poll for risk days
+//        let lower_bound : Date = Calendar.current.date(byAdding: .day, value: -riskDays, to: Date())!
+        // Experiment
+        let lower_bound : Date = Calendar.current.date(byAdding: .minute, value: -riskDays, to: Date())!
+        let upper_bound : Date = Date()
+        
         // regenerate peer tokens from the exposure keys on prevDate
-        // construct an aggregate set of positiveTokns/negativeTokens for all riskDays
+        // construct an aggregate set of positiveTokns/negativeTokens for all riskDay
         for prevDate in allPeerTEKs.keys {
+            // Experiment
+            if prevDate.localMinute - lower_bound.localMinute < 0 {
+                continue
+            }
             do {
                 positiveExpKey[prevDate] = try self.centralClient.getPositiveCases(date: prevDate)
             } catch {
                 print("Error when poll positive Exposure Keys")
                 positiveExpKey[prevDate] = []
             }
+            print("Polled positive expKeys: \(positiveExpKey[prevDate])")
             
             do {
                 negtiveExpKey[prevDate] = try self.centralClient.getNegativeCases(date: prevDate)
@@ -82,16 +93,29 @@ class RiskScoreController {
                 print("Error when poll negative Exposure Keys")
                 negtiveExpKey[prevDate] = []
             }
+            print("Polled negative expKeys: \(negtiveExpKey[prevDate])")
 
             // reproduce tokens for prevDate given exposure keys
-            let posTokens: Set<UInt64> = regenRPIs(expKeys: positiveExpKey[prevDate]!, nonce: nonce)
-            let negTokens: Set<UInt64>  = regenRPIs(expKeys: negtiveExpKey[prevDate]!, nonce: nonce)
+            var posTokens: Set<UInt64> = Set()
+            var negTokens: Set<UInt64> = Set()
+            if positiveExpKey[prevDate]!.count != 0 {
+                posTokens = regenRPIs(expKeys: positiveExpKey[prevDate]!, nonce: nonce)
+            }
+            if negtiveExpKey[prevDate]!.count != 0 {
+                negTokens = regenRPIs(expKeys: negtiveExpKey[prevDate]!, nonce: nonce)
+            }
+//            print("regenerated positive tokens: \(posTokens)")
+//            print("regenerated negative tokens: \(negTokens)")
             
             // Intersection between
             if (allPeerTEKs[prevDate] != nil) {
+                print("Start computing intersection...")
                 let segAll:Set<UInt64> = Set(allPeerTEKs[prevDate]!)
+                print("segAll:\(segAll)")
                 positiveTokens.formUnion(segAll.intersection(posTokens))
                 negativeTokens.formUnion(segAll.intersection(negTokens))
+                print("segall intersect pos: \(segAll.intersection(posTokens))")
+                print("segall intersect neg: \(segAll.intersection(posTokens))")
             }
             print("Aggregate positive tokens: \(positiveTokens)")
             print("Aggregate negative tokens: \(negativeTokens)")
@@ -121,6 +145,7 @@ class RiskScoreController {
                 }
                 payloadsHaveSeen.insert(token.payload.uint64)
             }
+            print("Risk score after computing positives: \(self.riskScore)")
             
             payloadsHaveSeen = []
             for token in peerTEKs {
@@ -143,7 +168,7 @@ class RiskScoreController {
                 }
                 payloadsHaveSeen.insert(token.payload.uint64)
             }
-            
+            print("Risk score after computing negatives: \(self.riskScore)")
         }
     }
 }

@@ -4,6 +4,7 @@ import ArgumentParser
 import testAuthModel
 import NIOCore
 import NIOPosix
+import CryptoKit
 
 // TAFile: UserId: UInt64 -> tokens: [UInt64]
 // Store one TAFile per day, named by "Date.now.formatted()"
@@ -20,8 +21,10 @@ class TestAuthProvider: Testingauth_AuthProvider {
   -> EventLoopFuture<Testingauth_Ack> {
     // generate userId when start test
     print("server received start test")
-    if !UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).1 {
-      TAFile.receivedTEKFile.createFile(url: TAFile.receivedTEKFile.dayURL(date: Date()))
+    if !UserIdToTEKs.load(from: .receivedTEKFile).1 {
+      // Experiment
+      let url = TAFile.receivedTEKFile.url()
+      TAFile.receivedTEKFile.createFile(url: url)
     }
     let userId = assignUserId()
     saveUserProfileStart(userId: userId, tokens: request.pretest)
@@ -51,7 +54,7 @@ class TestAuthProvider: Testingauth_AuthProvider {
   }
 
   func saveUserProfileStart(userId: UInt64, tokens: [UInt64]) {
-    var receivedTokens = UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).0
+    var receivedTokens = UserIdToTEKs.load(from: .receivedTEKFile).0
     for t in tokens {
       if receivedTokens[userId] != nil {
         receivedTokens[userId]!.append(t)
@@ -59,14 +62,16 @@ class TestAuthProvider: Testingauth_AuthProvider {
         receivedTokens[userId] = [t]
       }
     }
-    receivedTokens.daySave(to: .receivedTEKFile, day: Date())
+    receivedTokens.save(to: .receivedTEKFile)
+    print("assigned userId: \(userId)")
   }
 
   func updateUserProfile(userId: UInt64, token: UInt64) -> Testingauth_TestResult {
-    var receivedTokens = UserIdToTEKs.dayLoad(from: .receivedTEKFile, day: Date()).0
+    var receivedTokens = UserIdToTEKs.load(from: .receivedTEKFile).0
+    print("Updating userid: \(userId)")
     assert(receivedTokens[userId] != nil)
     receivedTokens[userId]!.append(token)
-    receivedTokens.daySave(to: .receivedTEKFile, day: Date())
+    receivedTokens.save(to: .receivedTEKFile)
 
     // user has waited another day
     assert(self.daysUntilResultByUser[userId] != nil)
@@ -82,7 +87,7 @@ class TestAuthProvider: Testingauth_AuthProvider {
           teks.append(t.data)
         }
       }
-      let seq: UInt64 = sign(pri_key: keys.0, content: teks).uint64
+      let seq: String = sign(pri_key: keys.0, content: teks).base64
 
       // Test: seq/expKey relationship is verifiable
       testSigVerifiable(content: teks, seq: seq, pub_key: keys.1)
@@ -94,7 +99,7 @@ class TestAuthProvider: Testingauth_AuthProvider {
       vrfyMsg.append(seq.data)
       vrfyMsg.append(result.data)
 
-      let signature: UInt64 = sign(pri_key: keys.0, content: vrfyMsg).uint64
+      let signature: String = sign(pri_key: keys.0, content: vrfyMsg).base64
 
       // Test: main msg body verifiable
       testSigVerifiable(content: vrfyMsg, seq: signature, pub_key: keys.1)
@@ -107,15 +112,15 @@ class TestAuthProvider: Testingauth_AuthProvider {
         $0.signature = signature
       }
       receivedTokens.removeValue(forKey: userId)
-      receivedTokens.daySave(to: .receivedTEKFile, day: Date())
+      receivedTokens.save(to: .receivedTEKFile)
       return response
     } else {
       let response = Testingauth_TestResult.with {
         $0.ready = false
         $0.taID = self.taID
-        $0.seq = 0
+        $0.seq = String()
         $0.result = 0
-        $0.signature = 0
+        $0.signature = String()
       }
       return response
     }
@@ -128,28 +133,51 @@ struct TestAuth: ParsableCommand {
   var host = "172.31.43.1"
   // var host = "localhost"
 
+  @Option(help: "Type y to clean all records on server")
+  var clean = "regular"
+
   func run() throws {
-    let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-    defer {
-      try! group.syncShutdownGracefully()
+    if clean == "y" {
+      do {
+          // Get the document directory url
+          let currentDirectoryUrl = URL(fileURLWithPath: ".")
+          let directoryContents = try FileManager.default.contentsOfDirectory(
+              at: currentDirectoryUrl,
+              includingPropertiesForKeys: nil,
+              options: .skipsHiddenFiles
+          )
+          //print(directoryContents)
+          for url in directoryContents where url.pathExtension == "txt" {
+              try FileManager.default.removeItem(at: url)
+          }
+          print("Cleaned all files!")
+      } catch {
+          print(error)
+      }
+    } else {
+      let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+      defer {
+        try! group.syncShutdownGracefully()
+      }
+
+      // Start the server and print its address once it has started.
+      let server = Server.insecure(group: group)
+        .withServiceProviders([TestAuthProvider()])
+        .bind(host: self.host, port: self.port)
+
+      server.map {
+        $0.channel.localAddress
+      }.whenSuccess { address in
+        print("testauth server started on port \(address!.port!)")
+      }
+
+      // Wait on the server's `onClose` future to stop the program from exiting.
+      _ = try server.flatMap {
+        $0.onClose
+      }.wait()
     }
-
-    // Start the server and print its address once it has started.
-    let server = Server.insecure(group: group)
-      .withServiceProviders([TestAuthProvider()])
-      .bind(host: self.host, port: self.port)
-
-    server.map {
-      $0.channel.localAddress
-    }.whenSuccess { address in
-      print("testauth server started on port \(address!.port!)")
-    }
-
-    // Wait on the server's `onClose` future to stop the program from exiting.
-    _ = try server.flatMap {
-      $0.onClose
-    }.wait()
   }
+
 }
 
 TestAuth.main()

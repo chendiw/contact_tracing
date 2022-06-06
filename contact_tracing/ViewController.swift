@@ -24,10 +24,12 @@ class ViewController: UIViewController {
     private var testResult: Testingauth_TestResult = Testingauth_TestResult.with {
         $0.ready = false
         $0.taID = 0
-        $0.seq = 0
+        $0.seq = String()
         $0.result = 0
-        $0.signature = 0
+        $0.signature = String()
     }
+    private var startedTest: Bool = false
+    private var queryResult: [String: Bool] = [:]
     
     var textField0: UITextView = UITextView(frame: CGRect(x: 90, y: 150, width: 250, height: 50))
     
@@ -50,7 +52,7 @@ class ViewController: UIViewController {
         print("Start Bluetooth")
         
         // Get today's level here: Write the riskScore result to a file
-        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
+//        let timer2 = Timer.scheduledTimer(timeInterval: tokenGenInterval, target: self, selector: #selector(todayTask), userInfo: nil, repeats: true)
         
         self.textField0.text = "Your COVID exposure level is: "
         self.textField0.textColor = .white
@@ -122,36 +124,35 @@ class ViewController: UIViewController {
     public func createMyExpKey() {
         let url = File.myExposureKeys.dayURL(date: Date())
         File.myExposureKeys.createFile(url: url)
-//        print("\(url) creation success")
     }
     
     public func createMyTokens() {
         let url = File.myTokens.dayURL(date: Date())
         File.myTokens.createFile(url: url)
-//        print("\(url) creation success")
     }
     
     public func createPeerTokens() {
         let url = File.peerTokens.dayURL(date: Date())
         File.peerTokens.createFile(url: url)
-//        print("\(url) creation success")
     }
     
     @objc func todayTask() {
         if self.start{
-//            print("This is today's Task")
             // 0. Create all the files locally
             createMyExpKey()
             createMyTokens()
             createPeerTokens()
             
             // 1. Generate an exposure key, Store to the file.
-            let exposureKey = ExpKey.next().data
-            print("Today's exposure key is: \(exposureKey.uint64) Stored on date: \(Date())")
+            if !TokenList.dayLoad(from: .myExposureKeys, day: Date()).1 {
+                // 1. Generate an exposure key, Store to the file.
+                let exposureKey = ExpKey.next().data
+                print("Today's exposure key is: \(exposureKey.uint64) Stored on date: \(Date())")
 
-            let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
-            let exposurekeyList: TokenList = [token]
-            exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
+                let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
+                let exposurekeyList: TokenList = [token]
+                exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
+            }
             
             // 2. Poll for negtive and positve exposure keys, calculate risk score
             self.myRiskScoreController.calculate()
@@ -174,13 +175,25 @@ class ViewController: UIViewController {
     
     @objc func startTest(sender: UIButton!) {
         print("Start test")
+        self.startedTest = true
         self.myTAClient = TAClient()
         self.myTAClient.prepStartTest()
+        
+        let timer3 = Timer.scheduledTimer(timeInterval: expKeyInterval, target: self, selector: #selector(automaticQueryResult), userInfo: nil, repeats: true)
+    }
+    
+    @objc func automaticQueryResult() {
+        if queryResult[Date().minuteString] == nil {
+            self.testResult = self.myTAClient.prepGetResult()
+            queryResult[Date().minuteString] = true
+        }
     }
     
     @objc func getTestResult(sender: UIButton!) {
         print("getTestResult")
         self.testResult = self.myTAClient.prepGetResult()
+        // Experiment
+        queryResult[Date().minuteString] = true
     }
     
     @objc func reportPositive(sender: UIButton!) {
@@ -193,8 +206,9 @@ class ViewController: UIViewController {
     }
     
     @objc func stopService(sender: UIButton!) {
-        print("Stop service")
+        print("Stop service and clean up")
         self.start = false
+        File.deleteAll()
         print(self.start)
     }
     

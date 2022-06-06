@@ -1,8 +1,19 @@
 import Foundation
 
-// Testing Authority Server Structs
+typealias ENInterval = TimeInterval
+extension ENInterval {
+    static func value() -> Int {
+//        return Int((Date().timeIntervalSince1970) / (10 * 60))
+        return Int((Date().timeIntervalSince1970) / 10)
+    }
+    
+    static func valueAtDate(date: Date) -> Int {
+//        return Int((date.timeIntervalSince1970) / (10 * 60))
+        return Int((date.timeIntervalSince1970) / 10)
+    }
+}
 
-extension Data {
+public extension Data {
     var uint64: UInt64 {
           get {
               if count >= 8 {
@@ -12,13 +23,28 @@ extension Data {
               }
           }
       }
-
+    
     var int: Int {
         return self.withUnsafeBytes{pointer in return pointer.load(as: Int.self)}
     }
     
     var hex: String {
         return map {String(format: "%02x", $0)}.joined()
+    }
+    
+    var string: String {
+        return String(decoding: self, as: UTF8.self)
+    }
+    
+    var base64: String {
+        return self.base64EncodedString()
+    }
+}
+
+public extension String {
+    var data: Data {
+        let result = try! Data.init(base64Encoded: self, options:.ignoreUnknownCharacters)
+        return result!
     }
 }
 
@@ -27,6 +53,37 @@ public extension UInt64 {
         return Swift.withUnsafeBytes(of: self) { Data($0) }
     }
 }
+
+public extension Date {
+    var localDay: Int {
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: self)
+        return day
+    }
+    
+    var localMinute: Int {
+        let calendar = Calendar.current
+        let minute = calendar.component(.minute, from: self)
+        return minute
+    }
+    
+    var dateString: String {
+        let calendar = Calendar.current
+        let day = calendar.component(.day, from: self)
+        let month = calendar.component(.month, from: self)
+        let name = String(month) + "-" + String(day)
+        return name
+    }
+    
+    var minuteString: String {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: self)
+        let minute = calendar.component(.minute, from: self)
+        let name = String(hour) + "-" + String(minute)
+        return name
+    }
+}
+
 
 enum TAFile: String {
     case receivedTEKFile
@@ -65,26 +122,61 @@ enum TAFile: String {
             print("Error: \(error.domain)")
         }
     }
+
+    func url() -> URL {
+        let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
+        let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
+        // let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue)!.appendingPathExtension("txt")
+        // Experiment
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(self.rawValue)!.appendingPathExtension("txt")
+        return fileUrl
+    }
     
     func dayURL(date: Date) -> URL {
         let documentDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
         let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
-        let fileUrl = documentDirectoryUrl.appendingPathComponent(dayFilename(date: date))!.appendingPathExtension("txt")
+        // let fileUrl = documentDirectoryUrl.appendingPathComponent(dayFilename(date: date))!.appendingPathExtension("txt")
+        // Experiment
+        let fileUrl = documentDirectoryUrl.appendingPathComponent(minuteFilename(date: date))!.appendingPathExtension("txt")
         return fileUrl
     }
 
     func dayFilename(date: Date) -> String {
-        let calendar = Calendar.current
-        let day = calendar.component(.day, from: date)
-        let month = calendar.component(.month, from: date)
-        let name = String(month) + "-" + String(day)
-        print("[dayURL] Today's date is: \(name)")
-        return self.rawValue + name
+        return self.rawValue + date.dateString
+    }
+
+    func minuteFilename(date: Date) -> String {
+        return self.rawValue + date.minuteString
     }
 }
 
 typealias UserIdToTEKs = [UInt64: [UInt64]]
 extension UserIdToTEKs {
+    static func load(from: TAFile) -> (UserIdToTEKs, Bool) {
+        do {
+            let data = try Data(contentsOf: from.url())
+            do {
+                let arr = try JSONDecoder().decode(self, from: data)
+                print("[load from file] the loaded data is: \(arr)")
+                return (arr, true)
+            } catch {
+                print(error)
+            }
+        } catch {
+        }
+        return (UserIdToTEKs(), false)
+    }
+
+    func save(to: TAFile) {
+        do {
+            let data = try JSONEncoder().encode(self)
+            try data.write(to: to.url())
+            print("[DaySave], save to file name \(to.url())")
+        } catch {
+            print("Save to file error: \(error)")
+        }
+    }
+
   static func dayLoad(from: TAFile, day: Date) -> (UserIdToTEKs, Bool) {
     do {
         let data = try Data(contentsOf: from.dayURL(date: day))

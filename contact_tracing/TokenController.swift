@@ -17,8 +17,8 @@ import CryptoKit
 public let serviceUUID = CBUUID.init(string:"5ad5b97a-49e6-493b-a4a9-b435c455137d")
 public let characteristicUUID = CBUUID.init(string:"34a30272-19e0-4900-a8e2-7d0bb0e23568")
 public let peripheralName = "CT-Peripheral-test1"
-public let tokenGenInterval: TimeInterval = 60 //re-exchange tokens per 10 min, testing with per min
-public let expKeyInterval: TimeInterval = 1*60 // re-generate exposure key per day (1440*60s), testing with per 5 min
+public let tokenGenInterval: TimeInterval = 9 //re-exchange tokens per 10 min, testing with per min
+public let expKeyInterval: TimeInterval = 60 // re-generate exposure key per day (1440*60s), testing with per 5 min
 
 class MyService {
     private var uuid: CBUUID
@@ -109,16 +109,13 @@ extension ExpKey {
 
 let KeepMyIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
 let KeepPeerIdsInterval: TimeInterval = 60*60*24*7*2 // 2 weeks = 14 days
-// Two files storing myTEKs and peerTokens
-// myTEKs: i (computed from ENIntervalNumber) -> TEK_i (14 pairs)
-// peerTokens: ENIntervalNumber -> [Tokenobject{Bluetooth payload, RSSI, GPS location}] (144*14=2016 pairs)
+
 enum File: String {
     case myTokens
     case peerTokens
     case myExposureKeys
 
     var rawValue: String {
-
         switch self {
             case .myTokens: return "myTokens"
             case .peerTokens: return "peerTokens"
@@ -158,7 +155,7 @@ enum File: String {
         let documentDirectoryUrl = NSURL(fileURLWithPath: documentDirectory)
 //        let fileUrl = documentDirectoryUrl.appendingPathComponent(dayFilename(date: date))!.appendingPathExtension("txt")
         
-        // For experiments
+        // Experiment
         let fileUrl = documentDirectoryUrl.appendingPathComponent(minuteFilename(date: date))!.appendingPathExtension("txt")
         
         return fileUrl
@@ -200,7 +197,7 @@ enum File: String {
 }
 
 struct TokenObject: Codable {
-    var eninterval: Int
+    var eninterval: UInt64
     var payload: Data
     var rssi: Int
     var lat: CLLocationDegrees  // latitute
@@ -217,8 +214,11 @@ extension TokenList {
     // Max file size: 32 x 1k x 14 = 448k bytes
     static func dayLoad(from: File, day: Date) -> (TokenList, Bool) {
         do {
-            print("[dayLoad] url: \(from.dayURL(date: day))")
+//            print("[dayLoad] url: \(from.dayURL(date: day))")
             let data = try Data(contentsOf: from.dayURL(date: day))
+//            if from.rawValue == "myExposureKeys" {
+//                print("Loading expKeys file: \(from.dayURL(date: day))")
+//            }
             do {
                 let arr = try JSONDecoder().decode(self, from: data)
 //                print("[load from file] the loaded data is: \(arr)")
@@ -235,7 +235,7 @@ extension TokenList {
         do {
             let data = try JSONEncoder().encode(self)
             try data.write(to: to.dayURL(date: day))
-            print("[DaySave], save to file name \(to.dayURL(date: day))")
+//            print("[DaySave], save to file name \(to.dayURL(date: day))")
         } catch {
             print("Save to file error: \(error)")
         }
@@ -261,12 +261,14 @@ extension TokenList {
 
 typealias ENInterval = TimeInterval
 extension ENInterval {
-    static func value() -> Int {
-        return Int((Date().timeIntervalSince1970) / (10 * 60))
+    static func value() -> UInt64 {
+//        return Int((Date().timeIntervalSince1970) / (10 * 60))
+        return UInt64((Date().timeIntervalSince1970) / tokenGenInterval)
     }
     
-    static func valueAtDate(date: Date) -> Int {
-        return Int((date.timeIntervalSince1970) / (10 * 60))
+    static func valueAtDate(date: Date) -> UInt64 {
+//        return Int((date.timeIntervalSince1970) / (10 * 60))
+        return UInt64((date.timeIntervalSince1970) / tokenGenInterval)
     }
 }
 
@@ -319,14 +321,25 @@ public class TokenController: NSObject {
     @objc public func generateMyToken() {
         // load current date's exposure key
         let readTodayExpKey = TokenList.dayLoad(from: .myExposureKeys, day: Date()).0
-//        assert(readTodayExpKey.count == 1)
-        self.myExposureKey = readTodayExpKey.first!
+        if readTodayExpKey.count == 0 {
+            let exposureKey = ExpKey.next().data
+            print("Today's exposure key is: \(exposureKey.uint64) Stored on date: \(Date())")
+
+            let token = TokenObject(eninterval: ENInterval.value(), payload: exposureKey, rssi: 0, lat: CLLocationDegrees(), long: CLLocationDegrees())  //
+            let exposurekeyList: TokenList = [token]
+                exposurekeyList.daySave(to:.myExposureKeys, day: Date())  // save to file
+            self.myExposureKey = token
+        } else {
+            self.myExposureKey = readTodayExpKey.first!
+        }
         
         // Generate RPI key from exposure key
         let rpi_key: SymmetricKey = getRPIKey(tek: self.myExposureKey.payload)
         
         // Generate RPI with random nonce, result: RPI (16 bytes)||nonce||tag (16 bytes)
-        let rpi: Data = getRPI(rpi_key: rpi_key, nonce: TokenController.nonce, eninterval: ENInterval.value())
+        let curENInterval = ENInterval.value()
+        let rpi: Data = getRPI(rpi_key: rpi_key, nonce: TokenController.nonce, eninterval: curENInterval)
+        print("My new token: \(rpi.uint64) at interval: \(curENInterval)")
         
         // Append and save my new RPI to file
         self.myTokens = TokenList.dayLoad(from: .myTokens, day: Date()).0
@@ -365,16 +378,16 @@ public class TokenController: NSObject {
 
         peripheralManager = PeripheralManager(peripheralName: peripheralName, queue: queue, service: ctService.getService())
             .onWriteClosure{[unowned self] (peripheral, tokenCharacteristic, data) in
-                print("[Onwrite]Received peer token: \(data.uint64)")
+//                print("[Onwrite]Received peer token: \(data.uint64)")
                 self.peerTokens = TokenList.dayLoad(from: .peerTokens, day: Date()).0 // load today's peerTokens
                 var rssiValue = 0;
                 if rssiList[peripheral.identifier] != nil {
                     rssiValue = rssiList[peripheral.identifier]!
                 }
-                print("[Read RSSI]peripheral=\(peripheral.identifier), RSSI=\(rssiValue)")
+//                print("[Read RSSI]peripheral=\(peripheral.identifier), RSSI=\(rssiValue)")
                 let latNow = locationManager.getLatitude()
                 let longNow = locationManager.getLongitude()
-                print("[Read GPS]The current GPS is: \(latNow) \(longNow)")
+//                print("[Read GPS]The current GPS is: \(latNow) \(longNow)")
                 self.peerTokens.append(curPayload: data, rssi: rssiValue, lat: latNow, long: longNow)
                 self.peerTokens.daySave(to: .peerTokens, day: Date())
                 return true
