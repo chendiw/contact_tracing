@@ -15,6 +15,7 @@ class CentralProvider: Central_CentralProvider {
     var fileUrl = currentDirectoryUrl.appendingPathComponent(fileName).appendingPathExtension("txt")
     // write tokens to file, with delimiters
     if (request.result.result == 1) {
+        print("received positive report: \(request)")
         if request.hasDate1 {
           fileName = "pos-" + request.date1.date
           currentDirectoryUrl = URL(fileURLWithPath: ".")
@@ -80,6 +81,7 @@ class CentralProvider: Central_CentralProvider {
           }
         }
     } else {
+        print("received negative report: \(request)")
         if request.hasDate2 {
           var fileName = "neg-" + request.date1.date
           var currentDirectoryUrl = URL(fileURLWithPath: ".")
