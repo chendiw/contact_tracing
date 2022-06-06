@@ -36,7 +36,7 @@ func getRPIKey(tek: Data) -> SymmetricKey {
 
 // AES_128(RPIK_i, PaddedData_j)
 // result: ciphertext(RPI)||nonce||tag = bluetooth payload
-func getRPI(rpi_key: SymmetricKey, nonce: Data?, eninterval: UInt64) -> Data {
+func getRPI(rpi_key: SymmetricKey, nonce: Data, eninterval: UInt64) -> Data {
     var plaintext = "EN-RPI".data(using: .utf8)! // 6 bytes
 //    print("plaintext length: \(plaintext.count)")
     var interval_value = eninterval
@@ -46,12 +46,15 @@ func getRPI(rpi_key: SymmetricKey, nonce: Data?, eninterval: UInt64) -> Data {
     let padding = Data.init(count: 2) // 2 bytes
 //    print("padding length: \(padding.count)")
     plaintext.append(padding)
-    let sealedData = try! AES.GCM.seal(plaintext, using: rpi_key, nonce: AES.GCM.Nonce(data: nonce!))
+//    print("nonce is: \(nonce.uint64)")
+    let sealedData = try! AES.GCM.seal(plaintext, using: rpi_key, nonce: AES.GCM.Nonce(data: nonce))
 //    print("Nonce: \(sealedData.nonce.withUnsafeBytes {Data(Array($0)).hex})")
 //    print("Tag: \(sealedData.tag.hex)")
 //    print("Ciphertext: \(sealedData.ciphertext.base64EncodedString())")
     var result = sealedData.ciphertext // Data
     assert(result.count == 16)
+    result.append(nonce)
+    assert(result.count == 32)
     
 //    result.append(sealedData.nonce.withUnsafeBytes {Data(Array($0))})
 //
@@ -104,16 +107,23 @@ func verifySign(pub_key: P256.Signing.PublicKey, signature: Data, digest: SHA256
 
 // Generate start (inclusive) and end (inclusive) of ENInterval in the past 5 days
 func regenENInterval(date: Date) -> (UInt64, UInt64){
-    let start = ENInterval.valueAtDate(date: Calendar.current.date(byAdding: .day, value: -5, to: date)!)
+//    let start = ENInterval.valueAtDate(date: Calendar.current.date(byAdding: .day, value: -5, to: date)!)
+    // Experiment
+    let start = ENInterval.valueAtDate(date: Calendar.current.date(byAdding: .minute, value: -5, to: date)!)
     let end = ENInterval.value()
+//    print("Regenerating tokens for interval range: \(start), \(end)")
     return (start, end)
 }
 
 // Reproduce all rpis for a list of exposure keys in the past 5 days
-func regenRPIs(expKeys: [UInt64], nonce: Data?) -> Set<UInt64> {
+func regenRPIs(expKeys: [UInt64], nonce: Data) -> Set<UInt64> {
     var allRPIs = Set<UInt64>.init()
     for expKey in expKeys {
+        if expKey == 0 {
+            continue
+        }
         let allENInterevals = regenENInterval(date: Date())
+//        print("regen nonce: \(nonce.uint64)")
         for i in allENInterevals.0..<(allENInterevals.1+1) {
             if !allRPIs.insert(getRPI(rpi_key: getRPIKey(tek: expKey.data), nonce: nonce, eninterval: i).uint64).0 {
                 print("RPI repeated! Highly unlikely: \(expKey.data.uint64)")

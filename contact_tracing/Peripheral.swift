@@ -38,10 +38,8 @@ class Peripheral: NSObject {
     
     func executeCommand(_ command: Command) {
 
-        print("execute command: \(command)")
+//        print("execute command: \(command)")
         switch command {
-//            case .read:
-//                self.peripheral.readValue(for: toCBCharacteristic()!)
             case .write(let value):
                 if let targetChar = toCBCharacteristic() {
                     self.peripheral.writeValue(value!, for: targetChar, type: CBCharacteristicWriteType.withResponse)
@@ -53,33 +51,6 @@ class Peripheral: NSObject {
                 } //withresponse to log whether write is sucessful to backend
             case .readRSSI:
                 self.peripheral.readRSSI()
-//            case .scheduleCommands(let newCommands, let withTimeInterval, let repeatCount):
-//                        if repeatCount == 0 {
-//                            // Schedule finished
-//                            if let c = nextCommand() {
-//                                executeCommand(c)
-//                            }
-//                            return
-//                        }
-//                        print("Before timer")
-//                timer = Timer.scheduledTimer(withTimeInterval: withTimeInterval, repeats: true) { [weak self] timer in
-////                            self?.queue.async {
-//                                // Finish off current commands
-//                                print("Executed timer")
-//                                var nextCommands = self?.commands ?? []
-//                                // Add new scheduled ocmmands for this round
-//                                nextCommands.append(contentsOf: newCommands)
-//                                // Mark the next scheduling event
-//                                nextCommands.append(.scheduleCommands(commands: newCommands, withTimeInterval: withTimeInterval, repeatCount: repeatCount - 1))
-//                                self?.commands = nextCommands
-//                                print("Current iteration of commands: \(self?.commands)")
-//                                if let c = self?.nextCommand() {
-//                                    print("next command after schedule: \(c)")
-//                                    self?.executeCommand(c)
-//                                }
-////                            }
-//                        }
-//                        RunLoop.current.add(timer!, forMode: .common)
             case .cancel(callback: let callback):
                 callback(self)
             case .clear:
@@ -172,6 +143,8 @@ extension Peripheral: CBPeripheralDelegate {
         guard let characteristicValue = characteristic.value else { print("Error reading characteristic value")
             return
         }
+        
+        print("in didUpdateValueFor: \(characteristicValue)")
         
         // use callback characteristicCallback to make characteristicValue accessible to centralManager
         characteristicCallback?(self, characteristic as! CBMutableCharacteristic, characteristicValue, error)

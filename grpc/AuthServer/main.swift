@@ -69,7 +69,17 @@ class TestAuthProvider: Testingauth_AuthProvider {
   func updateUserProfile(userId: UInt64, token: UInt64) -> Testingauth_TestResult {
     var receivedTokens = UserIdToTEKs.load(from: .receivedTEKFile).0
     print("Updating userid: \(userId)")
-    assert(receivedTokens[userId] != nil)
+    if receivedTokens[userId] == nil {
+      print("Your previous result is out")
+      let response = Testingauth_TestResult.with {
+        $0.ready = false
+        $0.taID = self.taID
+        $0.seq = String()
+        $0.result = 0
+        $0.signature = String()
+      }
+      return response
+    }
     receivedTokens[userId]!.append(token)
     receivedTokens.save(to: .receivedTEKFile)
 
@@ -93,7 +103,8 @@ class TestAuthProvider: Testingauth_AuthProvider {
       testSigVerifiable(content: teks, seq: seq, pub_key: keys.1)
 
       // for testing purposes, result is generated randomly
-      let result: UInt64 = [1, 0].randomElement()!
+      //let result: UInt64 = [1, 0].randomElement()!
+      let result: UInt64 = 1
 
       var vrfyMsg: Data = self.taID.data
       vrfyMsg.append(seq.data)
